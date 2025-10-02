@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AMEG - Novo Cadastro</title>
+    <title>AMEG - Editar Cadastro</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/mobile.css">
@@ -23,7 +23,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>AMEG - Novo Cadastro</h1>
+        <h1>AMEG - Editar Cadastro</h1>
         <a href="/logout" class="logout">Sair</a>
     </div>
     
@@ -36,46 +36,46 @@
     
     <div class="container">
         <div class="form-card">
-            <h2>Cadastro Familiar</h2>
+            <h2>Editar Cadastro Familiar</h2>
             
-            <form method="POST" enctype="multipart/form-data">
+            <form method="POST" action="/atualizar_cadastro/{{ cadastro[0] }}" enctype="multipart/form-data">
                 <h3>1. DADOS DO TITULAR</h3>
                 
                 <div class="form-group">
                     <label>Nome Completo *</label>
-                    <input type="text" name="nome_completo" required>
+                    <input type="text" name="nome_completo" value="{{ cadastro[1] or ''}}" required>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Endereço *</label>
-                        <input type="text" name="endereco" required>
+                        <input type="text" name="endereco" value="{{ cadastro[2] or ''}}" required>
                     </div>
                     <div class="form-group">
                         <label>Número *</label>
-                        <input type="text" name="numero" required>
+                        <input type="text" name="numero" value="{{ cadastro[3] or ''}}" required>
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Bairro *</label>
-                        <input type="text" name="bairro" required>
+                        <input type="text" name="bairro" value="{{ cadastro[4] or ''}}" required>
                     </div>
                     <div class="form-group">
                         <label>CEP * <small>(preenche endereço automaticamente)</small></label>
-                        <input type="text" name="cep" required>
+                        <input type="text" name="cep" value="{{ cadastro[5] or ''}}" required>
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Telefone Celular *</label>
-                        <input type="text" name="telefone" required>
+                        <input type="text" name="telefone" value="{{ cadastro[6] or ''}}" required>
                     </div>
                     <div class="form-group">
                         <label>Ponto de Referência</label>
-                        <input type="text" name="ponto_referencia">
+                        <input type="text" name="ponto_referencia" value="{{ cadastro[7] or ''}}">
                     </div>
                 </div>
                 
@@ -90,37 +90,37 @@
                     </div>
                     <div class="form-group">
                         <label>Idade *</label>
-                        <input type="number" name="idade" required>
+                        <input type="number" name="idade" value="{{ cadastro[9] or ''}}" required>
                     </div>
                     <div class="form-group">
                         <label>Data Nascimento *</label>
-                        <input type="date" name="data_nascimento" required>
+                        <input type="date" name="data_nascimento" value="{{ cadastro[10] or ''}}" required>
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Nº Título de Eleitor</label>
-                        <input type="text" name="titulo_eleitor">
+                        <input type="text" name="titulo_eleitor" value="{{ cadastro[11] or ''}}">
                     </div>
                     <div class="form-group">
                         <label>Cidade Emissão Título</label>
-                        <input type="text" name="cidade_titulo">
+                        <input type="text" name="cidade_titulo" value="{{ cadastro[12] or ''}}">
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>CPF *</label>
-                        <input type="text" name="cpf" required>
+                        <input type="text" name="cpf" value="{{ cadastro[13] or ''}}" required>
                     </div>
                     <div class="form-group">
                         <label>RG *</label>
-                        <input type="text" name="rg" required>
+                        <input type="text" name="rg" value="{{ cadastro[14] or ''}}" required>
                     </div>
                     <div class="form-group">
                         <label>NIS</label>
-                        <input type="text" name="nis">
+                        <input type="text" name="nis" value="{{ cadastro[15] or ''}}">
                     </div>
                 </div>
                 
@@ -137,11 +137,11 @@
                     </div>
                     <div class="form-group">
                         <label>Escolaridade *</label>
-                        <input type="text" name="escolaridade" required>
+                        <input type="text" name="escolaridade" value="{{ cadastro[17] or ''}}" required>
                     </div>
                     <div class="form-group">
                         <label>Profissão *</label>
-                        <input type="text" name="profissao" required>
+                        <input type="text" name="profissao" value="{{ cadastro[18] or ''}}" required>
                     </div>
                 </div>
                 

@@ -3,6 +3,8 @@
 <head>
     <title>AMEG - Dashboard</title>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/mobile.css">
     <style>
         body { font-family: Arial; margin: 0; background: #f4f4f4; }
         .header { background: #2c3e50; color: white; padding: 20px; }
@@ -74,6 +76,7 @@
                     <th>Telefone</th>
                     <th>Bairro</th>
                     <th>Data</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -84,6 +87,14 @@
                     <td>{{ cadastro[2] or '-' }}</td>
                     <td>{{ cadastro[3] or '-' }}</td>
                     <td>{{ cadastro[4] }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="/editar_cadastro/{{ cadastro[0] }}" style="background: #f39c12; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; margin-right: 5px;">✏️ Editar</a>
+                            <form method="POST" action="/deletar_cadastro/{{ cadastro[0] }}" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja deletar este cadastro?')">
+                                <button type="submit" style="background: #e74c3c; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">🗑️ Deletar</button>
+                            </form>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

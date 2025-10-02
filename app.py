@@ -27,6 +27,10 @@ ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory('static', filename)
+
 @app.route('/')
 def login():
     if 'usuario' in session:
@@ -89,7 +93,7 @@ def cadastrar():
         c = cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
         
         c.execute("""INSERT INTO cadastros (
-            nome_completo, endereco, bairro, telefone, ponto_referencia, genero, idade,
+            nome_completo, endereco, numero, bairro, cep, telefone, ponto_referencia, genero, idade,
             titulo_eleitor, cidade_titulo, cpf, data_nascimento, rg, estado_civil,
             nis, escolaridade, profissao, nome_companheiro, cpf_companheiro, rg_companheiro,
             titulo_companheiro, cidade_titulo_companheiro, nis_companheiro, idade_companheiro,
@@ -102,7 +106,7 @@ def cadastrar():
             tem_deficiencia, tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais
         ) VALUES (?, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
         (request.form.get('nome_completo'), request.form.get('endereco'),
-         request.form.get('bairro'), request.form.get('telefone'),
+         request.form.get('bairro'), request.form.get('numero'), request.form.get('cep'), request.form.get('telefone'),
          request.form.get('ponto_referencia'), request.form.get('genero'),
          request.form.get('idade'), request.form.get('titulo_eleitor'),
          request.form.get('cidade_titulo'), request.form.get('cpf'),
@@ -329,6 +333,135 @@ def salvar_usuario():
     cursor.close()
     conn.close()
     return redirect(url_for('usuarios'))
+
+@app.route('/editar_cadastro/<int:cadastro_id>')
+def editar_cadastro(cadastro_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    conn, cursor, db_type = get_db()
+    
+    if db_type == 'postgresql':
+        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
+    else:
+        cursor.execute('SELECT * FROM cadastros WHERE id = ?', (cadastro_id,))
+    
+    cadastro = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
+    if not cadastro:
+        flash('Cadastro não encontrado!')
+        return redirect(url_for('dashboard'))
+    
+    return render_template('editar_cadastro.html', cadastro=cadastro)
+
+@app.route('/atualizar_cadastro/<int:cadastro_id>', methods=['POST'])
+def atualizar_cadastro(cadastro_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    conn, cursor, db_type = get_db()
+    
+    # Campos do formulário
+    campos = [
+        'nome_completo', 'endereco', 'numero', 'bairro', 'cep', 'telefone', 'ponto_referencia',
+        'genero', 'idade', 'data_nascimento', 'titulo_eleitor', 'cidade_titulo',
+        'cpf', 'rg', 'nis', 'estado_civil', 'escolaridade', 'profissao',
+        'nome_companheiro', 'cpf_companheiro', 'rg_companheiro', 'idade_companheiro',
+        'escolaridade_companheiro', 'profissao_companheiro', 'qtd_filhos',
+        'nomes_idades_filhos', 'renda_familiar', 'beneficio_governo',
+        'qual_beneficio', 'casa_propria', 'tipo_casa', 'qtd_comodos',
+        'energia_eletrica', 'agua_encanada', 'rede_esgoto', 'coleta_lixo',
+        'doencas_familia', 'medicamentos_uso', 'deficiencia_familia',
+        'tipo_deficiencia', 'acompanhamento_medico', 'local_atendimento'
+    ]
+    
+    valores = [request.form.get(campo, '') for campo in campos]
+    valores.append(cadastro_id)
+    
+    sql_update = f"""
+    UPDATE cadastros SET 
+    nome_completo = {'%s' if db_type == 'postgresql' else '?'},
+    endereco = {'%s' if db_type == 'postgresql' else '?'},
+    numero = {'%s' if db_type == 'postgresql' else '?'},
+    bairro = {'%s' if db_type == 'postgresql' else '?'},
+    cep = {'%s' if db_type == 'postgresql' else '?'},
+    telefone = {'%s' if db_type == 'postgresql' else '?'},
+    ponto_referencia = {'%s' if db_type == 'postgresql' else '?'},
+    genero = {'%s' if db_type == 'postgresql' else '?'},
+    idade = {'%s' if db_type == 'postgresql' else '?'},
+    data_nascimento = {'%s' if db_type == 'postgresql' else '?'},
+    titulo_eleitor = {'%s' if db_type == 'postgresql' else '?'},
+    cidade_titulo = {'%s' if db_type == 'postgresql' else '?'},
+    cpf = {'%s' if db_type == 'postgresql' else '?'},
+    rg = {'%s' if db_type == 'postgresql' else '?'},
+    nis = {'%s' if db_type == 'postgresql' else '?'},
+    estado_civil = {'%s' if db_type == 'postgresql' else '?'},
+    escolaridade = {'%s' if db_type == 'postgresql' else '?'},
+    profissao = {'%s' if db_type == 'postgresql' else '?'},
+    nome_companheiro = {'%s' if db_type == 'postgresql' else '?'},
+    cpf_companheiro = {'%s' if db_type == 'postgresql' else '?'},
+    rg_companheiro = {'%s' if db_type == 'postgresql' else '?'},
+    idade_companheiro = {'%s' if db_type == 'postgresql' else '?'},
+    escolaridade_companheiro = {'%s' if db_type == 'postgresql' else '?'},
+    profissao_companheiro = {'%s' if db_type == 'postgresql' else '?'},
+    qtd_filhos = {'%s' if db_type == 'postgresql' else '?'},
+    nomes_idades_filhos = {'%s' if db_type == 'postgresql' else '?'},
+    renda_familiar = {'%s' if db_type == 'postgresql' else '?'},
+    beneficio_governo = {'%s' if db_type == 'postgresql' else '?'},
+    qual_beneficio = {'%s' if db_type == 'postgresql' else '?'},
+    casa_propria = {'%s' if db_type == 'postgresql' else '?'},
+    tipo_casa = {'%s' if db_type == 'postgresql' else '?'},
+    qtd_comodos = {'%s' if db_type == 'postgresql' else '?'},
+    energia_eletrica = {'%s' if db_type == 'postgresql' else '?'},
+    agua_encanada = {'%s' if db_type == 'postgresql' else '?'},
+    rede_esgoto = {'%s' if db_type == 'postgresql' else '?'},
+    coleta_lixo = {'%s' if db_type == 'postgresql' else '?'},
+    doencas_familia = {'%s' if db_type == 'postgresql' else '?'},
+    medicamentos_uso = {'%s' if db_type == 'postgresql' else '?'},
+    deficiencia_familia = {'%s' if db_type == 'postgresql' else '?'},
+    tipo_deficiencia = {'%s' if db_type == 'postgresql' else '?'},
+    acompanhamento_medico = {'%s' if db_type == 'postgresql' else '?'},
+    local_atendimento = {'%s' if db_type == 'postgresql' else '?'}
+    WHERE id = {'%s' if db_type == 'postgresql' else '?'}
+    """
+    
+    try:
+        cursor.execute(sql_update, valores)
+        conn.commit()
+        flash('Cadastro atualizado com sucesso!')
+    except Exception as e:
+        flash(f'Erro ao atualizar cadastro: {str(e)}')
+    
+    cursor.close()
+    conn.close()
+    return redirect(url_for('dashboard'))
+
+@app.route('/deletar_cadastro/<int:cadastro_id>', methods=['POST'])
+def deletar_cadastro(cadastro_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    conn, cursor, db_type = get_db()
+    
+    try:
+        # Deletar arquivos de saúde relacionados
+        if db_type == 'postgresql':
+            cursor.execute('DELETE FROM arquivos_saude WHERE cadastro_id = %s', (cadastro_id,))
+            cursor.execute('DELETE FROM cadastros WHERE id = %s', (cadastro_id,))
+        else:
+            cursor.execute('DELETE FROM arquivos_saude WHERE cadastro_id = ?', (cadastro_id,))
+            cursor.execute('DELETE FROM cadastros WHERE id = ?', (cadastro_id,))
+        
+        conn.commit()
+        flash('Cadastro deletado com sucesso!')
+    except Exception as e:
+        flash(f'Erro ao deletar cadastro: {str(e)}')
+    
+    cursor.close()
+    conn.close()
+    return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

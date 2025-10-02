@@ -1,0 +1,157 @@
+/* Responsividade para dispositivos móveis */
+@media (max-width: 768px) {
+    /* Layout geral */
+    body { font-size: 14px; }
+    
+    /* Header */
+    .header { padding: 15px 10px; text-align: center; }
+    .header h1 { font-size: 1.5em; margin: 0; }
+    .logout { float: none; display: block; margin-top: 10px; }
+    
+    /* Navegação */
+    .nav { padding: 10px; text-align: center; }
+    .nav a { 
+        display: inline-block; 
+        margin: 5px; 
+        padding: 8px 12px; 
+        font-size: 12px;
+        white-space: nowrap;
+    }
+    
+    /* Container */
+    .container { padding: 10px; }
+    
+    /* Cards de estatísticas */
+    .stats { 
+        flex-direction: column; 
+        gap: 10px; 
+    }
+    .stat-card { 
+        padding: 15px; 
+        margin-bottom: 10px;
+    }
+    .stat-number { font-size: 1.5em; }
+    
+    /* Formulários */
+    .form-row { 
+        flex-direction: column; 
+        gap: 10px; 
+    }
+    .form-card { padding: 20px 15px; }
+    .form-group { margin-bottom: 15px; }
+    input, select, textarea { 
+        font-size: 16px; /* Evita zoom no iOS */
+        padding: 12px;
+    }
+    
+    /* Tabelas responsivas */
+    table { 
+        font-size: 12px; 
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    th, td { padding: 8px 4px; }
+    
+    /* Botões */
+    .btn { 
+        width: 100%; 
+        margin: 10px 0; 
+        padding: 12px;
+        font-size: 14px;
+        touch-action: manipulation; /* Melhora responsividade touch */
+    }
+    
+    /* Login */
+    .login-container { 
+        margin: 20px 10px; 
+        padding: 20px 15px; 
+    }
+    
+    /* Dropdown de exportação */
+    .export-menu { display: block; width: 100%; margin: 5px 0; }
+    .export-dropdown { 
+        position: static; 
+        display: block; 
+        box-shadow: none; 
+        background: #34495e; 
+        margin-top: 10px;
+    }
+    .export-dropdown a { 
+        color: white; 
+        background: #3498db; 
+        margin: 2px 0; 
+        border-radius: 3px;
+    }
+    
+    /* Alertas */
+    .alert { margin: 10px 0; padding: 10px; }
+    
+    /* Relatórios */
+    .relatorio-card { 
+        margin-bottom: 15px; 
+        padding: 15px;
+    }
+    
+    /* Upload de arquivos */
+    .upload-area { 
+        padding: 20px 10px; 
+        text-align: center;
+    }
+    
+    /* Logo responsiva */
+    .logo { 
+        max-width: 150px !important; 
+        margin-bottom: 15px !important;
+    }
+}
+
+/* Para telas muito pequenas */
+@media (max-width: 480px) {
+    .header h1 { font-size: 1.2em; }
+    .nav a { 
+        display: block; 
+        width: 100%; 
+        margin: 2px 0; 
+        text-align: center;
+    }
+    table { font-size: 11px; }
+    th, td { padding: 6px 2px; }
+    
+    /* Logo ainda menor em telas pequenas */
+    .logo { 
+        max-width: 120px !important; 
+        margin-bottom: 10px !important;
+    }
+}
+
+/* Campos obrigatórios */
+label:after {
+    content: "";
+}
+label[for] + input[required] + label:before,
+label:has(+ input[required]):after {
+    content: " *";
+    color: #e74c3c;
+}
+input:invalid {
+    border-color: #e74c3c;
+}
+input:valid {
+    border-color: #27ae60;
+}
+
+/* Botões de ação */
+@media (max-width: 768px) {
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    .action-buttons a,
+    .action-buttons button {
+        font-size: 12px !important;
+        padding: 4px 8px !important;
+        margin: 1px 0 !important;
+    }
+}
