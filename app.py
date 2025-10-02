@@ -4,31 +4,23 @@ from db_helper import get_db, execute_query
 import csv
 import io
 import os
-import sqlite3
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+app.secret_key = 'ameg_secret_2024'
+app.config['UPLOAD_FOLDER'] = 'uploads/saude'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
-# Configuração baseada no ambiente
+# Inicializar banco na inicialização (apenas no Railway)
 if os.environ.get('RAILWAY_ENVIRONMENT'):
-    from config import RailwayConfig
-    app.config.from_object(RailwayConfig)
-elif os.environ.get('FLASK_ENV') == 'production':
-    from config import ProductionConfig
-    app.config.from_object(ProductionConfig)
-else:
-    from config import DevelopmentConfig
-    app.config.from_object(DevelopmentConfig)
-
-# Fallback para desenvolvimento
-if not app.config.get('SECRET_KEY'):
-    app.config['SECRET_KEY'] = 'ameg_secret_2024'
-if not app.config.get('UPLOAD_FOLDER'):
-    app.config['UPLOAD_FOLDER'] = 'uploads/saude'
-if not app.config.get('MAX_CONTENT_LENGTH'):
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+    try:
+        init_db_tables()
+        create_admin_user()
+        print("✅ Banco inicializado no Railway")
+    except Exception as e:
+        print(f"Erro na inicialização do banco: {e}")
 
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
 
@@ -46,9 +38,19 @@ def fazer_login():
     usuario = request.form['usuario']
     senha = request.form['senha']
     
-    users = execute_query('SELECT senha FROM usuarios WHERE usuario = ?', (usuario,), fetch=True)
+    conn, db_type = get_db_connection()
+    cursor = conn.cursor()
     
-    if users and check_password_hash(users[0]['senha'], senha):
+    if db_type == 'postgresql':
+        cursor.execute('SELECT senha FROM usuarios WHERE usuario = %s', (usuario,))
+    else:
+        cursor.execute('SELECT senha FROM usuarios WHERE usuario = ?', (usuario,))
+    
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
+    if user and check_password_hash(user[0], senha):
         session['usuario'] = usuario
         return redirect(url_for('dashboard'))
     else:
@@ -65,13 +67,14 @@ def dashboard():
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('SELECT COUNT(*) FROM cadastros')
-    total = c.fetchone()[0]
+    conn, db_type = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT COUNT(*) FROM cadastros')
+    total = cursor.fetchone()[0]
     
-    c.execute('SELECT id, nome_completo, telefone, bairro, data_cadastro FROM cadastros ORDER BY data_cadastro DESC LIMIT 5')
-    ultimos = c.fetchall()
+    cursor.execute('SELECT id, nome_completo, telefone, bairro, data_cadastro FROM cadastros ORDER BY data_cadastro DESC LIMIT 5')
+    ultimos = cursor.fetchall()
+    cursor.close()
     conn.close()
     
     return render_template('dashboard.html', total=total, ultimos=ultimos)
@@ -83,7 +86,7 @@ def cadastrar():
     
     if request.method == 'POST':
         conn = get_db_connection()
-        c = conn.cursor()
+        c = cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
         
         c.execute("""INSERT INTO cadastros (
             nome_completo, endereco, bairro, telefone, ponto_referencia, genero, idade,
@@ -97,7 +100,7 @@ def cadastrar():
             energia, lixo, agua, esgoto, observacoes, tem_doenca_cronica, doencas_cronicas,
             usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
             tem_deficiencia, tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        ) VALUES (?, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
         (request.form.get('nome_completo'), request.form.get('endereco'),
          request.form.get('bairro'), request.form.get('telefone'),
          request.form.get('ponto_referencia'), request.form.get('genero'),
@@ -142,7 +145,7 @@ def cadastrar():
                     file.save(filepath)
                     
                     descricao = request.form.get(f'descricao_{file_key}', '')
-                    c.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, caminho_arquivo, descricao) VALUES (?, ?, ?, ?, ?)', 
+                    c.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, caminho_arquivo, descricao) VALUES (?, %s, %s, %s, %s)', 
                              (cadastro_id, file.filename, file_key, filepath, descricao))
                     uploaded_files.append(file_key)
         
@@ -169,7 +172,7 @@ def relatorio_saude():
         return redirect(url_for('login'))
     
     conn = get_db_connection()
-    c = conn.cursor()
+    c = cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
     
     c.execute('SELECT COUNT(*) FROM cadastros WHERE tem_doenca_cronica = "Sim"')
     com_doenca_cronica = c.fetchone()[0]
@@ -214,12 +217,12 @@ def arquivos_saude(cadastro_id):
         return redirect(url_for('login'))
     
     conn = get_db_connection()
-    c = conn.cursor()
+    c = cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
     
-    c.execute('SELECT nome_completo FROM cadastros WHERE id = ?', (cadastro_id,))
+    c.execute('SELECT nome_completo FROM cadastros WHERE id = %s', (cadastro_id,))
     cadastro = c.fetchone()
     
-    c.execute('SELECT * FROM arquivos_saude WHERE cadastro_id = ? ORDER BY data_upload DESC', (cadastro_id,))
+    c.execute('SELECT * FROM arquivos_saude WHERE cadastro_id = %s ORDER BY data_upload DESC', (cadastro_id,))
     arquivos = c.fetchall()
     
     conn.close()
@@ -236,8 +239,8 @@ def download_arquivo(arquivo_id):
         return redirect(url_for('login'))
     
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('SELECT nome_arquivo, caminho_arquivo FROM arquivos_saude WHERE id = ?', (arquivo_id,))
+    c = cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
+    c.execute('SELECT nome_arquivo, caminho_arquivo FROM arquivos_saude WHERE id = %s', (arquivo_id,))
     arquivo = c.fetchone()
     conn.close()
     
@@ -267,8 +270,8 @@ def upload_arquivo(cadastro_id):
         file.save(filepath)
         
         conn = get_db_connection()
-        c = conn.cursor()
-        c.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, caminho_arquivo, descricao) VALUES (?, ?, ?, ?, ?)', 
+        c = cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
+        c.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, caminho_arquivo, descricao) VALUES (?, %s, %s, %s, %s)', 
                  (cadastro_id, file.filename, request.form.get('tipo_arquivo'), filepath, request.form.get('descricao')))
         conn.commit()
         conn.close()
@@ -283,59 +286,51 @@ def upload_arquivo(cadastro_id):
 def usuarios():
     if 'usuario' not in session:
         return redirect(url_for('login'))
-    
-    # Apenas admin pode acessar
     if session['usuario'] != 'admin':
-        flash('Acesso negado. Apenas administradores podem gerenciar usuários.')
+        flash('Acesso negado! Apenas administradores podem gerenciar usuários.')
         return redirect(url_for('dashboard'))
-    
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('SELECT id, usuario FROM usuarios ORDER BY usuario')
-    usuarios = c.fetchall()
-    conn.close()
-    
-    return render_template('usuarios.html', usuarios=usuarios)
+    return render_template('usuarios.html')
 
-@app.route('/criar_usuario', methods=['GET', 'POST'])
+@app.route('/criar_usuario')
 def criar_usuario():
     if 'usuario' not in session:
         return redirect(url_for('login'))
-    
-    # Apenas admin pode acessar
     if session['usuario'] != 'admin':
-        flash('Acesso negado. Apenas administradores podem criar usuários.')
+        flash('Acesso negado! Apenas administradores podem criar usuários.')
         return redirect(url_for('dashboard'))
-    
-    if request.method == 'POST':
-        novo_usuario = request.form['usuario']
-        nova_senha = request.form['senha']
-        
-        if len(nova_senha) < 8:
-            flash('Senha deve ter pelo menos 8 caracteres')
-            return render_template('criar_usuario.html')
-        
-        conn = get_db_connection()
-        c = conn.cursor()
-        
-        # Verificar se usuário já existe
-        c.execute('SELECT id FROM usuarios WHERE usuario = ?', (novo_usuario,))
-        if c.fetchone():
-            flash('Usuário já existe')
-            conn.close()
-            return render_template('criar_usuario.html')
-        
-        # Criar usuário
-        senha_hash = generate_password_hash(nova_senha)
-        c.execute('INSERT INTO usuarios (usuario, senha) VALUES (?, ?)', (novo_usuario, senha_hash))
-        conn.commit()
-        conn.close()
-        
-        flash('Usuário criado com sucesso')
-        return redirect(url_for('usuarios'))
-    
     return render_template('criar_usuario.html')
 
+@app.route('/criar_usuario', methods=['POST'])
+def salvar_usuario():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    if session['usuario'] != 'admin':
+        flash('Acesso negado! Apenas administradores podem criar usuários.')
+        return redirect(url_for('dashboard'))
+    
+    novo_usuario = request.form['usuario']
+    nova_senha = request.form['senha']
+    
+    conn, db_type = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        senha_hash = generate_password_hash(nova_senha)
+        if db_type == 'postgresql':
+            cursor.execute('INSERT INTO usuarios (usuario, senha) VALUES (%s, %s)', (novo_usuario, senha_hash))
+        else:
+            cursor.execute('INSERT INTO usuarios (usuario, senha) VALUES (?, ?)', (novo_usuario, senha_hash))
+        
+        conn.commit()
+        flash('Usuário criado com sucesso!')
+    except Exception as e:
+        flash(f'Erro ao criar usuário: {str(e)}')
+    
+    cursor.close()
+    conn.close()
+    return redirect(url_for('usuarios'))
+
 if __name__ == '__main__':
-    init_db()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    print(f"🚀 Iniciando AMEG na porta {port}")
+    app.run(host='0.0.0.0', port=port, debug=False)

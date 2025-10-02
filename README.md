@@ -48,8 +48,8 @@ cd /home/efcunha/GitHub/ameg
 
 ```
 ameg/
-├── app.py                  # Aplicação principal Flask (corrigido)
-├── run.py                  # Script para iniciar o servidor
+├── app.py                  # Aplicação principal Flask
+├── run.py                  # Script para desenvolvimento local
 ├── database.py             # Módulo de banco PostgreSQL/SQLite
 ├── db_helper.py            # Helper para consultas híbridas
 ├── config.py               # Configurações por ambiente
@@ -58,7 +58,7 @@ ameg/
 ├── deploy-railway.sh       # Script de deploy Railway
 ├── railway.json            # Configuração Railway
 ├── railway.dockerfile      # Dockerfile para Railway
-├── requirements.txt        # Dependências Python (atualizado)
+├── requirements.txt        # Dependências Python
 ├── ameg.db                 # Banco SQLite (local)
 ├── templates/              # Templates HTML
 ├── uploads/saude/          # Arquivos de saúde enviados
@@ -73,12 +73,12 @@ ameg/
 
 ### Produção (PostgreSQL)
 - Railway PostgreSQL
+- Inicializado automaticamente no primeiro deploy
 - Persistente e confiável
-- Configurado automaticamente
 
 ### Tabelas
 - `usuarios`: Controle de acesso
-- `cadastros`: Dados dos cadastrados
+- `cadastros`: Dados completos dos cadastrados (57 campos)
 - `arquivos_saude`: Arquivos médicos enviados
 
 ## Deploy no Railway
@@ -102,9 +102,9 @@ railway login
 
 ## Campos do Cadastro
 
-- Nome completo, endereço, telefone
-- CPF, RG, data de nascimento
-- Estado civil, profissão, renda
+- Dados pessoais: Nome, endereço, telefone, CPF, RG
+- Dados familiares: Companheiro, filhos, renda
+- Dados habitacionais: Casa, energia, água, esgoto
 - **Dados de Saúde**: Doenças, medicamentos, deficiências
 - **Upload de Arquivos**: Laudos médicos, receitas
 

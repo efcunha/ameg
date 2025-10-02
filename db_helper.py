@@ -22,19 +22,34 @@ def execute_query(query, params=None, fetch=False):
     conn, db_type = get_db()
     cursor = conn.cursor()
     
-    # Adaptar query para PostgreSQL
-    if db_type == 'postgresql' and params:
-        # Converter ? para %s
-        adapted_query = query.replace('?', '%s')
-        cursor.execute(adapted_query, params)
-    else:
-        cursor.execute(query, params or ())
-    
-    if fetch:
-        result = cursor.fetchall()
+    try:
+        # Adaptar query para PostgreSQL
+        if db_type == 'postgresql' and params:
+            # Converter ? para %s
+            adapted_query = query.replace('?', '%s')
+            cursor.execute(adapted_query, params)
+        else:
+            cursor.execute(query, params or ())
+        
+        if fetch:
+            result = cursor.fetchall()
+            conn.close()
+            return result
+        else:
+            conn.commit()
+            result = cursor.lastrowid if db_type == 'sqlite' else cursor.rowcount
+            conn.close()
+            return result
+    except Exception as e:
         conn.close()
-        return result
-    else:
-        conn.commit()
-        conn.close()
-        return cursor.lastrowid if db_type == 'sqlite' else cursor.rowcount
+        # Se falhar no PostgreSQL, tentar inicializar tabelas
+        if db_type == 'postgresql':
+            from database import init_db_tables, create_admin_user
+            try:
+                init_db_tables()
+                create_admin_user()
+                # Tentar novamente
+                return execute_query(query, params, fetch)
+            except:
+                pass
+        raise e
