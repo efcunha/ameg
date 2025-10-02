@@ -156,7 +156,7 @@ def cadastrar():
         uploaded_files = []
         if cadastro_id:
             for file_key in ['laudo', 'receita', 'imagem']:
-            if file_key in request.files:
+                if file_key in request.files:
                 file = request.files[file_key]
                 if file and file.filename and allowed_file(file.filename):
                     filename = secure_filename(f"{cadastro_id}_{file_key}_{file.filename}")
