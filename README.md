@@ -48,7 +48,7 @@ cd /home/efcunha/GitHub/ameg
 
 ```
 ameg/
-├── app.py                  # Aplicação principal Flask
+├── app.py                  # Aplicação principal Flask (corrigido)
 ├── run.py                  # Script para iniciar o servidor
 ├── database.py             # Módulo de banco PostgreSQL/SQLite
 ├── db_helper.py            # Helper para consultas híbridas
@@ -58,7 +58,7 @@ ameg/
 ├── deploy-railway.sh       # Script de deploy Railway
 ├── railway.json            # Configuração Railway
 ├── railway.dockerfile      # Dockerfile para Railway
-├── requirements.txt        # Dependências Python
+├── requirements.txt        # Dependências Python (atualizado)
 ├── ameg.db                 # Banco SQLite (local)
 ├── templates/              # Templates HTML
 ├── uploads/saude/          # Arquivos de saúde enviados
@@ -126,6 +126,7 @@ railway login
 
 - **Backend**: Flask (Python)
 - **Banco Local**: SQLite
-- **Banco Produção**: PostgreSQL
-- **Deploy**: Railway
+- **Banco Produção**: PostgreSQL (Railway)
+- **Deploy**: Railway com auto-deploy
 - **Frontend**: HTML/CSS/JavaScript
+- **Dependências**: psycopg2-binary, gunicorn, reportlab
