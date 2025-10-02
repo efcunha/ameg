@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AMEG - Login</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial; background: #f4f4f4; margin: 0; padding: 50px; }
+        .login-container { max-width: 400px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; color: #2c3e50; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .btn { width: 100%; background: #3498db; color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        .btn:hover { background: #2980b9; }
+        .alert { padding: 10px; margin: 10px 0; background: #f8d7da; color: #721c24; border-radius: 5px; }
+        .info { background: #d1ecf1; color: #0c5460; padding: 15px; margin: 20px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="header">
+            <h2>AMEG</h2>
+            <p>Sistema de Cadastro Familiar</p>
+        </div>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="info">
+            <strong>Dados de acesso padrão:</strong><br>
+            Usuário: admin<br>
+            Senha: admin123
+        </div>
+        
+        <form method="POST" action="/login">
+            <div class="form-group">
+                <label>Usuário:</label>
+                <input type="text" name="usuario" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Senha:</label>
+                <input type="password" name="senha" required>
+            </div>
+            
+            <button type="submit" class="btn">Entrar</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AMEG - Tipos de Relatórios</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .container { padding: 20px; max-width: 1000px; margin: 0 auto; }
+        .relatorio-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+        .relatorio-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        .relatorio-card h3 { color: #2c3e50; margin-bottom: 15px; }
+        .relatorio-card p { color: #666; margin-bottom: 20px; }
+        .btn { background: #3498db; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 5px; }
+        .btn:hover { background: #2980b9; }
+        .btn-success { background: #27ae60; }
+        .btn-success:hover { background: #229954; }
+        .btn-info { background: #17a2b8; }
+        .btn-info:hover { background: #138496; }
+        .btn-warning { background: #f39c12; }
+        .btn-warning:hover { background: #e67e22; }
+        .logout { float: right; color: white; text-decoration: none; }
+        .icon { font-size: 2em; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AMEG - Tipos de Relatórios</h1>
+        <a href="/logout" class="logout">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/cadastrar">Novo Cadastro</a>
+        <a href="/relatorios">Relatórios</a>
+    </div>
+    
+    <div class="container">
+        <h2>Escolha o tipo de relatório:</h2>
+        
+        <div class="relatorio-grid">
+            <div class="relatorio-card">
+                <div class="icon">📋</div>
+                <h3>Relatório Completo</h3>
+                <p>Lista todos os cadastros com informações detalhadas: nome, telefone, endereço, renda, etc.</p>
+                <a href="/relatorio_completo" class="btn">Ver Relatório</a>
+                <a href="/exportar?tipo=completo&formato=pdf" class="btn btn-warning">📄 PDF</a>
+                <a href="/exportar?tipo=completo&formato=csv" class="btn btn-success">📊 CSV</a>
+            </div>
+            
+            <div class="relatorio-card">
+                <div class="icon">📄</div>
+                <h3>Relatório Simplificado</h3>
+                <p>Lista resumida com apenas os dados essenciais: nome, telefone, bairro e renda.</p>
+                <a href="/relatorio_simplificado" class="btn">Ver Relatório</a>
+                <a href="/exportar?tipo=simplificado&formato=pdf" class="btn btn-warning">📄 PDF</a>
+                <a href="/exportar?tipo=simplificado&formato=csv" class="btn btn-success">📊 CSV</a>
+            </div>
+            
+            <div class="relatorio-card">
+                <div class="icon">📊</div>
+                <h3>Relatório Estatístico</h3>
+                <p>Estatísticas e gráficos: total por bairro, faixa etária, gênero, renda média, etc.</p>
+                <a href="/relatorio_estatistico" class="btn">Ver Estatísticas</a>
+                <a href="/exportar?tipo=estatistico&formato=pdf" class="btn btn-warning">📄 PDF</a>
+            </div>
+            
+            <div class="relatorio-card">
+                <div class="icon">👤</div>
+                <h3>Fichas Individuais</h3>
+                <p>Visualize ou imprima fichas completas de cadastro individual com todos os dados.</p>
+                <a href="/relatorio_completo" class="btn">Escolher Pessoa</a>
+                <p style="font-size: 0.9em; color: #888;">Clique em "Ver Ficha" na lista</p>
+            </div>
+            
+            <div class="relatorio-card">
+                <div class="icon">🏠</div>
+                <h3>Relatório por Bairro</h3>
+                <p>Cadastros agrupados por bairro com totais e estatísticas por região.</p>
+                <a href="/relatorio_por_bairro" class="btn">Ver por Bairro</a>
+                <a href="/exportar?tipo=bairro&formato=pdf" class="btn btn-warning">📄 PDF</a>
+            </div>
+            
+            <div class="relatorio-card">
+                <div class="icon">💰</div>
+                <h3>Relatório de Renda</h3>
+                <p>Análise de renda familiar: faixas salariais, renda média, distribuição por região.</p>
+                <a href="/relatorio_renda" class="btn">Ver Renda</a>
+                <a href="/exportar?tipo=renda&formato=pdf" class="btn btn-warning">📄 PDF</a>
+            </div>
+            
+            <div class="relatorio-card">
+                <div class="icon">🏥</div>
+                <h3>Relatório de Saúde</h3>
+                <p>Cadastros com doenças crônicas, uso de medicamentos contínuos, doenças mentais e deficiências.</p>
+                <a href="/relatorio_saude" class="btn">Ver Saúde</a>
+                <a href="/exportar?tipo=saude&formato=pdf" class="btn btn-warning">📄 PDF</a>
+                <a href="/exportar?tipo=saude&formato=csv" class="btn btn-success">📊 CSV</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

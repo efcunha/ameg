@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AMEG - Ficha de Cadastro</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .container { padding: 20px; max-width: 800px; margin: 0 auto; }
+        .ficha { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .section { margin: 30px 0; }
+        .section h3 { background: #3498db; color: white; padding: 10px; margin: 0 0 15px 0; border-radius: 5px; }
+        .field-row { display: flex; gap: 20px; margin-bottom: 15px; }
+        .field { flex: 1; }
+        .field label { font-weight: bold; color: #2c3e50; display: block; margin-bottom: 5px; }
+        .field span { display: block; padding: 8px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 3px; min-height: 20px; }
+        .logout { float: right; color: white; text-decoration: none; }
+        .print-btn { background: #27ae60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px 5px; display: inline-block; }
+        .print-btn:hover { background: #229954; }
+        @media print {
+            .header, .nav, .print-btn { display: none; }
+            body { background: white; }
+            .container { max-width: none; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AMEG - Ficha de Cadastro</h1>
+        <a href="/logout" class="logout">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/cadastrar">Novo Cadastro</a>
+        <a href="/relatorios">Relatórios</a>
+        <a href="/ficha_pdf/{{ cadastro[0] }}" class="print-btn">📋 Baixar PDF</a>
+        <a href="javascript:window.print()" class="print-btn">🖨️ Imprimir</a>
+    </div>
+    
+    <div class="container">
+        <div class="ficha">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2>AMEG - ASSOCIAÇÃO DOS AMBULANTES E TRABALHADORES EM GERAL DA PARAÍBA</h2>
+                <h3>FICHA DE CADASTRO FAMILIAR - ID: {{ cadastro[0] }}</h3>
+            </div>
+            
+            <div class="section">
+                <h3>1. DADOS DO TITULAR</h3>
+                
+                <div class="field">
+                    <label>Nome Completo:</label>
+                    <span>{{ cadastro[1] or '' }}</span>
+                </div>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>Endereço:</label>
+                        <span>{{ cadastro[2] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Bairro:</label>
+                        <span>{{ cadastro[3] or '' }}</span>
+                    </div>
+                </div>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>Telefone:</label>
+                        <span>{{ cadastro[4] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Ponto de Referência:</label>
+                        <span>{{ cadastro[5] or '' }}</span>
+                    </div>
+                </div>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>Gênero:</label>
+                        <span>{{ cadastro[6] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Idade:</label>
+                        <span>{{ cadastro[7] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Data Nascimento:</label>
+                        <span>{{ cadastro[11] or '' }}</span>
+                    </div>
+                </div>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>CPF:</label>
+                        <span>{{ cadastro[10] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>RG:</label>
+                        <span>{{ cadastro[12] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>NIS:</label>
+                        <span>{{ cadastro[14] or '' }}</span>
+                    </div>
+                </div>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>Estado Civil:</label>
+                        <span>{{ cadastro[13] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Escolaridade:</label>
+                        <span>{{ cadastro[15] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Profissão:</label>
+                        <span>{{ cadastro[16] or '' }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            {% if cadastro[17] %}
+            <div class="section">
+                <h3>DADOS DO COMPANHEIRO</h3>
+                
+                <div class="field">
+                    <label>Nome:</label>
+                    <span>{{ cadastro[17] or '' }}</span>
+                </div>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>CPF:</label>
+                        <span>{{ cadastro[18] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>RG:</label>
+                        <span>{{ cadastro[19] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Idade:</label>
+                        <span>{{ cadastro[23] or '' }}</span>
+                    </div>
+                </div>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>Profissão:</label>
+                        <span>{{ cadastro[25] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Escolaridade:</label>
+                        <span>{{ cadastro[24] or '' }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="section">
+                <h3>2. DADOS FAMILIARES E RENDA</h3>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>Nº Pessoas na Família:</label>
+                        <span>{{ cadastro[30] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Tipo de Trabalho:</label>
+                        <span>{{ cadastro[27] or '' }}</span>
+                    </div>
+                </div>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>Adultos:</label>
+                        <span>{{ cadastro[32] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Crianças:</label>
+                        <span>{{ cadastro[33] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Idosos:</label>
+                        <span>{{ cadastro[35] or '' }}</span>
+                    </div>
+                </div>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>Renda Familiar:</label>
+                        <span>{{ ("R$ %.2f"|format(cadastro[38])) if cadastro[38] else '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Renda Per Capita:</label>
+                        <span>{{ ("R$ %.2f"|format(cadastro[39])) if cadastro[39] else '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Bolsa Família:</label>
+                        <span>{{ ("R$ %.2f"|format(cadastro[40])) if cadastro[40] else '' }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>3. DADOS DA MORADIA</h3>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>Tipo da Casa:</label>
+                        <span>{{ cadastro[41] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Material:</label>
+                        <span>{{ cadastro[42] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Energia:</label>
+                        <span>{{ cadastro[43] or '' }}</span>
+                    </div>
+                </div>
+                
+                <div class="field-row">
+                    <div class="field">
+                        <label>Água:</label>
+                        <span>{{ cadastro[45] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Esgoto:</label>
+                        <span>{{ cadastro[46] or '' }}</span>
+                    </div>
+                    <div class="field">
+                        <label>Lixo:</label>
+                        <span>{{ cadastro[44] or '' }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            {% if cadastro[47] %}
+            <div class="section">
+                <h3>OBSERVAÇÕES</h3>
+                <div class="field">
+                    <span>{{ cadastro[47] or '' }}</span>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div style="margin-top: 30px; text-align: center; color: #666;">
+                <p><strong>Data do Cadastro:</strong> {{ cadastro[48] }}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

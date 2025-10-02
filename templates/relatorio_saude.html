@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AMEG - Relatório de Saúde</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .container { padding: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 2em; font-weight: bold; color: #e74c3c; }
+        table { width: 100%; background: white; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; font-size: 12px; }
+        th { background: #e74c3c; color: white; }
+        .logout { float: right; color: white; text-decoration: none; }
+        .export-btn { background: #27ae60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px; display: inline-block; }
+        .health-tag { background: #e74c3c; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin: 1px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AMEG - Relatório de Saúde</h1>
+        <a href="/logout" class="logout">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/relatorios">← Voltar aos Relatórios</a>
+        <a href="/exportar?tipo=saude&formato=pdf" class="export-btn" style="background: #e74c3c;">📋 PDF</a>
+        <a href="/exportar?tipo=saude&formato=csv" class="export-btn">📊 CSV</a>
+    </div>
+    
+    <div class="container">
+        <h3>🏥 Estatísticas de Saúde</h3>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.com_doenca_cronica }}</div>
+                <div>Doenças Crônicas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.usa_medicamento }}</div>
+                <div>Uso Contínuo de Medicamentos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.com_doenca_mental }}</div>
+                <div>Doenças Mentais</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.com_deficiencia }}</div>
+                <div>Deficiências</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.precisa_cuidados }}</div>
+                <div>Cuidados Especiais</div>
+            </div>
+        </div>
+        
+        <h3>📋 Cadastros com Necessidades de Saúde</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Idade</th>
+                    <th>Telefone</th>
+                    <th>Bairro</th>
+                    <th>Doenças Crônicas</th>
+                    <th>Medicamentos</th>
+                    <th>Saúde Mental</th>
+                    <th>Deficiência</th>
+                    <th>Cuidados Especiais</th>
+                    <th>Arquivos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cadastro in cadastros %}
+                <tr>
+                    <td>{{ cadastro[0] }}</td>
+                    <td>{{ cadastro[1] }}</td>
+                    <td>{{ cadastro[2] or '-' }}</td>
+                    <td>{{ cadastro[3] or '-' }}</td>
+                    <td>{{ cadastro[4] or '-' }}</td>
+                    <td>
+                        {% if cadastro[5] == 'Sim' %}
+                            <span class="health-tag">{{ cadastro[6] or 'Não especificado' }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if cadastro[7] == 'Sim' %}
+                            <span class="health-tag">{{ cadastro[8] or 'Não especificado' }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if cadastro[9] == 'Sim' %}
+                            <span class="health-tag">{{ cadastro[10] or 'Não especificado' }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if cadastro[11] == 'Sim' %}
+                            <span class="health-tag">{{ cadastro[12] or 'Não especificado' }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if cadastro[13] == 'Sim' %}
+                            <span class="health-tag">{{ cadastro[14] or 'Não especificado' }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/arquivos_saude/{{ cadastro[0] }}" style="color: #3498db; text-decoration: none;">📁 Ver Arquivos</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if not cadastros %}
+        <div style="text-align: center; padding: 40px; background: white; border-radius: 10px; margin-top: 20px;">
+            <h4>✅ Nenhum cadastro com necessidades especiais de saúde encontrado</h4>
+            <p>Todos os cadastrados estão sem problemas de saúde reportados.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

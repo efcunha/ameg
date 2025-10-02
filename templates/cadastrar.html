@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AMEG - Novo Cadastro</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .container { padding: 20px; max-width: 800px; margin: 0 auto; }
+        .form-card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .form-row { display: flex; gap: 20px; margin-bottom: 15px; }
+        .form-group { flex: 1; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .btn { background: #27ae60; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        .btn:hover { background: #229954; }
+        .logout { float: right; color: white; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AMEG - Novo Cadastro</h1>
+        <a href="/logout" class="logout">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/cadastrar">Novo Cadastro</a>
+        <a href="/relatorios">Relatórios</a>
+        <a href="/exportar">Exportar CSV</a>
+    </div>
+    
+    <div class="container">
+        <div class="form-card">
+            <h2>Cadastro Familiar</h2>
+            
+            <form method="POST" enctype="multipart/form-data">
+                <h3>1. DADOS DO TITULAR</h3>
+                
+                <div class="form-group">
+                    <label>Nome Completo *</label>
+                    <input type="text" name="nome_completo" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Endereço</label>
+                        <input type="text" name="endereco">
+                    </div>
+                    <div class="form-group">
+                        <label>Bairro</label>
+                        <input type="text" name="bairro">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Telefone</label>
+                        <input type="text" name="telefone">
+                    </div>
+                    <div class="form-group">
+                        <label>Ponto de Referência</label>
+                        <input type="text" name="ponto_referencia">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Gênero</label>
+                        <select name="genero">
+                            <option value="">Selecione</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Feminino</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Idade</label>
+                        <input type="number" name="idade">
+                    </div>
+                    <div class="form-group">
+                        <label>Data Nascimento</label>
+                        <input type="date" name="data_nascimento">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nº Título de Eleitor</label>
+                        <input type="text" name="titulo_eleitor">
+                    </div>
+                    <div class="form-group">
+                        <label>Cidade Emissão Título</label>
+                        <input type="text" name="cidade_titulo">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>CPF</label>
+                        <input type="text" name="cpf">
+                    </div>
+                    <div class="form-group">
+                        <label>RG</label>
+                        <input type="text" name="rg">
+                    </div>
+                    <div class="form-group">
+                        <label>NIS</label>
+                        <input type="text" name="nis">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Estado Civil</label>
+                        <select name="estado_civil">
+                            <option value="">Selecione</option>
+                            <option value="Solteiro">Solteiro(a)</option>
+                            <option value="Casado">Casado(a)</option>
+                            <option value="Divorciado">Divorciado(a)</option>
+                            <option value="Viúvo">Viúvo(a)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Escolaridade</label>
+                        <input type="text" name="escolaridade">
+                    </div>
+                    <div class="form-group">
+                        <label>Profissão</label>
+                        <input type="text" name="profissao">
+                    </div>
+                </div>
+                
+                <h3>DADOS DO COMPANHEIRO</h3>
+                
+                <div class="form-group">
+                    <label>Nome Companheiro</label>
+                    <input type="text" name="nome_companheiro">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>CPF Companheiro</label>
+                        <input type="text" name="cpf_companheiro">
+                    </div>
+                    <div class="form-group">
+                        <label>RG Companheiro</label>
+                        <input type="text" name="rg_companheiro">
+                    </div>
+                    <div class="form-group">
+                        <label>Idade Companheiro</label>
+                        <input type="number" name="idade_companheiro">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Título Eleitor Companheiro</label>
+                        <input type="text" name="titulo_companheiro">
+                    </div>
+                    <div class="form-group">
+                        <label>Cidade Título Companheiro</label>
+                        <input type="text" name="cidade_titulo_companheiro">
+                    </div>
+                    <div class="form-group">
+                        <label>NIS Companheiro</label>
+                        <input type="text" name="nis_companheiro">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Escolaridade Companheiro</label>
+                        <input type="text" name="escolaridade_companheiro">
+                    </div>
+                    <div class="form-group">
+                        <label>Profissão Companheiro</label>
+                        <input type="text" name="profissao_companheiro">
+                    </div>
+                    <div class="form-group">
+                        <label>Data Nascimento Companheiro</label>
+                        <input type="date" name="data_nascimento_companheiro">
+                    </div>
+                </div>
+                
+                <h3>2. DADOS DE RENDA FAMILIAR</h3>
+                
+                <div class="form-group">
+                    <label>Tipo de Trabalho</label>
+                    <select name="tipo_trabalho">
+                        <option value="">Selecione</option>
+                        <option value="Assalariado com carteira">Assalariado com carteira</option>
+                        <option value="Assalariado sem carteira">Assalariado sem carteira</option>
+                        <option value="Trabalhador Autônomo">Trabalhador Autônomo</option>
+                        <option value="Aposentado">Aposentado</option>
+                        <option value="Pensionista">Pensionista</option>
+                        <option value="BPC">BPC</option>
+                        <option value="Funcionário Público">Funcionário Público</option>
+                        <option value="Desempregado">Desempregado</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantas pessoas trabalham?</label>
+                        <input type="number" name="pessoas_trabalham">
+                    </div>
+                    <div class="form-group">
+                        <label>Quantos Aposentados/Pensionistas?</label>
+                        <input type="number" name="aposentados_pensionistas">
+                    </div>
+                </div>
+                
+                <h3>3. DETALHAMENTO FAMILIAR</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nº Pessoas na Família</label>
+                        <input type="number" name="num_pessoas_familia">
+                    </div>
+                    <div class="form-group">
+                        <label>Nº de Famílias</label>
+                        <select name="num_familias">
+                            <option value="">Selecione</option>
+                            <option value="1 Família">1 Família</option>
+                            <option value="2 Famílias">2 Famílias</option>
+                            <option value="mais de 2 famílias">Mais de 2 famílias</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Adultos</label>
+                        <input type="number" name="adultos">
+                    </div>
+                    <div class="form-group">
+                        <label>Crianças</label>
+                        <input type="number" name="criancas">
+                    </div>
+                    <div class="form-group">
+                        <label>Adolescentes</label>
+                        <input type="number" name="adolescentes">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Idosos</label>
+                        <input type="number" name="idosos">
+                    </div>
+                    <div class="form-group">
+                        <label>Gestantes</label>
+                        <input type="number" name="gestantes">
+                    </div>
+                    <div class="form-group">
+                        <label>Nutrizes</label>
+                        <input type="number" name="nutrizes">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Renda Familiar Bruta (R$)</label>
+                        <input type="number" step="0.01" name="renda_familiar">
+                    </div>
+                    <div class="form-group">
+                        <label>Renda Per Capita (R$)</label>
+                        <input type="number" step="0.01" name="renda_per_capita">
+                    </div>
+                    <div class="form-group">
+                        <label>Bolsa Família (R$)</label>
+                        <input type="number" step="0.01" name="bolsa_familia">
+                    </div>
+                </div>
+                
+                <h3>DADOS DA MORADIA</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Casa</label>
+                        <select name="casa_tipo">
+                            <option value="">Selecione</option>
+                            <option value="própria">Própria</option>
+                            <option value="alugada">Alugada</option>
+                            <option value="cedida">Cedida</option>
+                            <option value="invadida">Invadida</option>
+                            <option value="compartilhada">Compartilhada</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo Material</label>
+                        <select name="casa_material">
+                            <option value="">Selecione</option>
+                            <option value="alvenaria">Alvenaria</option>
+                            <option value="mista">Mista</option>
+                            <option value="taipa">Taipa</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Energia</label>
+                        <select name="energia">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Lixo</label>
+                        <select name="lixo">
+                            <option value="">Selecione</option>
+                            <option value="coletado">Coletado</option>
+                            <option value="queimado">Queimado</option>
+                            <option value="enterrado">Enterrado</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Água</label>
+                        <select name="agua">
+                            <option value="">Selecione</option>
+                            <option value="encanada">Encanada</option>
+                            <option value="poço">Poço</option>
+                            <option value="cisterna">Cisterna</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Esgoto</label>
+                        <select name="esgoto">
+                            <option value="">Selecione</option>
+                            <option value="saneado">Saneado</option>
+                            <option value="fossa">Fossa</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Observações</label>
+                    <textarea name="observacoes" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                </div>
+                
+                <h3>DADOS DE SAÚDE</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tem doença crônica?</label>
+                        <select name="tem_doenca_cronica" onchange="toggleField(this, 'doencas_cronicas')">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quais doenças crônicas?</label>
+                        <input type="text" name="doencas_cronicas" id="doencas_cronicas" disabled placeholder="Ex: Diabetes, Hipertensão">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Usa medicamento contínuo?</label>
+                        <select name="usa_medicamento_continuo" onchange="toggleField(this, 'medicamentos_continuos')">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quais medicamentos?</label>
+                        <input type="text" name="medicamentos_continuos" id="medicamentos_continuos" disabled placeholder="Ex: Insulina, Captopril">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tem doença mental?</label>
+                        <select name="tem_doenca_mental" onchange="toggleField(this, 'doencas_mentais')">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quais doenças mentais?</label>
+                        <input type="text" name="doencas_mentais" id="doencas_mentais" disabled placeholder="Ex: Depressão, Ansiedade">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tem deficiência?</label>
+                        <select name="tem_deficiencia" onchange="toggleField(this, 'tipo_deficiencia')">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de deficiência?</label>
+                        <input type="text" name="tipo_deficiencia" id="tipo_deficiencia" disabled placeholder="Ex: Visual, Auditiva, Física">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Precisa de cuidados especiais?</label>
+                        <select name="precisa_cuidados_especiais" onchange="toggleField(this, 'cuidados_especiais')">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quais cuidados?</label>
+                        <input type="text" name="cuidados_especiais" id="cuidados_especiais" disabled placeholder="Ex: Fisioterapia, Acompanhamento médico">
+                    </div>
+                </div>
+                
+                <h3>ANEXOS DE SAÚDE</h3>
+                <p style="color: #666; font-size: 14px;">Anexe laudos médicos, receitas ou imagens relacionadas à saúde (PDF, PNG, JPG, DOC - máx. 16MB cada)</p>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📋 Laudo Médico</label>
+                        <input type="file" name="laudo" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+                        <input type="text" name="descricao_laudo" placeholder="Descrição do laudo (opcional)" style="margin-top: 5px;">
+                    </div>
+                    <div class="form-group">
+                        <label>💊 Receita Médica</label>
+                        <input type="file" name="receita" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+                        <input type="text" name="descricao_receita" placeholder="Descrição da receita (opcional)" style="margin-top: 5px;">
+                    </div>
+                    <div class="form-group">
+                        <label>📷 Imagem/Exame</label>
+                        <input type="file" name="imagem" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+                        <input type="text" name="descricao_imagem" placeholder="Descrição da imagem (opcional)" style="margin-top: 5px;">
+                    </div>
+                </div>
+                
+                <script>
+                function toggleField(select, targetId) {
+                    const target = document.getElementById(targetId);
+                    if (select.value === 'Sim') {
+                        target.disabled = false;
+                        target.style.backgroundColor = '#fff';
+                    } else {
+                        target.disabled = true;
+                        target.value = '';
+                        target.style.backgroundColor = '#f5f5f5';
+                    }
+                }
+                </script>
+                
+                <button type="submit" class="btn">Salvar Cadastro</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

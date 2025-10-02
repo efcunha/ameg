@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AMEG - Arquivos de Saúde</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .container { padding: 20px; max-width: 1000px; margin: 0 auto; }
+        .upload-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .files-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+        .file-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        .file-icon { font-size: 2em; margin-bottom: 10px; }
+        .btn { background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; }
+        .btn-success { background: #27ae60; }
+        .btn-danger { background: #e74c3c; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .logout { float: right; color: white; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AMEG - Arquivos de Saúde</h1>
+        <a href="/logout" class="logout">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/relatorio_saude">← Voltar ao Relatório</a>
+    </div>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div style="padding: 15px; margin: 20px 0; background: #d4edda; color: #155724; border-radius: 5px;">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <h2>📁 Arquivos de Saúde - {{ cadastro[0] }}</h2>
+        
+        <div class="upload-card">
+            <h3>📤 Enviar Novo Arquivo</h3>
+            <form method="POST" action="/upload_arquivo/{{ cadastro_id }}" enctype="multipart/form-data">
+                <div style="display: flex; gap: 20px; align-items: end;">
+                    <div class="form-group" style="flex: 2;">
+                        <label>Arquivo:</label>
+                        <input type="file" name="arquivo" accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Tipo:</label>
+                        <select name="tipo_arquivo" required>
+                            <option value="">Selecione</option>
+                            <option value="laudo">📋 Laudo</option>
+                            <option value="receita">💊 Receita</option>
+                            <option value="exame">🔬 Exame</option>
+                            <option value="imagem">📷 Imagem</option>
+                            <option value="outros">📄 Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 2;">
+                        <label>Descrição:</label>
+                        <input type="text" name="descricao" placeholder="Descrição do arquivo">
+                    </div>
+                    <button type="submit" class="btn btn-success">Enviar</button>
+                </div>
+            </form>
+            <p style="color: #666; font-size: 12px; margin-top: 10px;">
+                Formatos aceitos: PDF, PNG, JPG, GIF, DOC, DOCX | Tamanho máximo: 16MB
+            </p>
+        </div>
+        
+        <h3>📂 Arquivos Anexados ({{ arquivos|length }})</h3>
+        
+        {% if arquivos %}
+        <div class="files-grid">
+            {% for arquivo in arquivos %}
+            <div class="file-card">
+                <div class="file-icon">
+                    {% if arquivo[2] == 'laudo' %}📋
+                    {% elif arquivo[2] == 'receita' %}💊
+                    {% elif arquivo[2] == 'exame' %}🔬
+                    {% elif arquivo[2] == 'imagem' %}📷
+                    {% else %}📄
+                    {% endif %}
+                </div>
+                <h4>{{ arquivo[1] }}</h4>
+                <p><strong>Tipo:</strong> {{ arquivo[2].title() }}</p>
+                {% if arquivo[5] %}
+                <p><strong>Descrição:</strong> {{ arquivo[5] }}</p>
+                {% endif %}
+                <p><small>Enviado em: {{ arquivo[6] }}</small></p>
+                <a href="/download_arquivo/{{ arquivo[0] }}" class="btn">📥 Download</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px; background: white; border-radius: 10px;">
+            <h4>📂 Nenhum arquivo anexado</h4>
+            <p>Use o formulário acima para enviar laudos, receitas ou imagens.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

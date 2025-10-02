@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AMEG - Relatório Estatístico</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .container { padding: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 2em; font-weight: bold; color: #3498db; }
+        .chart-section { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; font-weight: bold; }
+        .logout { float: right; color: white; text-decoration: none; }
+        .export-btn { background: #27ae60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AMEG - Relatório Estatístico</h1>
+        <a href="/logout" class="logout">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/relatorios">← Voltar aos Relatórios</a>
+        <a href="/exportar?tipo=estatistico&formato=pdf" class="export-btn" style="background: #e74c3c;">📋 PDF</a>
+    </div>
+    
+    <div class="container">
+        <h3>Estatísticas Gerais</h3>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.total }}</div>
+                <div>Total de Cadastros</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">R$ {{ "%.2f"|format(stats.renda_media) }}</div>
+                <div>Renda Média</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.homens }}</div>
+                <div>Homens</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.mulheres }}</div>
+                <div>Mulheres</div>
+            </div>
+        </div>
+        
+        <div class="chart-section">
+            <h4>📊 Distribuição por Faixa Etária</h4>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.menores }}</div>
+                    <div>Menores (0-17 anos)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.adultos }}</div>
+                    <div>Adultos (18-59 anos)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.idosos }}</div>
+                    <div>Idosos (60+ anos)</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-section">
+            <h4>🏠 Top 10 Bairros com Mais Cadastros</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Posição</th>
+                        <th>Bairro</th>
+                        <th>Quantidade</th>
+                        <th>Percentual</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bairro in stats.por_bairro %}
+                    <tr>
+                        <td>{{ loop.index }}º</td>
+                        <td>{{ bairro[0] }}</td>
+                        <td>{{ bairro[1] }}</td>
+                        <td>{{ "%.1f"|format((bairro[1] / stats.total * 100)) }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="chart-section">
+            <h4>📈 Resumo Demográfico</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Indicador</th>
+                        <th>Valor</th>
+                        <th>Observação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total de Cadastros</td>
+                        <td>{{ stats.total }}</td>
+                        <td>Famílias cadastradas</td>
+                    </tr>
+                    <tr>
+                        <td>Renda Média Familiar</td>
+                        <td>R$ {{ "%.2f"|format(stats.renda_media) }}</td>
+                        <td>Média das rendas informadas</td>
+                    </tr>
+                    <tr>
+                        <td>Proporção Homens/Mulheres</td>
+                        <td>{{ stats.homens }}/{{ stats.mulheres }}</td>
+                        <td>{{ "%.1f"|format((stats.homens / (stats.homens + stats.mulheres) * 100)) if (stats.homens + stats.mulheres) > 0 else 0 }}% / {{ "%.1f"|format((stats.mulheres / (stats.homens + stats.mulheres) * 100)) if (stats.homens + stats.mulheres) > 0 else 0 }}%</td>
+                    </tr>
+                    <tr>
+                        <td>População Economicamente Ativa</td>
+                        <td>{{ stats.adultos }}</td>
+                        <td>Pessoas entre 18-59 anos</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
