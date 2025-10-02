@@ -1,166 +1,135 @@
 import os
-import sqlite3
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from werkzeug.security import generate_password_hash
 
 def get_db_connection():
-    """Conecta ao banco correto (PostgreSQL no Railway, SQLite local)"""
+    """Conecta ao PostgreSQL do Railway"""
     database_url = os.environ.get('DATABASE_URL')
-    if database_url:
-        # PostgreSQL (Railway)
-        conn = psycopg2.connect(database_url)
-        return conn, 'postgresql'
-    else:
-        # SQLite (local)
-        conn = sqlite3.connect('ameg.db')
-        conn.row_factory = sqlite3.Row
-        return conn, 'sqlite'
+    if not database_url:
+        raise Exception("DATABASE_URL não encontrada")
+    
+    conn = psycopg2.connect(database_url)
+    return conn, 'postgresql'
 
 def init_db_tables():
-    """Cria as tabelas necessárias"""
+    """Cria as tabelas necessárias no PostgreSQL"""
     conn, db_type = get_db_connection()
+    cursor = conn.cursor()
     
-    if db_type == 'postgresql':
-        cursor = conn.cursor()
-        
-        # Tabela usuarios
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS usuarios (
-                id SERIAL PRIMARY KEY,
-                usuario VARCHAR(50) UNIQUE NOT NULL,
-                senha VARCHAR(255) NOT NULL
-            )
-        ''')
-        
-        # Tabela cadastros
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS cadastros (
-                id SERIAL PRIMARY KEY,
-                nome_completo VARCHAR(255) NOT NULL,
-                endereco TEXT,
-                numero VARCHAR(10),
-                bairro VARCHAR(100),
-                cep VARCHAR(10),
-                telefone VARCHAR(20),
-                genero VARCHAR(20),
-                idade INTEGER,
-                cpf VARCHAR(14),
-                rg VARCHAR(20),
-                data_nascimento DATE,
-                estado_civil VARCHAR(30),
-                profissao VARCHAR(100),
-                renda_familiar DECIMAL(10,2),
-                num_pessoas_familia INTEGER,
-                tem_doenca_cronica VARCHAR(10),
-                doencas_cronicas TEXT,
-                usa_medicamento_continuo VARCHAR(10),
-                medicamentos_continuos TEXT,
-                tem_doenca_mental VARCHAR(10),
-                doencas_mentais TEXT,
-                tem_deficiencia VARCHAR(10),
-                deficiencias TEXT,
-                precisa_cuidados_especiais VARCHAR(10),
-                cuidados_especiais TEXT,
-                data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        # Tabela arquivos_saude
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS arquivos_saude (
-                id SERIAL PRIMARY KEY,
-                cadastro_id INTEGER,
-                nome_arquivo VARCHAR(255) NOT NULL,
-                tipo_arquivo VARCHAR(50),
-                caminho_arquivo TEXT NOT NULL,
-                data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (cadastro_id) REFERENCES cadastros (id)
-            )
-        ''')
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-    else:
-        # SQLite
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS usuarios (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario TEXT UNIQUE NOT NULL,
-                senha TEXT NOT NULL
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS cadastros (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nome_completo TEXT NOT NULL,
-                endereco TEXT,
-                numero TEXT,
-                bairro TEXT,
-                cep TEXT,
-                telefone TEXT,
-                genero TEXT,
-                idade INTEGER,
-                cpf TEXT,
-                rg TEXT,
-                data_nascimento TEXT,
-                estado_civil TEXT,
-                profissao TEXT,
-                renda_familiar REAL,
-                num_pessoas_familia INTEGER,
-                tem_doenca_cronica TEXT,
-                doencas_cronicas TEXT,
-                usa_medicamento_continuo TEXT,
-                medicamentos_continuos TEXT,
-                tem_doenca_mental TEXT,
-                doencas_mentais TEXT,
-                tem_deficiencia TEXT,
-                deficiencias TEXT,
-                precisa_cuidados_especiais TEXT,
-                cuidados_especiais TEXT,
-                data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS arquivos_saude (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                cadastro_id INTEGER,
-                nome_arquivo TEXT NOT NULL,
-                tipo_arquivo TEXT,
-                caminho_arquivo TEXT NOT NULL,
-                data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (cadastro_id) REFERENCES cadastros (id)
-            )
-        ''')
-        
-        conn.commit()
-        conn.close()
+    # Tabela usuarios
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id SERIAL PRIMARY KEY,
+            usuario VARCHAR(50) UNIQUE NOT NULL,
+            senha VARCHAR(255) NOT NULL
+        )
+    ''')
+    
+    # Tabela cadastros - TODOS os campos do formulário
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS cadastros (
+            id SERIAL PRIMARY KEY,
+            nome_completo VARCHAR(255) NOT NULL,
+            endereco TEXT,
+            numero VARCHAR(10),
+            bairro VARCHAR(100),
+            cep VARCHAR(10),
+            telefone VARCHAR(20),
+            ponto_referencia TEXT,
+            genero VARCHAR(20),
+            idade INTEGER,
+            data_nascimento DATE,
+            titulo_eleitor VARCHAR(20),
+            cidade_titulo VARCHAR(100),
+            cpf VARCHAR(14),
+            rg VARCHAR(20),
+            nis VARCHAR(20),
+            estado_civil VARCHAR(30),
+            escolaridade VARCHAR(100),
+            profissao VARCHAR(100),
+            nome_companheiro VARCHAR(255),
+            cpf_companheiro VARCHAR(14),
+            rg_companheiro VARCHAR(20),
+            idade_companheiro INTEGER,
+            escolaridade_companheiro VARCHAR(100),
+            profissao_companheiro VARCHAR(100),
+            data_nascimento_companheiro DATE,
+            titulo_companheiro VARCHAR(20),
+            cidade_titulo_companheiro VARCHAR(100),
+            nis_companheiro VARCHAR(20),
+            tipo_trabalho VARCHAR(100),
+            pessoas_trabalham INTEGER,
+            aposentados_pensionistas INTEGER,
+            num_pessoas_familia INTEGER,
+            num_familias INTEGER,
+            adultos INTEGER,
+            criancas INTEGER,
+            adolescentes INTEGER,
+            idosos INTEGER,
+            gestantes INTEGER,
+            nutrizes INTEGER,
+            renda_familiar DECIMAL(10,2),
+            renda_per_capita DECIMAL(10,2),
+            bolsa_familia VARCHAR(10),
+            casa_tipo VARCHAR(50),
+            casa_material VARCHAR(50),
+            energia VARCHAR(10),
+            lixo VARCHAR(10),
+            agua VARCHAR(10),
+            esgoto VARCHAR(10),
+            observacoes TEXT,
+            tem_doenca_cronica VARCHAR(10),
+            doencas_cronicas TEXT,
+            usa_medicamento_continuo VARCHAR(10),
+            medicamentos_continuos TEXT,
+            tem_doenca_mental VARCHAR(10),
+            doencas_mentais TEXT,
+            tem_deficiencia VARCHAR(10),
+            tipo_deficiencia TEXT,
+            precisa_cuidados_especiais VARCHAR(10),
+            cuidados_especiais TEXT,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Tabela arquivos_saude
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS arquivos_saude (
+            id SERIAL PRIMARY KEY,
+            cadastro_id INTEGER REFERENCES cadastros(id) ON DELETE CASCADE,
+            nome_arquivo VARCHAR(255) NOT NULL,
+            tipo_arquivo VARCHAR(50),
+            descricao TEXT,
+            data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 def create_admin_user():
-    """Cria usuário admin se não existir"""
-    conn, db_type = get_db_connection()
-    
-    if db_type == 'postgresql':
+    """Cria usuário admin padrão"""
+    try:
+        conn, db_type = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT COUNT(*) FROM usuarios WHERE usuario = %s', ('admin',))
-        if cursor.fetchone()[0] == 0:
-            admin_password = os.environ.get('ADMIN_PASSWORD', 'admin123')
-            senha_hash = generate_password_hash(admin_password)
-            cursor.execute('INSERT INTO usuarios (usuario, senha) VALUES (%s, %s)', ('admin', senha_hash))
-            conn.commit()
+        
+        # Verificar se admin já existe
+        cursor.execute('SELECT id FROM usuarios WHERE usuario = %s', ('admin',))
+        if cursor.fetchone():
+            cursor.close()
+            conn.close()
+            return
+        
+        # Criar admin
+        admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin@2024!Secure')
+        senha_hash = generate_password_hash(admin_password)
+        cursor.execute('INSERT INTO usuarios (usuario, senha) VALUES (%s, %s)', ('admin', senha_hash))
+        
+        conn.commit()
         cursor.close()
         conn.close()
-    else:
-        cursor = conn.cursor()
-        cursor.execute('SELECT COUNT(*) FROM usuarios WHERE usuario = ?', ('admin',))
-        if cursor.fetchone()[0] == 0:
-            senha_hash = generate_password_hash('admin123')
-            cursor.execute('INSERT INTO usuarios (usuario, senha) VALUES (?, ?)', ('admin', senha_hash))
-            conn.commit()
-        conn.close()
+        print("✅ Usuário admin criado")
+    except Exception as e:
+        print(f"Erro ao criar admin: {e}")

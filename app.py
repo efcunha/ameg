@@ -89,30 +89,41 @@ def cadastrar():
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        conn = get_db_connection()
-        c = cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
+        conn, cursor, db_type = get_db()
         
-        c.execute("""INSERT INTO cadastros (
+        cursor.execute("""INSERT INTO cadastros (
             nome_completo, endereco, numero, bairro, cep, telefone, ponto_referencia, genero, idade,
-            titulo_eleitor, cidade_titulo, cpf, data_nascimento, rg, estado_civil,
-            nis, escolaridade, profissao, nome_companheiro, cpf_companheiro, rg_companheiro,
-            titulo_companheiro, cidade_titulo_companheiro, nis_companheiro, idade_companheiro,
-            escolaridade_companheiro, profissao_companheiro, data_nascimento_companheiro,
-            tipo_trabalho, pessoas_trabalham, aposentados_pensionistas, num_pessoas_familia,
-            num_familias, adultos, criancas, adolescentes, idosos, gestantes, nutrizes,
-            renda_familiar, renda_per_capita, bolsa_familia, casa_tipo, casa_material,
-            energia, lixo, agua, esgoto, observacoes, tem_doenca_cronica, doencas_cronicas,
-            usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
-            tem_deficiencia, tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais
-        ) VALUES (?, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-        (request.form.get('nome_completo'), request.form.get('endereco'),
-         request.form.get('bairro'), request.form.get('numero'), request.form.get('cep'), request.form.get('telefone'),
-         request.form.get('ponto_referencia'), request.form.get('genero'),
-         request.form.get('idade'), request.form.get('titulo_eleitor'),
-         request.form.get('cidade_titulo'), request.form.get('cpf'),
-         request.form.get('data_nascimento'), request.form.get('rg'),
-         request.form.get('estado_civil'), request.form.get('nis'),
-         request.form.get('escolaridade'), request.form.get('profissao'),
+            data_nascimento, titulo_eleitor, cidade_titulo, cpf, rg, nis, estado_civil,
+            escolaridade, profissao, nome_companheiro, cpf_companheiro, rg_companheiro,
+            idade_companheiro, escolaridade_companheiro, profissao_companheiro, data_nascimento_companheiro,
+            titulo_companheiro, cidade_titulo_companheiro, nis_companheiro, tipo_trabalho,
+            pessoas_trabalham, aposentados_pensionistas, num_pessoas_familia, num_familias,
+            adultos, criancas, adolescentes, idosos, gestantes, nutrizes, renda_familiar,
+            renda_per_capita, bolsa_familia, casa_tipo, casa_material, energia, lixo, agua,
+            esgoto, observacoes, tem_doenca_cronica, doencas_cronicas, usa_medicamento_continuo,
+            medicamentos_continuos, tem_doenca_mental, doencas_mentais, tem_deficiencia,
+            tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+        (request.form.get('nome_completo'), request.form.get('endereco'), request.form.get('numero'),
+         request.form.get('bairro'), request.form.get('cep'), request.form.get('telefone'),
+         request.form.get('ponto_referencia'), request.form.get('genero'), request.form.get('idade'),
+         request.form.get('data_nascimento'), request.form.get('titulo_eleitor'), request.form.get('cidade_titulo'),
+         request.form.get('cpf'), request.form.get('rg'), request.form.get('nis'),
+         request.form.get('estado_civil'), request.form.get('escolaridade'), request.form.get('profissao'),
+         request.form.get('nome_companheiro'), request.form.get('cpf_companheiro'), request.form.get('rg_companheiro'),
+         request.form.get('idade_companheiro'), request.form.get('escolaridade_companheiro'), request.form.get('profissao_companheiro'),
+         request.form.get('data_nascimento_companheiro'), request.form.get('titulo_companheiro'), request.form.get('cidade_titulo_companheiro'),
+         request.form.get('nis_companheiro'), request.form.get('tipo_trabalho'), request.form.get('pessoas_trabalham'),
+         request.form.get('aposentados_pensionistas'), request.form.get('num_pessoas_familia'), request.form.get('num_familias'),
+         request.form.get('adultos'), request.form.get('criancas'), request.form.get('adolescentes'),
+         request.form.get('idosos'), request.form.get('gestantes'), request.form.get('nutrizes'),
+         request.form.get('renda_familiar'), request.form.get('renda_per_capita'), request.form.get('bolsa_familia'),
+         request.form.get('casa_tipo'), request.form.get('casa_material'), request.form.get('energia'),
+         request.form.get('lixo'), request.form.get('agua'), request.form.get('esgoto'),
+         request.form.get('observacoes'), request.form.get('tem_doenca_cronica'), request.form.get('doencas_cronicas'),
+         request.form.get('usa_medicamento_continuo'), request.form.get('medicamentos_continuos'), request.form.get('tem_doenca_mental'),
+         request.form.get('doencas_mentais'), request.form.get('tem_deficiencia'), request.form.get('tipo_deficiencia'),
+         request.form.get('precisa_cuidados_especiais'), request.form.get('cuidados_especiais')))
          request.form.get('nome_companheiro'), request.form.get('cpf_companheiro'),
          request.form.get('rg_companheiro'), request.form.get('titulo_companheiro'),
          request.form.get('cidade_titulo_companheiro'), request.form.get('nis_companheiro'),
