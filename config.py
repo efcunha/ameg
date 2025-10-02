@@ -16,3 +16,9 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     DATABASE_PATH = ':memory:'
+
+class RailwayConfig(Config):
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'railway-secret-key'
+    DEBUG = False
+    DATABASE_PATH = '/app/data/ameg.db'
+    UPLOAD_FOLDER = '/app/data/uploads/saude'

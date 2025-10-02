@@ -9,115 +9,123 @@ Sistema web para cadastro familiar da Associação dos Ambulantes e Trabalhadore
 - **Cadastro**: Formulário completo baseado no documento AMEG
 - **Relatórios**: Listagem e estatísticas dos cadastrados
 - **Exportação**: Download dos dados em CSV
+- **Deploy**: Suporte para Railway com PostgreSQL
 
 ## Como usar
 
-1. **Testar o sistema (recomendado):**
+### 1. Desenvolvimento Local
 ```bash
 cd /home/efcunha/GitHub/ameg
 ./testar.sh
 ```
 
-2. **Iniciar o sistema:**
+### 2. Produção Local
 ```bash
 cd /home/efcunha/GitHub/ameg
 source venv/bin/activate
 python run.py
 ```
 
-3. **Acessar o sistema:**
-- URL: http://localhost:5000
-- Usuário: `admin`
-- Senha: `admin123`
+### 3. Deploy no Railway
+```bash
+cd /home/efcunha/GitHub/ameg
+./deploy-railway.sh
+```
+
+## Acesso ao Sistema
+
+### Local
+- **URL**: http://localhost:5000
+- **Usuário**: `admin`
+- **Senha**: `admin123`
+
+### Railway (Produção)
+- **URL**: https://ameg-production-013f.up.railway.app/
+- **Usuário**: `admin`
+- **Senha**: `Admin@2024!Secure`
 
 ## Estrutura do Projeto
 
 ```
 ameg/
-├── app.py              # Aplicação principal Flask
-├── run.py              # Script para iniciar o servidor
-├── test_ameg.py        # Testes automatizados
-├── testar.sh           # Script executável para testes
-├── ameg.db             # Banco de dados SQLite (criado automaticamente)
-├── templates/          # Templates HTML
-│   ├── login.html
-│   ├── dashboard.html
-│   ├── cadastrar.html
-│   ├── relatorios.html
-│   └── relatorio_saude.html
-├── uploads/saude/      # Arquivos de saúde enviados
-└── venv/               # Ambiente virtual Python
+├── app.py                  # Aplicação principal Flask
+├── run.py                  # Script para iniciar o servidor
+├── database.py             # Módulo de banco PostgreSQL/SQLite
+├── db_helper.py            # Helper para consultas híbridas
+├── config.py               # Configurações por ambiente
+├── test_ameg.py            # Testes automatizados
+├── testar.sh               # Script executável para testes
+├── deploy-railway.sh       # Script de deploy Railway
+├── railway.json            # Configuração Railway
+├── railway.dockerfile      # Dockerfile para Railway
+├── requirements.txt        # Dependências Python
+├── ameg.db                 # Banco SQLite (local)
+├── templates/              # Templates HTML
+├── uploads/saude/          # Arquivos de saúde enviados
+└── venv/                   # Ambiente virtual Python
 ```
-
-## Campos do Cadastro
-
-- Nome completo
-- Endereço e bairro
-- Telefone
-- Gênero e idade
-- CPF, RG, data de nascimento
-- Estado civil
-- Profissão
-- Renda familiar
-- Número de pessoas na família
-- **Dados de Saúde**: Doenças crônicas, medicamentos, deficiências
-- **Upload de Arquivos**: Laudos médicos, receitas, imagens
 
 ## Banco de Dados
 
-O sistema usa SQLite com três tabelas:
+### Local (SQLite)
+- Arquivo: `ameg.db`
+- Criado automaticamente
+
+### Produção (PostgreSQL)
+- Railway PostgreSQL
+- Persistente e confiável
+- Configurado automaticamente
+
+### Tabelas
 - `usuarios`: Controle de acesso
 - `cadastros`: Dados dos cadastrados
 - `arquivos_saude`: Arquivos médicos enviados
 
-## Testes Automatizados
+## Deploy no Railway
 
-O sistema inclui uma suíte completa de testes automatizados:
-
-### Executar Testes
+### Pré-requisitos
 ```bash
-# Método mais simples
-./testar.sh
-
-# Ou manualmente
-source venv/bin/activate
-python test_ameg.py
+npm install -g @railway/cli
+railway login
 ```
 
-### Testes Incluídos
+### Deploy Automático
+```bash
+./deploy-railway.sh
+```
+
+### Variáveis de Ambiente (Railway)
+- `RAILWAY_ENVIRONMENT=true`
+- `ADMIN_PASSWORD=Admin@2024!Secure`
+- `SECRET_KEY=<gerada-automaticamente>`
+- `DATABASE_URL=<configurada-automaticamente>`
+
+## Campos do Cadastro
+
+- Nome completo, endereço, telefone
+- CPF, RG, data de nascimento
+- Estado civil, profissão, renda
+- **Dados de Saúde**: Doenças, medicamentos, deficiências
+- **Upload de Arquivos**: Laudos médicos, receitas
+
+## Testes Automatizados
+
+```bash
+./testar.sh
+```
+
+### Cobertura
 - ✅ Estrutura de arquivos
-- ✅ Banco de dados SQLite
+- ✅ Banco de dados
 - ✅ Templates HTML
-- ✅ Sistema de autenticação
+- ✅ Autenticação
 - ✅ Rotas da aplicação
 - ✅ Integração completa
 
-### Resultado dos Testes
-- Taxa de sucesso: 100%
-- 8 testes automatizados
-- Validação completa do sistema
+## Tecnologias
 
-## Deploy em Produção
-
-### Deploy Rápido com Docker
-```bash
-# 1. Configurar ambiente
-cp .env.example .env
-# Edite o SECRET_KEY no arquivo .env
-
-# 2. Deploy automático
-./deploy.sh
-
-# 3. Acessar aplicação
-# http://localhost (ou seu domínio)
-```
-
-### Deploy Manual
-Consulte o arquivo [DEPLOY.md](DEPLOY.md) para instruções detalhadas.
-
-## Relatórios
-
-- Total de cadastros
-- Renda média familiar
-- Listagem completa
-- Exportação para CSV
+- **Backend**: Flask (Python)
+- **Banco Local**: SQLite
+- **Banco Produção**: PostgreSQL
+- **Deploy**: Railway
+- **Frontend**: HTML/CSS/JavaScript

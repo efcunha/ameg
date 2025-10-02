@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, send_from_directory
-import sqlite3
+from database import get_db_connection, init_db_tables, create_admin_user
+from db_helper import get_db, execute_query
 import csv
 import io
 import os
@@ -10,8 +11,10 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 
 # Configuração baseada no ambiente
-config_name = os.environ.get('FLASK_ENV', 'development')
-if config_name == 'production':
+if os.environ.get('RAILWAY_ENVIRONMENT'):
+    from config import RailwayConfig
+    app.config.from_object(RailwayConfig)
+elif os.environ.get('FLASK_ENV') == 'production':
     from config import ProductionConfig
     app.config.from_object(ProductionConfig)
 else:
@@ -227,13 +230,9 @@ def fazer_login():
     usuario = request.form['usuario']
     senha = request.form['senha']
     
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('SELECT senha FROM usuarios WHERE usuario = ?', (usuario,))
-    user = c.fetchone()
-    conn.close()
+    users = execute_query('SELECT senha FROM usuarios WHERE usuario = ?', (usuario,), fetch=True)
     
-    if user and check_password_hash(user[0], senha):
+    if users and check_password_hash(users[0]['senha'], senha):
         session['usuario'] = usuario
         return redirect(url_for('dashboard'))
     else:
