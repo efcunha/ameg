@@ -36,13 +36,16 @@ python run.py
 ameg/
 ├── app.py              # Aplicação principal Flask
 ├── run.py              # Script para iniciar o servidor
+├── test_ameg.py        # Testes automatizados
+├── testar.sh           # Script executável para testes
 ├── ameg.db             # Banco de dados SQLite (criado automaticamente)
-├── ameg.csv            # Arquivo CSV original
 ├── templates/          # Templates HTML
 │   ├── login.html
 │   ├── dashboard.html
 │   ├── cadastrar.html
-│   └── relatorios.html
+│   ├── relatorios.html
+│   └── relatorio_saude.html
+├── uploads/saude/      # Arquivos de saúde enviados
 └── venv/               # Ambiente virtual Python
 ```
 
@@ -57,12 +60,15 @@ ameg/
 - Profissão
 - Renda familiar
 - Número de pessoas na família
+- **Dados de Saúde**: Doenças crônicas, medicamentos, deficiências
+- **Upload de Arquivos**: Laudos médicos, receitas, imagens
 
 ## Banco de Dados
 
-O sistema usa SQLite com duas tabelas:
+O sistema usa SQLite com três tabelas:
 - `usuarios`: Controle de acesso
 - `cadastros`: Dados dos cadastrados
+- `arquivos_saude`: Arquivos médicos enviados
 
 ## Testes Automatizados
 
@@ -90,6 +96,24 @@ python test_ameg.py
 - Taxa de sucesso: 100%
 - 8 testes automatizados
 - Validação completa do sistema
+
+## Deploy em Produção
+
+### Deploy Rápido com Docker
+```bash
+# 1. Configurar ambiente
+cp .env.example .env
+# Edite o SECRET_KEY no arquivo .env
+
+# 2. Deploy automático
+./deploy.sh
+
+# 3. Acessar aplicação
+# http://localhost (ou seu domínio)
+```
+
+### Deploy Manual
+Consulte o arquivo [DEPLOY.md](DEPLOY.md) para instruções detalhadas.
 
 ## Relatórios
 

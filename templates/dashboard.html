@@ -36,6 +36,9 @@
         <a href="/dashboard">Dashboard</a>
         <a href="/cadastrar">Novo Cadastro</a>
         <a href="/relatorios">Relatórios</a>
+        {% if session.usuario == 'admin' %}
+        <a href="/usuarios">Usuários</a>
+        {% endif %}
         <div class="export-menu">
             <a href="#" style="background: #27ae60;">Exportar ▼</a>
             <div class="export-dropdown">

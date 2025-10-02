@@ -8,17 +8,125 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.secret_key = 'ameg_secret_2024'
-app.config['UPLOAD_FOLDER'] = 'uploads/saude'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+# Configuração baseada no ambiente
+config_name = os.environ.get('FLASK_ENV', 'development')
+if config_name == 'production':
+    from config import ProductionConfig
+    app.config.from_object(ProductionConfig)
+else:
+    from config import DevelopmentConfig
+    app.config.from_object(DevelopmentConfig)
+
+# Fallback para desenvolvimento
+if not app.config.get('SECRET_KEY'):
+    app.config['SECRET_KEY'] = 'ameg_secret_2024'
+if not app.config.get('UPLOAD_FOLDER'):
+    app.config['UPLOAD_FOLDER'] = 'uploads/saude'
+if not app.config.get('MAX_CONTENT_LENGTH'):
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
+
+def get_db_connection():
+    """Conecta ao banco de dados"""
+    db_path = app.config.get('DATABASE_PATH', 'ameg.db')
+    
+    # Criar diretório se não existir
+    os.makedirs(os.path.dirname(db_path) if os.path.dirname(db_path) else '.', exist_ok=True)
+    
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    
+    # Verificar se tabelas existem, se não, criar
+    c = conn.cursor()
+    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='usuarios'")
+    if not c.fetchone():
+        init_db_tables(conn)
+    
+    return conn
+
+def init_db_tables(conn):
+    """Cria as tabelas do banco"""
+    c = conn.cursor()
+    
+    # Tabela de usuários
+    c.execute('''CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario TEXT UNIQUE NOT NULL,
+        senha TEXT NOT NULL
+    )''')
+    
+    # Tabela de cadastros
+    c.execute('''CREATE TABLE IF NOT EXISTS cadastros (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome_completo TEXT NOT NULL,
+        endereco TEXT,
+        bairro TEXT,
+        telefone TEXT,
+        genero TEXT,
+        idade INTEGER,
+        cpf TEXT,
+        rg TEXT,
+        data_nascimento TEXT,
+        estado_civil TEXT,
+        profissao TEXT,
+        renda_familiar REAL,
+        num_pessoas_familia INTEGER,
+        tem_doenca_cronica TEXT,
+        doencas_cronicas TEXT,
+        usa_medicamento_continuo TEXT,
+        medicamentos_continuos TEXT,
+        tem_doenca_mental TEXT,
+        doencas_mentais TEXT,
+        tem_deficiencia TEXT,
+        deficiencias TEXT,
+        precisa_cuidados_especiais TEXT,
+        cuidados_especiais TEXT,
+        data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
+    
+    # Tabela de arquivos de saúde
+    c.execute('''CREATE TABLE IF NOT EXISTS arquivos_saude (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cadastro_id INTEGER,
+        nome_arquivo TEXT NOT NULL,
+        tipo_arquivo TEXT,
+        caminho_arquivo TEXT NOT NULL,
+        data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (cadastro_id) REFERENCES cadastros (id)
+    )''')
+    
+    # Inserir usuário admin padrão
+    from werkzeug.security import generate_password_hash
+    import secrets
+    import string
+    
+    # Gerar senha complexa se não existir variável de ambiente
+    admin_password = os.environ.get('ADMIN_PASSWORD')
+    if not admin_password:
+        # Gerar senha aleatória complexa
+        chars = string.ascii_letters + string.digits + "!@#$%&*"
+        admin_password = ''.join(secrets.choice(chars) for _ in range(16))
+        print(f"SENHA ADMIN GERADA: {admin_password}")
+    
+    senha_hash = generate_password_hash(admin_password)
+    
+    # Remover admin existente e inserir novo
+    c.execute('DELETE FROM usuarios WHERE usuario = ?', ('admin',))
+    c.execute('INSERT INTO usuarios (usuario, senha) VALUES (?, ?)', ('admin', senha_hash))
+    
+    conn.commit()
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def init_db():
-    conn = sqlite3.connect('ameg.db')
+    """Inicializa o banco de dados (compatibilidade)"""
+    db_path = app.config.get('DATABASE_PATH', 'ameg.db')
+    conn = sqlite3.connect(db_path)
+    init_db_tables(conn)
+    conn.close()
     c = conn.cursor()
     
     c.execute("""CREATE TABLE IF NOT EXISTS usuarios (
@@ -119,7 +227,7 @@ def fazer_login():
     usuario = request.form['usuario']
     senha = request.form['senha']
     
-    conn = sqlite3.connect('ameg.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('SELECT senha FROM usuarios WHERE usuario = ?', (usuario,))
     user = c.fetchone()
@@ -142,7 +250,7 @@ def dashboard():
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn = sqlite3.connect('ameg.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('SELECT COUNT(*) FROM cadastros')
     total = c.fetchone()[0]
@@ -159,7 +267,7 @@ def cadastrar():
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        conn = sqlite3.connect('ameg.db')
+        conn = get_db_connection()
         c = conn.cursor()
         
         c.execute("""INSERT INTO cadastros (
@@ -245,7 +353,7 @@ def relatorio_saude():
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn = sqlite3.connect('ameg.db')
+    conn = get_db_connection()
     c = conn.cursor()
     
     c.execute('SELECT COUNT(*) FROM cadastros WHERE tem_doenca_cronica = "Sim"')
@@ -290,7 +398,7 @@ def arquivos_saude(cadastro_id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn = sqlite3.connect('ameg.db')
+    conn = get_db_connection()
     c = conn.cursor()
     
     c.execute('SELECT nome_completo FROM cadastros WHERE id = ?', (cadastro_id,))
@@ -312,7 +420,7 @@ def download_arquivo(arquivo_id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn = sqlite3.connect('ameg.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('SELECT nome_arquivo, caminho_arquivo FROM arquivos_saude WHERE id = ?', (arquivo_id,))
     arquivo = c.fetchone()
@@ -343,7 +451,7 @@ def upload_arquivo(cadastro_id):
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         
-        conn = sqlite3.connect('ameg.db')
+        conn = get_db_connection()
         c = conn.cursor()
         c.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, caminho_arquivo, descricao) VALUES (?, ?, ?, ?, ?)', 
                  (cadastro_id, file.filename, request.form.get('tipo_arquivo'), filepath, request.form.get('descricao')))
@@ -355,6 +463,63 @@ def upload_arquivo(cadastro_id):
         flash('Tipo de arquivo não permitido! Use: PDF, PNG, JPG, DOC, DOCX')
     
     return redirect(url_for('arquivos_saude', cadastro_id=cadastro_id))
+
+@app.route('/usuarios')
+def usuarios():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    # Apenas admin pode acessar
+    if session['usuario'] != 'admin':
+        flash('Acesso negado. Apenas administradores podem gerenciar usuários.')
+        return redirect(url_for('dashboard'))
+    
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('SELECT id, usuario FROM usuarios ORDER BY usuario')
+    usuarios = c.fetchall()
+    conn.close()
+    
+    return render_template('usuarios.html', usuarios=usuarios)
+
+@app.route('/criar_usuario', methods=['GET', 'POST'])
+def criar_usuario():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    # Apenas admin pode acessar
+    if session['usuario'] != 'admin':
+        flash('Acesso negado. Apenas administradores podem criar usuários.')
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        novo_usuario = request.form['usuario']
+        nova_senha = request.form['senha']
+        
+        if len(nova_senha) < 8:
+            flash('Senha deve ter pelo menos 8 caracteres')
+            return render_template('criar_usuario.html')
+        
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Verificar se usuário já existe
+        c.execute('SELECT id FROM usuarios WHERE usuario = ?', (novo_usuario,))
+        if c.fetchone():
+            flash('Usuário já existe')
+            conn.close()
+            return render_template('criar_usuario.html')
+        
+        # Criar usuário
+        senha_hash = generate_password_hash(nova_senha)
+        c.execute('INSERT INTO usuarios (usuario, senha) VALUES (?, ?)', (novo_usuario, senha_hash))
+        conn.commit()
+        conn.close()
+        
+        flash('Usuário criado com sucesso')
+        return redirect(url_for('usuarios'))
+    
+    return render_template('criar_usuario.html')
 
 if __name__ == '__main__':
     init_db()
