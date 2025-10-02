@@ -92,7 +92,9 @@ def cadastrar():
         conn, db_type = get_db()
         cursor = conn.cursor()
         
-        cursor.execute("""INSERT INTO cadastros (
+        from db_helper import execute_query
+        
+        execute_query("""INSERT INTO cadastros (
             nome_completo, endereco, numero, bairro, cep, telefone, ponto_referencia, genero, idade,
             data_nascimento, titulo_eleitor, cidade_titulo, cpf, rg, nis, estado_civil,
             escolaridade, profissao, nome_companheiro, cpf_companheiro, rg_companheiro,
@@ -104,7 +106,7 @@ def cadastrar():
             esgoto, observacoes, tem_doenca_cronica, doencas_cronicas, usa_medicamento_continuo,
             medicamentos_continuos, tem_doenca_mental, doencas_mentais, tem_deficiencia,
             tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (request.form.get('nome_completo'), request.form.get('endereco'), request.form.get('numero'),
          request.form.get('bairro'), request.form.get('cep'), request.form.get('telefone'),
          request.form.get('ponto_referencia'), request.form.get('genero'), request.form.get('idade'),
@@ -126,8 +128,16 @@ def cadastrar():
          request.form.get('doencas_mentais'), request.form.get('tem_deficiencia'), request.form.get('tipo_deficiencia'),
          request.form.get('precisa_cuidados_especiais'), request.form.get('cuidados_especiais')))
         
-        conn.commit()
-        cadastro_id = cursor.lastrowid
+        # Para obter o ID do cadastro inserido, fazer uma query separada
+        conn, db_type = get_db()
+        cursor = conn.cursor()
+        
+        if db_type == 'postgresql':
+            cursor.execute('SELECT id FROM cadastros ORDER BY id DESC LIMIT 1')
+        else:
+            cursor.execute('SELECT last_insert_rowid()')
+        
+        cadastro_id = cursor.fetchone()[0]
         
         # Upload de arquivos
         uploaded_files = []
