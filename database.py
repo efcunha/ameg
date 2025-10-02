@@ -74,7 +74,7 @@ def init_db_tables():
             nutrizes INTEGER,
             renda_familiar DECIMAL(10,2),
             renda_per_capita DECIMAL(10,2),
-            bolsa_familia VARCHAR(10),
+            bolsa_familia DECIMAL(10,2),
             casa_tipo VARCHAR(50),
             casa_material VARCHAR(50),
             energia VARCHAR(10),
