@@ -37,7 +37,7 @@ def init_db_tables():
             cep VARCHAR(10),
             telefone VARCHAR(20),
             ponto_referencia TEXT,
-            genero VARCHAR(20),
+            genero VARCHAR(50),
             idade INTEGER,
             data_nascimento DATE,
             titulo_eleitor VARCHAR(20),
