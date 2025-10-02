@@ -43,7 +43,7 @@
                 
                 <div class="form-group">
                     <label>Nome Completo *</label>
-                    <input type="text" name="nome_completo" value="{{ cadastro[1] or ''}}" required>
+                    <input type="text" name="nome_completo" value="{{ cadastro.nome_completo or cadastro[1] or ''}}" required>
                 </div>
                 
                 <div class="form-row">
