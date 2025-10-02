@@ -357,12 +357,18 @@ def editar_cadastro(cadastro_id):
     conn, db_type = get_db()
     cursor = conn.cursor()
     
+    print(f"DEBUG: Buscando cadastro ID {cadastro_id}")
+    
     if db_type == 'postgresql':
         cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
     else:
         cursor.execute('SELECT * FROM cadastros WHERE id = ?', (cadastro_id,))
     
     cadastro = cursor.fetchone()
+    print(f"DEBUG: Cadastro encontrado: {cadastro is not None}")
+    if cadastro:
+        print(f"DEBUG: Dados do cadastro: {dict(cadastro) if hasattr(cadastro, 'keys') else 'Dados existem'}")
+    
     cursor.close()
     conn.close()
     
