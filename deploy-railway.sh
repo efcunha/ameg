@@ -1,6 +1,11 @@
 #!/bin/bash
 
 echo "🚂 Deploy AMEG no Railway"
+echo ""
+echo "⚠️  NOTA: Se houver problemas de timeout, use:"
+echo "   1. Railway Dashboard: https://railway.app/dashboard"
+echo "   2. Configure auto-deploy via GitHub"
+echo ""
 
 # Adicionar PATH do npm global
 export PATH=$PATH:/home/efcunha/.npm-global/bin
