@@ -26,6 +26,9 @@ def init_db_tables():
         )
     ''')
     
+    # Dropar e recriar tabela cadastros para garantir estrutura atualizada
+    cursor.execute('DROP TABLE IF EXISTS cadastros CASCADE')
+    
     # Tabela cadastros - TODOS os campos do formulário
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS cadastros (
