@@ -157,16 +157,16 @@ def cadastrar():
         if cadastro_id:
             for file_key in ['laudo', 'receita', 'imagem']:
                 if file_key in request.files:
-                file = request.files[file_key]
-                if file and file.filename and allowed_file(file.filename):
-                    filename = secure_filename(f"{cadastro_id}_{file_key}_{file.filename}")
-                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    file.save(filepath)
-                    
-                    descricao = request.form.get(f'descricao_{file_key}', '')
-                    cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, caminho_arquivo, descricao) VALUES (?, %s, %s, %s, %s)', 
-                             (cadastro_id, file.filename, file_key, filepath, descricao))
-                    uploaded_files.append(file_key)
+                    file = request.files[file_key]
+                    if file and file.filename and allowed_file(file.filename):
+                        filename = secure_filename(f"{cadastro_id}_{file_key}_{file.filename}")
+                        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                        file.save(filepath)
+                        
+                        descricao = request.form.get(f'descricao_{file_key}', '')
+                        cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, caminho_arquivo, descricao) VALUES (?, %s, %s, %s, %s)', 
+                                 (cadastro_id, file.filename, file_key, filepath, descricao))
+                        uploaded_files.append(file_key)
         
         conn.commit()
         conn.close()
