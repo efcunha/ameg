@@ -89,7 +89,8 @@ def cadastrar():
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        conn, cursor, db_type = get_db()
+        conn, db_type = get_db()
+        cursor = conn.cursor()
         
         cursor.execute("""INSERT INTO cadastros (
             nome_completo, endereco, numero, bairro, cep, telefone, ponto_referencia, genero, idade,
@@ -329,7 +330,8 @@ def editar_cadastro(cadastro_id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn, cursor, db_type = get_db()
+    conn, db_type = get_db()
+    cursor = conn.cursor()
     
     if db_type == 'postgresql':
         cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
@@ -351,7 +353,8 @@ def atualizar_cadastro(cadastro_id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn, cursor, db_type = get_db()
+    conn, db_type = get_db()
+    cursor = conn.cursor()
     
     # Campos do formulário
     campos = [
@@ -433,7 +436,8 @@ def deletar_cadastro(cadastro_id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn, cursor, db_type = get_db()
+    conn, db_type = get_db()
+    cursor = conn.cursor()
     
     try:
         # Deletar arquivos de saúde relacionados
