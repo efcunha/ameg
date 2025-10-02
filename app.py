@@ -124,30 +124,9 @@ def cadastrar():
          request.form.get('usa_medicamento_continuo'), request.form.get('medicamentos_continuos'), request.form.get('tem_doenca_mental'),
          request.form.get('doencas_mentais'), request.form.get('tem_deficiencia'), request.form.get('tipo_deficiencia'),
          request.form.get('precisa_cuidados_especiais'), request.form.get('cuidados_especiais')))
-         request.form.get('nome_companheiro'), request.form.get('cpf_companheiro'),
-         request.form.get('rg_companheiro'), request.form.get('titulo_companheiro'),
-         request.form.get('cidade_titulo_companheiro'), request.form.get('nis_companheiro'),
-         request.form.get('idade_companheiro'), request.form.get('escolaridade_companheiro'),
-         request.form.get('profissao_companheiro'), request.form.get('data_nascimento_companheiro'),
-         request.form.get('tipo_trabalho'), request.form.get('pessoas_trabalham'),
-         request.form.get('aposentados_pensionistas'), request.form.get('num_pessoas_familia'),
-         request.form.get('num_familias'), request.form.get('adultos'),
-         request.form.get('criancas'), request.form.get('adolescentes'),
-         request.form.get('idosos'), request.form.get('gestantes'),
-         request.form.get('nutrizes'), request.form.get('renda_familiar'),
-         request.form.get('renda_per_capita'), request.form.get('bolsa_familia'),
-         request.form.get('casa_tipo'), request.form.get('casa_material'),
-         request.form.get('energia'), request.form.get('lixo'),
-         request.form.get('agua'), request.form.get('esgoto'),
-         request.form.get('observacoes'), request.form.get('tem_doenca_cronica'),
-         request.form.get('doencas_cronicas'), request.form.get('usa_medicamento_continuo'),
-         request.form.get('medicamentos_continuos'), request.form.get('tem_doenca_mental'),
-         request.form.get('doencas_mentais'), request.form.get('tem_deficiencia'),
-         request.form.get('tipo_deficiencia'), request.form.get('precisa_cuidados_especiais'),
-         request.form.get('cuidados_especiais')))
         
         conn.commit()
-        cadastro_id = c.lastrowid
+        cadastro_id = cursor.lastrowid
         
         # Upload de arquivos
         uploaded_files = []
@@ -160,7 +139,7 @@ def cadastrar():
                     file.save(filepath)
                     
                     descricao = request.form.get(f'descricao_{file_key}', '')
-                    c.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, caminho_arquivo, descricao) VALUES (?, %s, %s, %s, %s)', 
+                    cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, caminho_arquivo, descricao) VALUES (?, %s, %s, %s, %s)', 
                              (cadastro_id, file.filename, file_key, filepath, descricao))
                     uploaded_files.append(file_key)
         
