@@ -37,7 +37,11 @@ def execute_query(query, params=None, fetch=False):
             return result
         else:
             conn.commit()
-            result = cursor.lastrowid if db_type == 'sqlite' else cursor.rowcount
+            if db_type == 'sqlite':
+                result = cursor.lastrowid
+            else:
+                # PostgreSQL - retornar número de linhas afetadas
+                result = cursor.rowcount
             conn.close()
             return result
     except Exception as e:
