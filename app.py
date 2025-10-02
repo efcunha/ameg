@@ -146,11 +146,16 @@ def cadastrar():
         else:
             cursor.execute('SELECT last_insert_rowid()')
         
-        cadastro_id = cursor.fetchone()[0]
+        result = cursor.fetchone()
+        if result:
+            cadastro_id = result[0]
+        else:
+            cadastro_id = None
         
         # Upload de arquivos
         uploaded_files = []
-        for file_key in ['laudo', 'receita', 'imagem']:
+        if cadastro_id:
+            for file_key in ['laudo', 'receita', 'imagem']:
             if file_key in request.files:
                 file = request.files[file_key]
                 if file and file.filename and allowed_file(file.filename):
