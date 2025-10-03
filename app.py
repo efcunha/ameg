@@ -399,7 +399,27 @@ def usuarios():
     if session['usuario'] != 'admin':
         flash('Acesso negado! Apenas administradores podem gerenciar usuários.')
         return redirect(url_for('dashboard'))
-    return render_template('usuarios.html')
+    
+    logger.info("📋 Carregando lista de usuários...")
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT id, usuario FROM usuarios ORDER BY usuario')
+        usuarios_lista = cursor.fetchall()
+        
+        logger.debug(f"Encontrados {len(usuarios_lista)} usuários")
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template('usuarios.html', usuarios=usuarios_lista)
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao carregar usuários: {e}")
+        flash('Erro ao carregar lista de usuários.')
+        return render_template('usuarios.html', usuarios=[])
 
 @app.route('/criar_usuario')
 def criar_usuario():
@@ -421,17 +441,37 @@ def salvar_usuario():
     novo_usuario = request.form['usuario']
     nova_senha = request.form['senha']
     
+    logger.info(f"👤 Criando novo usuário: {novo_usuario}")
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
+        # Verificar se usuário já existe
+        logger.debug("Verificando se usuário já existe...")
+        cursor.execute('SELECT id FROM usuarios WHERE usuario = %s', (novo_usuario,))
+        existing_user = cursor.fetchone()
+        
+        if existing_user:
+            logger.warning(f"⚠️ Usuário {novo_usuario} já existe")
+            flash(f'Usuário "{novo_usuario}" já existe!')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios'))
+        
         senha_hash = generate_password_hash(nova_senha)
+        logger.debug("Hash da senha gerado")
+        
         # No Railway sempre será PostgreSQL
         cursor.execute('INSERT INTO usuarios (usuario, senha) VALUES (%s, %s)', (novo_usuario, senha_hash))
+        logger.debug("Query INSERT executada")
         
         conn.commit()
+        logger.info(f"✅ Usuário {novo_usuario} criado com sucesso!")
         flash('Usuário criado com sucesso!')
     except Exception as e:
+        logger.error(f"❌ Erro ao criar usuário {novo_usuario}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         flash(f'Erro ao criar usuário: {str(e)}')
     
     cursor.close()
