@@ -500,28 +500,6 @@ def deletar_cadastro(cadastro_id):
     conn.close()
     return redirect(url_for('dashboard'))
 
-@app.route('/download_arquivo/<int:arquivo_id>')
-@login_required
-def download_arquivo(arquivo_id):
-    conn = get_db_connection()
-    cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
-    
-    cursor.execute('SELECT nome_arquivo, arquivo_dados FROM arquivos_saude WHERE id = %s', (arquivo_id,))
-    arquivo = cursor.fetchone()
-    
-    cursor.close()
-    conn.close()
-    
-    if arquivo:
-        return send_file(
-            io.BytesIO(arquivo[1]),
-            as_attachment=True,
-            download_name=arquivo[0]
-        )
-    else:
-        flash('Arquivo não encontrado!')
-        return redirect(url_for('dashboard'))
-
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     logger.info(f"🚀 Iniciando AMEG na porta {port}")
