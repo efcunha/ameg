@@ -44,13 +44,8 @@ def init_db_tables():
         ''')
         logger.debug("✅ Tabela usuarios criada/verificada")
         
-        # Dropar e recriar tabela cadastros para garantir estrutura atualizada
-        logger.debug("Recriando tabela cadastros...")
-        cursor.execute('DROP TABLE IF EXISTS cadastros CASCADE')
-        logger.debug("Tabela cadastros dropada (se existia)")
-        
         # Tabela cadastros - TODOS os campos do formulário
-        logger.debug("Criando nova tabela cadastros...")
+        logger.debug("Criando tabela cadastros...")
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS cadastros (
                 id SERIAL PRIMARY KEY,
