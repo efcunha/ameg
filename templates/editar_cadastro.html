@@ -936,5 +936,108 @@
             </form>
         </div>
     </div>
+
+    <script>
+    // Limites dos campos conforme definido na tabela do banco
+    const FIELD_LIMITS = {
+        'nome_completo': 255,
+        'numero': 10,
+        'bairro': 100,
+        'cep': 10,
+        'telefone': 20,
+        'titulo_eleitor': 20,
+        'cidade_titulo': 100,
+        'cpf': 14,
+        'rg': 20,
+        'nis': 20,
+        'estado_civil': 30,
+        'escolaridade': 100,
+        'profissao': 100,
+        'nome_companheiro': 255,
+        'cpf_companheiro': 14,
+        'rg_companheiro': 20,
+        'escolaridade_companheiro': 100,
+        'profissao_companheiro': 100,
+        'titulo_companheiro': 20,
+        'cidade_titulo_companheiro': 100,
+        'nis_companheiro': 20,
+        'tipo_trabalho': 100,
+        'casa_tipo': 50,
+        'casa_material': 50
+    };
+
+    // Função para validar campo em tempo real
+    function validateField(input) {
+        const fieldName = input.name;
+        const maxLength = FIELD_LIMITS[fieldName];
+        
+        if (maxLength && input.value.length > maxLength) {
+            input.style.borderColor = '#dc3545';
+            input.style.backgroundColor = '#fff5f5';
+            
+            // Remover aviso anterior se existir
+            let existingWarning = input.parentNode.querySelector('.length-warning');
+            if (existingWarning) {
+                existingWarning.remove();
+            }
+            
+            // Adicionar aviso
+            const warning = document.createElement('div');
+            warning.className = 'length-warning';
+            warning.style.color = '#dc3545';
+            warning.style.fontSize = '12px';
+            warning.style.marginTop = '2px';
+            warning.textContent = `Máximo ${maxLength} caracteres (atual: ${input.value.length})`;
+            input.parentNode.appendChild(warning);
+            
+            return false;
+        } else {
+            input.style.borderColor = '';
+            input.style.backgroundColor = '';
+            
+            // Remover aviso se existir
+            let existingWarning = input.parentNode.querySelector('.length-warning');
+            if (existingWarning) {
+                existingWarning.remove();
+            }
+            
+            return true;
+        }
+    }
+
+    // Adicionar validação em tempo real para todos os campos com limite
+    document.addEventListener('DOMContentLoaded', function() {
+        Object.keys(FIELD_LIMITS).forEach(fieldName => {
+            const input = document.querySelector(`[name="${fieldName}"]`);
+            if (input) {
+                input.addEventListener('input', function() {
+                    validateField(this);
+                });
+                
+                input.addEventListener('blur', function() {
+                    validateField(this);
+                });
+            }
+        });
+        
+        // Validação no envio do formulário
+        document.querySelector('form').addEventListener('submit', function(e) {
+            let hasErrors = false;
+            
+            Object.keys(FIELD_LIMITS).forEach(fieldName => {
+                const input = document.querySelector(`[name="${fieldName}"]`);
+                if (input && !validateField(input)) {
+                    hasErrors = true;
+                }
+            });
+            
+            if (hasErrors) {
+                e.preventDefault();
+                alert('Por favor, corrija os campos destacados antes de enviar o formulário.');
+                return false;
+            }
+        });
+    });
+    </script>
 </body>
 </html>
