@@ -85,13 +85,11 @@ def fazer_login():
     usuario = request.form['usuario']
     senha = request.form['senha']
     
-    conn, db_type = get_db_connection()
+    conn = get_db_connection()
     cursor = conn.cursor()
     
-    if db_type == 'postgresql':
-        cursor.execute('SELECT senha FROM usuarios WHERE usuario = %s', (usuario,))
-    else:
-        cursor.execute('SELECT senha FROM usuarios WHERE usuario = ?', (usuario,))
+    # No Railway sempre será PostgreSQL
+    cursor.execute('SELECT senha FROM usuarios WHERE usuario = %s', (usuario,))
     
     user = cursor.fetchone()
     cursor.close()
@@ -114,7 +112,7 @@ def dashboard():
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn, db_type = get_db_connection()
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT COUNT(*) FROM cadastros')
     total = cursor.fetchone()[0]
@@ -129,13 +127,20 @@ def dashboard():
 @app.route('/cadastrar', methods=['GET', 'POST'])
 def cadastrar():
     if 'usuario' not in session:
+        logger.debug("Usuário não logado tentando acessar /cadastrar")
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        conn, db_type = get_db()
-        cursor = conn.cursor()
+        logger.info("🆕 Iniciando novo cadastro...")
+        logger.debug(f"Dados recebidos: nome_completo={request.form.get('nome_completo')}")
         
-        execute_query("""INSERT INTO cadastros (
+        try:
+            conn, db_type = get_db()
+            cursor = conn.cursor()
+            logger.debug("Conexão com banco estabelecida para cadastro")
+            
+            logger.debug("Executando INSERT para novo cadastro...")
+            execute_query("""INSERT INTO cadastros (
             nome_completo, endereco, numero, bairro, cep, telefone, ponto_referencia, genero, idade,
             data_nascimento, titulo_eleitor, cidade_titulo, cpf, rg, nis, estado_civil,
             escolaridade, profissao, nome_companheiro, cpf_companheiro, rg_companheiro,
@@ -195,20 +200,32 @@ def cadastrar():
                 if file_key in request.files:
                     file = request.files[file_key]
                     if file and file.filename and allowed_file(file.filename):
+                        logger.debug(f"Processando arquivo: {file.filename} ({file_key})")
                         file_data = file.read()
                         descricao = request.form.get(f'descricao_{file_key}', '')
                         cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (%s, %s, %s, %s, %s)', 
                                  (cadastro_id, file.filename, file_key, file_data, descricao))
                         uploaded_files.append(file_key)
+                        logger.debug(f"Arquivo {file.filename} salvo com sucesso")
         
         conn.commit()
         conn.close()
+        logger.info("✅ Cadastro salvo com sucesso no banco")
         
         if uploaded_files:
+            logger.info(f"📎 Arquivos enviados: {', '.join(uploaded_files)}")
             flash(f'Cadastro realizado com sucesso! Arquivos enviados: {", ".join(uploaded_files)}')
         else:
             flash('Cadastro realizado com sucesso!')
         return redirect(url_for('dashboard'))
+        
+        except Exception as e:
+            logger.error(f"❌ Erro ao salvar cadastro: {e}")
+            logger.error(f"Tipo do erro: {type(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            flash('Erro ao salvar cadastro. Tente novamente.')
+            return redirect(url_for('cadastrar'))
     
     return render_template('cadastrar.html')
 
@@ -361,15 +378,13 @@ def salvar_usuario():
     novo_usuario = request.form['usuario']
     nova_senha = request.form['senha']
     
-    conn, db_type = get_db_connection()
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
         senha_hash = generate_password_hash(nova_senha)
-        if db_type == 'postgresql':
-            cursor.execute('INSERT INTO usuarios (usuario, senha) VALUES (%s, %s)', (novo_usuario, senha_hash))
-        else:
-            cursor.execute('INSERT INTO usuarios (usuario, senha) VALUES (?, ?)', (novo_usuario, senha_hash))
+        # No Railway sempre será PostgreSQL
+        cursor.execute('INSERT INTO usuarios (usuario, senha) VALUES (%s, %s)', (novo_usuario, senha_hash))
         
         conn.commit()
         flash('Usuário criado com sucesso!')
@@ -383,44 +398,60 @@ def salvar_usuario():
 @app.route('/editar_cadastro/<int:cadastro_id>')
 def editar_cadastro(cadastro_id):
     if 'usuario' not in session:
+        logger.debug("Usuário não logado tentando acessar /editar_cadastro")
         return redirect(url_for('login'))
     
-    conn, db_type = get_db()
-    cursor = conn.cursor()
-    
-    print(f"DEBUG: Buscando cadastro ID {cadastro_id}")
-    
-    if db_type == 'postgresql':
-        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
-    else:
-        cursor.execute('SELECT * FROM cadastros WHERE id = ?', (cadastro_id,))
-    
-    cadastro = cursor.fetchone()
-    print(f"DEBUG: Cadastro encontrado: {cadastro is not None}")
-    if cadastro:
+    logger.info(f"📝 Carregando cadastro para edição: ID {cadastro_id}")
+    try:
+        conn, db_type = get_db()
+        cursor = conn.cursor()
+        logger.debug(f"Buscando cadastro ID {cadastro_id}")
+        
+        if db_type == 'postgresql':
+            cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
+        else:
+            cursor.execute('SELECT * FROM cadastros WHERE id = ?', (cadastro_id,))
+        
+        cadastro = cursor.fetchone()
+        logger.debug(f"Cadastro encontrado: {cadastro is not None}")
+        if cadastro:
         print(f"DEBUG: Dados do cadastro: {dict(cadastro) if hasattr(cadastro, 'keys') else 'Dados existem'}")
     
-    cursor.close()
-    conn.close()
-    
-    if not cadastro:
-        flash('Cadastro não encontrado!')
+        cursor.close()
+        conn.close()
+        logger.info("✅ Cadastro carregado para edição")
+        
+        if not cadastro:
+            logger.warning(f"⚠️ Cadastro ID {cadastro_id} não encontrado")
+            flash('Cadastro não encontrado!')
+            return redirect(url_for('dashboard'))
+        
+        return render_template('editar_cadastro.html', cadastro=cadastro)
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao carregar cadastro para edição: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        flash('Erro ao carregar cadastro.')
         return redirect(url_for('dashboard'))
-    
-    return render_template('editar_cadastro.html', cadastro=cadastro)
 
 @app.route('/atualizar_cadastro/<int:cadastro_id>', methods=['POST'])
 def atualizar_cadastro(cadastro_id):
     if 'usuario' not in session:
+        logger.debug("Usuário não logado tentando acessar /atualizar_cadastro")
         return redirect(url_for('login'))
     
-    conn, db_type = get_db()
-    cursor = conn.cursor()
+    logger.info(f"💾 Atualizando cadastro ID {cadastro_id}")
+    logger.debug(f"Dados recebidos: nome_completo={request.form.get('nome_completo')}")
     
-    # Campos do formulário
-    campos = [
-        'nome_completo', 'endereco', 'numero', 'bairro', 'cep', 'telefone', 'ponto_referencia',
-        'genero', 'idade', 'data_nascimento', 'titulo_eleitor', 'cidade_titulo',
+    try:
+        conn, db_type = get_db()
+        cursor = conn.cursor()
+        logger.debug("Conexão estabelecida para atualização")
+        
+        # Campos do formulário
+        campos = [
+            'nome_completo', 'endereco', 'numero', 'bairro', 'cep', 'telefone', 'ponto_referencia',
+            'genero', 'idade', 'data_nascimento', 'titulo_eleitor', 'cidade_titulo',
         'cpf', 'rg', 'nis', 'estado_civil', 'escolaridade', 'profissao',
         'nome_companheiro', 'cpf_companheiro', 'rg_companheiro', 'idade_companheiro',
         'escolaridade_companheiro', 'profissao_companheiro', 'qtd_filhos',
@@ -495,27 +526,44 @@ def atualizar_cadastro(cadastro_id):
 @app.route('/deletar_cadastro/<int:cadastro_id>', methods=['POST'])
 def deletar_cadastro(cadastro_id):
     if 'usuario' not in session:
+        logger.debug("Usuário não logado tentando acessar /deletar_cadastro")
         return redirect(url_for('login'))
     
-    logger.info(f"Tentando deletar cadastro ID: {cadastro_id}")
+    logger.info(f"🗑️ Tentando deletar cadastro ID: {cadastro_id}")
     
     try:
         conn = get_db_connection()
-        cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
+        cursor = conn.cursor()
+        logger.debug("Conexão estabelecida para deleção")
         
-        # Deletar arquivos de saúde relacionados
+        # Deletar arquivos de saúde relacionados primeiro
+        logger.debug("Deletando arquivos de saúde relacionados...")
         cursor.execute('DELETE FROM arquivos_saude WHERE cadastro_id = %s', (cadastro_id,))
-        cursor.execute('DELETE FROM cadastros WHERE id = %s', (cadastro_id,))
+        arquivos_deletados = cursor.rowcount
+        logger.debug(f"Arquivos deletados: {arquivos_deletados}")
         
-        conn.commit()
-        logger.info(f"Cadastro {cadastro_id} deletado com sucesso")
-        flash('Cadastro deletado com sucesso!')
+        # Deletar o cadastro
+        logger.debug("Deletando cadastro principal...")
+        cursor.execute('DELETE FROM cadastros WHERE id = %s', (cadastro_id,))
+        cadastros_deletados = cursor.rowcount
+        
+        if cadastros_deletados > 0:
+            conn.commit()
+            logger.info(f"✅ Cadastro {cadastro_id} deletado com sucesso")
+            flash('Cadastro deletado com sucesso!')
+        else:
+            logger.warning(f"⚠️ Cadastro {cadastro_id} não encontrado para deleção")
+            flash('Cadastro não encontrado!')
+            
     except Exception as e:
-        logger.error(f"Erro ao deletar cadastro {cadastro_id}: {str(e)}")
+        logger.error(f"❌ Erro ao deletar cadastro {cadastro_id}: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         flash(f'Erro ao deletar cadastro: {str(e)}')
+    finally:
+        cursor.close()
+        conn.close()
+        logger.debug("Conexão fechada após deleção")
     
-    cursor.close()
-    conn.close()
     return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
