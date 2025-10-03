@@ -17,6 +17,11 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
     try:
         init_db_tables()
         create_admin_user()
+        
+        # Migração da tabela arquivos_saude
+        from migrate_db import migrate_arquivos_saude
+        migrate_arquivos_saude()
+        
         print("✅ Banco inicializado no Railway")
     except Exception as e:
         print(f"Erro na inicialização do banco: {e}")
