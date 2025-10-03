@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 8080
 
-CMD ["python", "test_railway.py"]
+CMD ["python", "app.py"]

@@ -147,10 +147,13 @@ def cadastrar():
             cursor.execute('SELECT last_insert_rowid()')
         
         result = cursor.fetchone()
+        print(f"DEBUG: result = {result}, type = {type(result)}")
         if result:
             cadastro_id = result[0]
+            print(f"DEBUG: cadastro_id = {cadastro_id}")
         else:
             cadastro_id = None
+            print("DEBUG: result is None")
         
         # Upload de arquivos
         uploaded_files = []
