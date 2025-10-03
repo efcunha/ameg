@@ -157,6 +157,65 @@ def init_db_tables():
         ''')
         logger.debug("✅ Tabela cadastros criada")
         
+        # Verificar e adicionar novos campos se não existirem
+        logger.debug("Verificando se novos campos de trabalho existem...")
+        cursor.execute("""
+            SELECT column_name FROM information_schema.columns 
+            WHERE table_name = 'cadastros' AND column_name = 'com_que_trabalha'
+        """)
+        campo_existe = cursor.fetchone()
+        
+        if not campo_existe:
+            logger.info("🔧 Adicionando novos campos de trabalho à tabela existente...")
+            
+            # Adicionar campos de atividade de trabalho
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS com_que_trabalha TEXT")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS onde_trabalha TEXT")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS horario_trabalho TEXT")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS tempo_atividade TEXT")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS atua_ponto_fixo VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS qual_ponto_fixo TEXT")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS dias_semana_trabalha INTEGER")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS trabalho_continuo_temporada VARCHAR(20)")
+            
+            # Adicionar campos de condições de trabalho
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS sofreu_acidente_trabalho VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS qual_acidente TEXT")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS trabalho_incomoda_calor VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS trabalho_incomoda_barulho VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS trabalho_incomoda_seguranca VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS trabalho_incomoda_banheiros VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS trabalho_incomoda_outro VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS trabalho_incomoda_outro_desc TEXT")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS acesso_banheiro_agua VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS trabalha_sozinho_ajudantes TEXT")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS possui_autorizacao_municipal VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS problemas_fiscalizacao_policia VARCHAR(10)")
+            
+            # Adicionar campos de estrutura de trabalho
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS estrutura_barraca VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS estrutura_carrinho VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS estrutura_mesa VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS estrutura_outro VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS estrutura_outro_desc TEXT")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS necessita_energia_eletrica VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS utiliza_gas_cozinha VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS usa_veiculo_proprio VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS qual_veiculo TEXT")
+            
+            # Adicionar campos de renda e família
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS fonte_renda_trabalho_ambulante VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS fonte_renda_aposentadoria VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS fonte_renda_outro_trabalho VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS fonte_renda_beneficio_social VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS fonte_renda_outro VARCHAR(10)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS fonte_renda_outro_desc TEXT")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS pessoas_dependem_renda INTEGER")
+            
+            logger.info("✅ Novos campos adicionados com sucesso!")
+        else:
+            logger.debug("✅ Campos de trabalho já existem na tabela")
+        
         # Tabela arquivos_saude
         logger.debug("Criando tabela arquivos_saude...")
         cursor.execute('''
