@@ -68,6 +68,27 @@
         </div>
         
         <h3>Últimos Cadastros</h3>
+        
+        <!-- Controles de pesquisa e ordenação -->
+        <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <div>
+                    <label for="search-input" style="font-weight: bold; margin-right: 5px;">Pesquisar:</label>
+                    <input type="text" id="search-input" placeholder="Digite o nome..." style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; width: 200px;">
+                </div>
+                <div>
+                    <label for="sort-select" style="font-weight: bold; margin-right: 5px;">Ordenar por:</label>
+                    <select id="sort-select" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        <option value="id-desc">ID (Mais recente)</option>
+                        <option value="id-asc">ID (Mais antigo)</option>
+                        <option value="nome-asc">Nome (A-Z)</option>
+                        <option value="nome-desc">Nome (Z-A)</option>
+                    </select>
+                </div>
+                <button onclick="clearFilters()" style="padding: 8px 15px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer;">Limpar</button>
+            </div>
+        </div>
+        
         <table>
             <thead>
                 <tr>
@@ -100,5 +121,70 @@
             </tbody>
         </table>
     </div>
+
+    <script>
+        // Função para pesquisar na tabela
+        function searchTable() {
+            const input = document.getElementById('search-input');
+            const filter = input.value.toLowerCase();
+            const table = document.querySelector('table tbody');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const nameCell = rows[i].getElementsByTagName('td')[1]; // Coluna do nome
+                if (nameCell) {
+                    const txtValue = nameCell.textContent || nameCell.innerText;
+                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                        rows[i].style.display = '';
+                    } else {
+                        rows[i].style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        // Função para ordenar a tabela
+        function sortTable() {
+            const select = document.getElementById('sort-select');
+            const [field, direction] = select.value.split('-');
+            const table = document.querySelector('table tbody');
+            const rows = Array.from(table.getElementsByTagName('tr'));
+
+            rows.sort((a, b) => {
+                let aVal, bVal;
+                
+                if (field === 'id') {
+                    aVal = parseInt(a.getElementsByTagName('td')[0].textContent);
+                    bVal = parseInt(b.getElementsByTagName('td')[0].textContent);
+                } else if (field === 'nome') {
+                    aVal = a.getElementsByTagName('td')[1].textContent.toLowerCase();
+                    bVal = b.getElementsByTagName('td')[1].textContent.toLowerCase();
+                }
+
+                if (direction === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            // Reordenar as linhas na tabela
+            rows.forEach(row => table.appendChild(row));
+        }
+
+        // Função para limpar filtros
+        function clearFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('sort-select').value = 'id-desc';
+            searchTable();
+            sortTable();
+        }
+
+        // Adicionar event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('search-input').addEventListener('keyup', searchTable);
+            document.getElementById('sort-select').addEventListener('change', sortTable);
+        });
+    </script>
 </body>
 </html>
