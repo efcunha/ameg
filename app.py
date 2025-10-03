@@ -146,8 +146,11 @@ def cadastrar():
         
         result = cursor.fetchone()
         if result:
-            # Handle both SQLite (tuple/Row) and PostgreSQL (dict) results
-            cadastro_id = result['id'] if isinstance(result, dict) else result[0]
+            # FIXED: Handle PostgreSQL dict vs SQLite tuple results
+            if hasattr(result, 'keys'):  # PostgreSQL RealDictCursor
+                cadastro_id = result['id']
+            else:  # SQLite Row or tuple
+                cadastro_id = result[0]
         else:
             cadastro_id = None
         
