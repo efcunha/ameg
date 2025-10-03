@@ -278,11 +278,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Quantas pessoas trabalham?</label>
-                        <input type="number" name="pessoas_trabalham" value="{{ cadastro[30] if cadastro and cadastro|length > 30 else '0' }}" required min="0">
+                        <input type="number" name="pessoas_trabalham" value="{{ cadastro.pessoas_trabalham if cadastro else '0' }}" required min="0">
                     </div>
                     <div class="form-group">
                         <label>Quantos Aposentados/Pensionistas?</label>
-                        <input type="number" name="aposentados_pensionistas" value="{{ cadastro[31] if cadastro and cadastro|length > 31 else '0' }}" required min="0">
+                        <input type="number" name="aposentados_pensionistas" value="{{ cadastro.aposentados_pensionistas if cadastro else '0' }}" required min="0">
                     </div>
                 </div>
                 
@@ -291,7 +291,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Nº Pessoas na Família</label>
-                        <input type="number" name="num_pessoas_familia" value="{{ cadastro[32] if cadastro and cadastro|length > 32 else '1' }}" required min="1">
+                        <input type="number" name="num_pessoas_familia" value="{{ cadastro.num_pessoas_familia if cadastro else '1' }}" required min="1">
                     </div>
                     <div class="form-group">
                         <label>Nº de Famílias</label>
@@ -307,45 +307,45 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Adultos</label>
-                        <input type="number" name="adultos" value="{{ cadastro[34] if cadastro and cadastro|length > 34 else '0' }}" required min="0">
+                        <input type="number" name="adultos" value="{{ cadastro.adultos if cadastro else '0' }}" required min="0">
                     </div>
                     <div class="form-group">
                         <label>Crianças</label>
-                        <input type="number" name="criancas" value="{{ cadastro[35] if cadastro and cadastro|length > 35 else '0' }}" required min="0">
+                        <input type="number" name="criancas" value="{{ cadastro.criancas if cadastro else '0' }}" required min="0">
                     </div>
                     <div class="form-group">
                         <label>Adolescentes</label>
-                        <input type="number" name="adolescentes" value="{{ cadastro[36] if cadastro and cadastro|length > 36 else '0' }}" required min="0">
+                        <input type="number" name="adolescentes" value="{{ cadastro.adolescentes if cadastro else '0' }}" required min="0">
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Idosos</label>
-                        <input type="number" name="idosos" value="{{ cadastro[37] if cadastro and cadastro|length > 37 else '0' }}" required min="0">
+                        <input type="number" name="idosos" value="{{ cadastro.idosos if cadastro else '0' }}" required min="0">
                     </div>
                     <div class="form-group">
                         <label>Gestantes</label>
-                        <input type="number" name="gestantes" value="{{ cadastro[38] if cadastro and cadastro|length > 38 else '0' }}" required min="0">
+                        <input type="number" name="gestantes" value="{{ cadastro.gestantes if cadastro else '0' }}" required min="0">
                     </div>
                     <div class="form-group">
                         <label>Nutrizes</label>
-                        <input type="number" name="nutrizes" value="{{ cadastro[39] if cadastro and cadastro|length > 39 else '0' }}" required min="0">
+                        <input type="number" name="nutrizes" value="{{ cadastro.nutrizes if cadastro else '0' }}" required min="0">
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Renda Familiar Bruta (R$)</label>
-                        <input type="number" step="0.01" name="renda_familiar" value="{{ cadastro[40] if cadastro and cadastro|length > 40 else '0' }}" required min="0">
+                        <input type="number" step="0.01" name="renda_familiar" value="{{ cadastro.renda_familiar if cadastro else '0' }}" required min="0">
                     </div>
                     <div class="form-group">
                         <label>Renda Per Capita (R$)</label>
-                        <input type="number" step="0.01" name="renda_per_capita" value="{{ cadastro[41] if cadastro and cadastro|length > 41 else '0' }}" required min="0">
+                        <input type="number" step="0.01" name="renda_per_capita" value="{{ cadastro.renda_per_capita if cadastro else '0' }}" required min="0">
                     </div>
                     <div class="form-group">
                         <label>Bolsa Família (R$)</label>
-                        <input type="number" step="0.01" name="bolsa_familia" value="{{ cadastro[42] if cadastro and cadastro|length > 42 else '0' }}" required min="0">
+                        <input type="number" step="0.01" name="bolsa_familia" value="{{ cadastro.bolsa_familia if cadastro else '0' }}" required min="0">
                     </div>
                 </div>
                 
