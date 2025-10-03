@@ -10,11 +10,7 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'ameg_secret_2024_fallback_key_change_in_production')
-app.config['UPLOAD_FOLDER'] = 'uploads/saude'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-
-# Criar diretório de uploads se não existir
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Inicializar banco na inicialização (apenas no Railway)
 if os.environ.get('RAILWAY_ENVIRONMENT'):
@@ -164,13 +160,10 @@ def cadastrar():
                 if file_key in request.files:
                     file = request.files[file_key]
                     if file and file.filename and allowed_file(file.filename):
-                        filename = secure_filename(f"{cadastro_id}_{file_key}_{file.filename}")
-                        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                        file.save(filepath)
-                        
+                        file_data = file.read()
                         descricao = request.form.get(f'descricao_{file_key}', '')
-                        cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, caminho_arquivo, descricao) VALUES (?, %s, %s, %s, %s)', 
-                                 (cadastro_id, file.filename, file_key, filepath, descricao))
+                        cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (%s, %s, %s, %s, %s)', 
+                                 (cadastro_id, file.filename, file_key, file_data, descricao))
                         uploaded_files.append(file_key)
         
         conn.commit()
@@ -289,14 +282,12 @@ def upload_arquivo(cadastro_id):
         return redirect(url_for('arquivos_saude', cadastro_id=cadastro_id))
     
     if file and allowed_file(file.filename):
-        filename = secure_filename(f"{cadastro_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}")
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
+        file_data = file.read()
         
         conn = get_db_connection()
         c = cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
-        c.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, caminho_arquivo, descricao) VALUES (?, %s, %s, %s, %s)', 
-                 (cadastro_id, file.filename, request.form.get('tipo_arquivo'), filepath, request.form.get('descricao')))
+        c.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (%s, %s, %s, %s, %s)', 
+                 (cadastro_id, file.filename, request.form.get('tipo_arquivo'), file_data, request.form.get('descricao')))
         conn.commit()
         conn.close()
         
@@ -491,6 +482,28 @@ def deletar_cadastro(cadastro_id):
     cursor.close()
     conn.close()
     return redirect(url_for('dashboard'))
+
+@app.route('/download_arquivo/<int:arquivo_id>')
+@login_required
+def download_arquivo(arquivo_id):
+    conn = get_db_connection()
+    cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
+    
+    cursor.execute('SELECT nome_arquivo, arquivo_dados FROM arquivos_saude WHERE id = %s', (arquivo_id,))
+    arquivo = cursor.fetchone()
+    
+    cursor.close()
+    conn.close()
+    
+    if arquivo:
+        return send_file(
+            io.BytesIO(arquivo[1]),
+            as_attachment=True,
+            download_name=arquivo[0]
+        )
+    else:
+        flash('Arquivo não encontrado!')
+        return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

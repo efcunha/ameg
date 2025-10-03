@@ -104,6 +104,7 @@ def init_db_tables():
             nome_arquivo VARCHAR(255) NOT NULL,
             tipo_arquivo VARCHAR(50),
             descricao TEXT,
+            arquivo_dados BYTEA,
             data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
