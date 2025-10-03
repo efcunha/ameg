@@ -24,6 +24,23 @@ logger.info(f"DATABASE_URL presente: {'DATABASE_URL' in os.environ}")
 # Inicializar banco na inicialização (apenas no Railway)
 if os.environ.get('RAILWAY_ENVIRONMENT'):
     try:
+        # Adicionar coluna arquivo_dados se não existir
+        conn = get_db_connection()
+        cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
+        
+        try:
+            cursor.execute("ALTER TABLE arquivos_saude ADD COLUMN arquivo_dados BYTEA")
+            conn.commit()
+            logger.info("Coluna arquivo_dados adicionada")
+        except Exception as e:
+            if "already exists" in str(e) or "duplicate column" in str(e):
+                logger.info("Coluna arquivo_dados já existe")
+            else:
+                logger.error(f"Erro ao adicionar coluna: {e}")
+        
+        cursor.close()
+        conn.close()
+        
         logger.info("✅ Banco inicializado no Railway (modo simplificado)")
     except Exception as e:
         logger.error(f"❌ Erro na inicialização do banco: {e}")
