@@ -500,6 +500,7 @@
                 <h3>ANEXOS DE SAÚDE</h3>
                 <p style="color: #666; font-size: 14px;">Anexe laudos médicos, receitas ou imagens relacionadas à saúde (PDF, PNG, JPG, DOC - máx. 16MB cada)</p>
                 
+                <!-- Campos para adicionar novos arquivos -->
                 <div class="form-row">
                     <div class="form-group">
                         <label>📋 Laudo Médico</label>
@@ -517,6 +518,57 @@
                         <input type="text" name="descricao_imagem" placeholder="Descrição da imagem (opcional)" style="margin-top: 5px;">
                     </div>
                 </div>
+                
+                <!-- Lista de arquivos existentes -->
+                {% if arquivos_saude %}
+                <div style="margin-top: 25px; background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #3498db;">
+                    <h4 style="margin-top: 0; color: #2c3e50; display: flex; align-items: center;">
+                        📁 Arquivos Anexados ({{ arquivos_saude|length }})
+                    </h4>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        {% for arquivo in arquivos_saude %}
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 8px; background: white; border-radius: 5px; border: 1px solid #dee2e6;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: bold; color: #2c3e50; margin-bottom: 4px;">
+                                    📎 {{ arquivo.nome_arquivo }}
+                                </div>
+                                {% if arquivo.descricao %}
+                                <div style="color: #666; font-size: 14px; margin-bottom: 4px;">
+                                    {{ arquivo.descricao }}
+                                </div>
+                                {% endif %}
+                                <div style="color: #999; font-size: 12px;">
+                                    📅 Enviado em: {{ arquivo.data_upload.strftime('%d/%m/%Y às %H:%M') if arquivo.data_upload else 'Data não disponível' }}
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <a href="/download_arquivo/{{ arquivo.id }}" 
+                                   style="background: #3498db; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; display: flex; align-items: center; gap: 4px;"
+                                   title="Baixar arquivo">
+                                    📥 Download
+                                </a>
+                                <a href="/excluir_arquivo/{{ arquivo.id }}" 
+                                   style="background: #e74c3c; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; display: flex; align-items: center; gap: 4px;"
+                                   onclick="return confirm('⚠️ Tem certeza que deseja excluir o arquivo \'{{ arquivo.nome_arquivo }}\'?\n\nEsta ação não pode ser desfeita.')"
+                                   title="Excluir arquivo">
+                                    🗑️ Excluir
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: #e8f4fd; border-radius: 4px; font-size: 13px; color: #2c3e50;">
+                        💡 <strong>Dica:</strong> Para atualizar um arquivo, exclua o arquivo antigo e adicione o novo arquivo usando os campos acima.
+                    </div>
+                </div>
+                {% else %}
+                <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+                    <div style="color: #856404; font-size: 14px;">
+                        📋 <strong>Nenhum arquivo anexado ainda.</strong><br>
+                        Use os campos acima para adicionar laudos médicos, receitas ou exames.
+                    </div>
+                </div>
+                {% endif %}
                 
                 <script>
                 function toggleField(select, targetId) {

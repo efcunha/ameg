@@ -553,24 +553,74 @@ def editar_cadastro(cadastro_id):
         
         cadastro = cursor.fetchone()
         logger.debug(f"Cadastro encontrado: {cadastro is not None}")
+        
+        # Buscar arquivos de saúde associados
+        arquivos_saude = []
         if cadastro:
-            logger.debug(f"Dados do cadastro: {dict(cadastro) if hasattr(cadastro, 'keys') else 'Dados existem'}")
+            logger.debug("Buscando arquivos de saúde...")
+            if db_type == 'postgresql':
+                cursor.execute('SELECT id, nome_arquivo, tipo_arquivo, descricao, data_upload FROM arquivos_saude WHERE cadastro_id = %s ORDER BY data_upload DESC', (cadastro_id,))
+            else:
+                cursor.execute('SELECT id, nome_arquivo, tipo_arquivo, descricao, data_upload FROM arquivos_saude WHERE cadastro_id = ? ORDER BY data_upload DESC', (cadastro_id,))
+            
+            arquivos_saude = cursor.fetchall()
+            logger.debug(f"Encontrados {len(arquivos_saude)} arquivos de saúde")
         
         cursor.close()
         conn.close()
-        logger.info("✅ Cadastro carregado para edição")
+        logger.info("✅ Cadastro e arquivos carregados para edição")
         
         if not cadastro:
             logger.warning(f"⚠️ Cadastro ID {cadastro_id} não encontrado")
             flash('Cadastro não encontrado!')
             return redirect(url_for('dashboard'))
         
-        return render_template('editar_cadastro.html', cadastro=cadastro)
+        return render_template('editar_cadastro.html', cadastro=cadastro, arquivos_saude=arquivos_saude)
         
     except Exception as e:
         logger.error(f"❌ Erro ao carregar cadastro para edição: {e}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         flash('Erro ao carregar cadastro.')
+        return redirect(url_for('dashboard'))
+
+@app.route('/excluir_arquivo/<int:arquivo_id>')
+def excluir_arquivo(arquivo_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        conn, db_type = get_db()
+        cursor = conn.cursor()
+        
+        # Buscar o cadastro_id antes de excluir
+        if db_type == 'postgresql':
+            cursor.execute('SELECT cadastro_id FROM arquivos_saude WHERE id = %s', (arquivo_id,))
+        else:
+            cursor.execute('SELECT cadastro_id FROM arquivos_saude WHERE id = ?', (arquivo_id,))
+        
+        result = cursor.fetchone()
+        if not result:
+            flash('Arquivo não encontrado!')
+            return redirect(url_for('dashboard'))
+        
+        cadastro_id = result[0] if isinstance(result, tuple) else result['cadastro_id']
+        
+        # Excluir o arquivo
+        if db_type == 'postgresql':
+            cursor.execute('DELETE FROM arquivos_saude WHERE id = %s', (arquivo_id,))
+        else:
+            cursor.execute('DELETE FROM arquivos_saude WHERE id = ?', (arquivo_id,))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        flash('Arquivo excluído com sucesso!')
+        return redirect(url_for('editar_cadastro', cadastro_id=cadastro_id))
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao excluir arquivo: {e}")
+        flash('Erro ao excluir arquivo.')
         return redirect(url_for('dashboard'))
 
 @app.route('/atualizar_cadastro/<int:cadastro_id>', methods=['POST'])
