@@ -167,45 +167,45 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>CPF Companheiro</label>
-                        <input type="text" name="cpf_companheiro">
+                        <input type="text" name="cpf_companheiro" value="{{ cadastro[20] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>RG Companheiro</label>
-                        <input type="text" name="rg_companheiro">
+                        <input type="text" name="rg_companheiro" value="{{ cadastro[21] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>Idade Companheiro</label>
-                        <input type="number" name="idade_companheiro">
+                        <input type="number" name="idade_companheiro" value="{{ cadastro[22] or '' }}">
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Título Eleitor Companheiro</label>
-                        <input type="text" name="titulo_companheiro">
+                        <input type="text" name="titulo_companheiro" value="{{ cadastro[26] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>Cidade Título Companheiro</label>
-                        <input type="text" name="cidade_titulo_companheiro">
+                        <input type="text" name="cidade_titulo_companheiro" value="{{ cadastro[27] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>NIS Companheiro</label>
-                        <input type="text" name="nis_companheiro">
+                        <input type="text" name="nis_companheiro" value="{{ cadastro[28] or '' }}">
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Escolaridade Companheiro</label>
-                        <input type="text" name="escolaridade_companheiro">
+                        <input type="text" name="escolaridade_companheiro" value="{{ cadastro[23] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>Profissão Companheiro</label>
-                        <input type="text" name="profissao_companheiro">
+                        <input type="text" name="profissao_companheiro" value="{{ cadastro[24] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>Data Nascimento Companheiro</label>
-                        <input type="date" name="data_nascimento_companheiro">
+                        <input type="date" name="data_nascimento_companheiro" value="{{ cadastro[25] or '' }}">
                     </div>
                 </div>
                 
@@ -230,11 +230,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Quantas pessoas trabalham?</label>
-                        <input type="number" name="pessoas_trabalham">
+                        <input type="number" name="pessoas_trabalham" value="{{ cadastro[30] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>Quantos Aposentados/Pensionistas?</label>
-                        <input type="number" name="aposentados_pensionistas">
+                        <input type="number" name="aposentados_pensionistas" value="{{ cadastro[31] or '' }}">
                     </div>
                 </div>
                 
@@ -243,7 +243,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Nº Pessoas na Família</label>
-                        <input type="number" name="num_pessoas_familia">
+                        <input type="number" name="num_pessoas_familia" value="{{ cadastro[32] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>Nº de Famílias</label>
@@ -259,45 +259,45 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Adultos</label>
-                        <input type="number" name="adultos">
+                        <input type="number" name="adultos" value="{{ cadastro[34] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>Crianças</label>
-                        <input type="number" name="criancas">
+                        <input type="number" name="criancas" value="{{ cadastro[35] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>Adolescentes</label>
-                        <input type="number" name="adolescentes">
+                        <input type="number" name="adolescentes" value="{{ cadastro[36] or '' }}">
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Idosos</label>
-                        <input type="number" name="idosos">
+                        <input type="number" name="idosos" value="{{ cadastro[37] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>Gestantes</label>
-                        <input type="number" name="gestantes">
+                        <input type="number" name="gestantes" value="{{ cadastro[38] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>Nutrizes</label>
-                        <input type="number" name="nutrizes">
+                        <input type="number" name="nutrizes" value="{{ cadastro[39] or '' }}">
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Renda Familiar Bruta (R$)</label>
-                        <input type="number" step="0.01" name="renda_familiar">
+                        <input type="number" step="0.01" name="renda_familiar" value="{{ cadastro[40] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>Renda Per Capita (R$)</label>
-                        <input type="number" step="0.01" name="renda_per_capita">
+                        <input type="number" step="0.01" name="renda_per_capita" value="{{ cadastro[41] or '' }}">
                     </div>
                     <div class="form-group">
                         <label>Bolsa Família (R$)</label>
-                        <input type="number" step="0.01" name="bolsa_familia">
+                        <input type="number" step="0.01" name="bolsa_familia" value="{{ cadastro[42] or '' }}">
                     </div>
                 </div>
                 
@@ -385,7 +385,7 @@
                     </div>
                     <div class="form-group">
                         <label>Quais doenças crônicas?</label>
-                        <input type="text" name="doencas_cronicas" id="doencas_cronicas" disabled placeholder="Ex: Diabetes, Hipertensão">
+                        <input type="text" name="doencas_cronicas" id="doencas_cronicas" value="{{ cadastro[51] or '' }}" disabled placeholder="Ex: Diabetes, Hipertensão">
                     </div>
                 </div>
                 
@@ -400,7 +400,7 @@
                     </div>
                     <div class="form-group">
                         <label>Quais medicamentos?</label>
-                        <input type="text" name="medicamentos_continuos" id="medicamentos_continuos" disabled placeholder="Ex: Insulina, Captopril">
+                        <input type="text" name="medicamentos_continuos" id="medicamentos_continuos" value="{{ cadastro[53] or '' }}" disabled placeholder="Ex: Insulina, Captopril">
                     </div>
                 </div>
                 
@@ -415,7 +415,7 @@
                     </div>
                     <div class="form-group">
                         <label>Quais doenças mentais?</label>
-                        <input type="text" name="doencas_mentais" id="doencas_mentais" disabled placeholder="Ex: Depressão, Ansiedade">
+                        <input type="text" name="doencas_mentais" id="doencas_mentais" value="{{ cadastro[55] or '' }}" disabled placeholder="Ex: Depressão, Ansiedade">
                     </div>
                 </div>
                 
@@ -430,7 +430,7 @@
                     </div>
                     <div class="form-group">
                         <label>Tipo de deficiência?</label>
-                        <input type="text" name="tipo_deficiencia" id="tipo_deficiencia" disabled placeholder="Ex: Visual, Auditiva, Física">
+                        <input type="text" name="tipo_deficiencia" id="tipo_deficiencia" value="{{ cadastro[57] or '' }}" disabled placeholder="Ex: Visual, Auditiva, Física">
                     </div>
                 </div>
                 
@@ -445,7 +445,7 @@
                     </div>
                     <div class="form-group">
                         <label>Quais cuidados?</label>
-                        <input type="text" name="cuidados_especiais" id="cuidados_especiais" disabled placeholder="Ex: Fisioterapia, Acompanhamento médico">
+                        <input type="text" name="cuidados_especiais" id="cuidados_especiais" value="{{ cadastro[59] or '' }}" disabled placeholder="Ex: Fisioterapia, Acompanhamento médico">
                     </div>
                 </div>
                 
