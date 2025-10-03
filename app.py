@@ -101,8 +101,6 @@ def cadastrar():
         conn, db_type = get_db()
         cursor = conn.cursor()
         
-        from db_helper import execute_query
-        
         execute_query("""INSERT INTO cadastros (
             nome_completo, endereco, numero, bairro, cep, telefone, ponto_referencia, genero, idade,
             data_nascimento, titulo_eleitor, cidade_titulo, cpf, rg, nis, estado_civil,
@@ -147,13 +145,11 @@ def cadastrar():
             cursor.execute('SELECT last_insert_rowid()')
         
         result = cursor.fetchone()
-        print(f"DEBUG: result = {result}, type = {type(result)}")
         if result:
-            cadastro_id = result[0]
-            print(f"DEBUG: cadastro_id = {cadastro_id}")
+            # Handle both SQLite (tuple/Row) and PostgreSQL (dict) results
+            cadastro_id = result['id'] if isinstance(result, dict) else result[0]
         else:
             cadastro_id = None
-            print("DEBUG: result is None")
         
         # Upload de arquivos
         uploaded_files = []
