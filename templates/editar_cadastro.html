@@ -84,8 +84,8 @@
                         <label>Gênero *</label>
                         <select name="genero" required>
                             <option value="">Selecione</option>
-                            <option value="M">Masculino</option>
-                            <option value="F">Feminino</option>
+                            <option value="M" {{ 'selected' if cadastro[8] == 'M' else '' }}>Masculino</option>
+                            <option value="F" {{ 'selected' if cadastro[8] == 'F' else '' }}>Feminino</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -129,10 +129,10 @@
                         <label>Estado Civil *</label>
                         <select name="estado_civil" required>
                             <option value="">Selecione</option>
-                            <option value="Solteiro">Solteiro(a)</option>
-                            <option value="Casado">Casado(a)</option>
-                            <option value="Divorciado">Divorciado(a)</option>
-                            <option value="Viúvo">Viúvo(a)</option>
+                            <option value="Solteiro" {{ 'selected' if cadastro[16] == 'Solteiro' else '' }}>Solteiro(a)</option>
+                            <option value="Casado" {{ 'selected' if cadastro[16] == 'Casado' else '' }}>Casado(a)</option>
+                            <option value="Divorciado" {{ 'selected' if cadastro[16] == 'Divorciado' else '' }}>Divorciado(a)</option>
+                            <option value="Viúvo" {{ 'selected' if cadastro[16] == 'Viúvo' else '' }}>Viúvo(a)</option>
                         </select>
                     </div>
                     <div class="form-group">
