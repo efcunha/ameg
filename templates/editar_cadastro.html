@@ -253,8 +253,631 @@
                     </div>
                     <div class="form-group">
                         <label>Data Nascimento Companheiro</label>
-                        <input type="date" name="data_nascimento_companheiro" value="{{ cadastro[25] if cadastro and cadastro|length > 25 else '' }}">
+                        <input type="date" name="data_nascimento_companheiro" value="{{ cadastro[28] if cadastro and cadastro|length > 28 else '' }}">
                     </div>
+                </div>
+                
+                <h3>2. DADOS DE RENDA FAMILIAR</h3>
+                
+                <div class="form-group">
+                    <label>Tipo de Trabalho</label>
+                    <select name="tipo_trabalho">
+                        <option value="">Selecione</option>
+                        <option value="Assalariado com carteira" {{ 'selected' if cadastro and cadastro|length > 29 and cadastro[29] == 'Assalariado com carteira' else '' }}>Assalariado com carteira</option>
+                        <option value="Assalariado sem carteira" {{ 'selected' if cadastro and cadastro|length > 29 and cadastro[29] == 'Assalariado sem carteira' else '' }}>Assalariado sem carteira</option>
+                        <option value="Trabalhador Autônomo" {{ 'selected' if cadastro and cadastro|length > 29 and cadastro[29] == 'Trabalhador Autônomo' else '' }}>Trabalhador Autônomo</option>
+                        <option value="Aposentado" {{ 'selected' if cadastro and cadastro|length > 29 and cadastro[29] == 'Aposentado' else '' }}>Aposentado</option>
+                        <option value="Pensionista" {{ 'selected' if cadastro and cadastro|length > 29 and cadastro[29] == 'Pensionista' else '' }}>Pensionista</option>
+                        <option value="BPC" {{ 'selected' if cadastro and cadastro|length > 29 and cadastro[29] == 'BPC' else '' }}>BPC</option>
+                        <option value="Funcionário Público" {{ 'selected' if cadastro and cadastro|length > 29 and cadastro[29] == 'Funcionário Público' else '' }}>Funcionário Público</option>
+                        <option value="Desempregado" {{ 'selected' if cadastro and cadastro|length > 29 and cadastro[29] == 'Desempregado' else '' }}>Desempregado</option>
+                        <option value="Outros" {{ 'selected' if cadastro and cadastro|length > 29 and cadastro[29] == 'Outros' else '' }}>Outros</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantas pessoas trabalham?</label>
+                        <input type="number" name="pessoas_trabalham" value="{{ cadastro[30] if cadastro and cadastro|length > 30 else '0' }}" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Quantos Aposentados/Pensionistas?</label>
+                        <input type="number" name="aposentados_pensionistas" value="{{ cadastro[31] if cadastro and cadastro|length > 31 else '0' }}" required min="0">
+                    </div>
+                </div>
+                
+                <h3>3. DETALHAMENTO FAMILIAR</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nº Pessoas na Família</label>
+                        <input type="number" name="num_pessoas_familia" value="{{ cadastro[32] if cadastro and cadastro|length > 32 else '1' }}" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Nº de Famílias</label>
+                        <select name="num_familias">
+                            <option value="">Selecione</option>
+                            <option value="1" {{ 'selected' if cadastro and cadastro|length > 33 and cadastro[33] == '1' else '' }}>1 Família</option>
+                            <option value="2" {{ 'selected' if cadastro and cadastro|length > 33 and cadastro[33] == '2' else '' }}>2 Famílias</option>
+                            <option value="3" {{ 'selected' if cadastro and cadastro|length > 33 and cadastro[33] == '3' else '' }}>Mais de 2 famílias</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Adultos</label>
+                        <input type="number" name="adultos" value="{{ cadastro[34] if cadastro and cadastro|length > 34 else '0' }}" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Crianças</label>
+                        <input type="number" name="criancas" value="{{ cadastro[35] if cadastro and cadastro|length > 35 else '0' }}" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Adolescentes</label>
+                        <input type="number" name="adolescentes" value="{{ cadastro[36] if cadastro and cadastro|length > 36 else '0' }}" required min="0">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Idosos</label>
+                        <input type="number" name="idosos" value="{{ cadastro[37] if cadastro and cadastro|length > 37 else '0' }}" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Gestantes</label>
+                        <input type="number" name="gestantes" value="{{ cadastro[38] if cadastro and cadastro|length > 38 else '0' }}" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Nutrizes</label>
+                        <input type="number" name="nutrizes" value="{{ cadastro[39] if cadastro and cadastro|length > 39 else '0' }}" required min="0">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Renda Familiar Bruta (R$)</label>
+                        <input type="number" step="0.01" name="renda_familiar" value="{{ cadastro[40] if cadastro and cadastro|length > 40 else '0' }}" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Renda Per Capita (R$)</label>
+                        <input type="number" step="0.01" name="renda_per_capita" value="{{ cadastro[41] if cadastro and cadastro|length > 41 else '0' }}" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Bolsa Família (R$)</label>
+                        <input type="number" step="0.01" name="bolsa_familia" value="{{ cadastro[42] if cadastro and cadastro|length > 42 else '0' }}" required min="0">
+                    </div>
+                </div>
+                
+                <h3>DADOS DA MORADIA</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Casa</label>
+                        <select name="casa_tipo">
+                            <option value="">Selecione</option>
+                            <option value="própria" {{ 'selected' if cadastro and cadastro|length > 43 and cadastro[43] == 'própria' else '' }}>Própria</option>
+                            <option value="alugada" {{ 'selected' if cadastro and cadastro|length > 43 and cadastro[43] == 'alugada' else '' }}>Alugada</option>
+                            <option value="cedida" {{ 'selected' if cadastro and cadastro|length > 43 and cadastro[43] == 'cedida' else '' }}>Cedida</option>
+                            <option value="invadida" {{ 'selected' if cadastro and cadastro|length > 43 and cadastro[43] == 'invadida' else '' }}>Invadida</option>
+                            <option value="compartilhada" {{ 'selected' if cadastro and cadastro|length > 43 and cadastro[43] == 'compartilhada' else '' }}>Compartilhada</option>
+                            <option value="outros" {{ 'selected' if cadastro and cadastro|length > 43 and cadastro[43] == 'outros' else '' }}>Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo Material</label>
+                        <select name="casa_material">
+                            <option value="">Selecione</option>
+                            <option value="alvenaria" {{ 'selected' if cadastro and cadastro|length > 44 and cadastro[44] == 'alvenaria' else '' }}>Alvenaria</option>
+                            <option value="mista" {{ 'selected' if cadastro and cadastro|length > 44 and cadastro[44] == 'mista' else '' }}>Mista</option>
+                            <option value="taipa" {{ 'selected' if cadastro and cadastro|length > 44 and cadastro[44] == 'taipa' else '' }}>Taipa</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Energia</label>
+                        <select name="energia">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 45 and cadastro[45] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 45 and cadastro[45] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Lixo</label>
+                        <select name="lixo">
+                            <option value="">Selecione</option>
+                            <option value="coletado" {{ 'selected' if cadastro and cadastro|length > 46 and cadastro[46] == 'coletado' else '' }}>Coletado</option>
+                            <option value="queimado" {{ 'selected' if cadastro and cadastro|length > 46 and cadastro[46] == 'queimado' else '' }}>Queimado</option>
+                            <option value="enterrado" {{ 'selected' if cadastro and cadastro|length > 46 and cadastro[46] == 'enterrado' else '' }}>Enterrado</option>
+                            <option value="outros" {{ 'selected' if cadastro and cadastro|length > 46 and cadastro[46] == 'outros' else '' }}>Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Água</label>
+                        <select name="agua">
+                            <option value="">Selecione</option>
+                            <option value="encanada" {{ 'selected' if cadastro and cadastro|length > 47 and cadastro[47] == 'encanada' else '' }}>Encanada</option>
+                            <option value="poço" {{ 'selected' if cadastro and cadastro|length > 47 and cadastro[47] == 'poço' else '' }}>Poço</option>
+                            <option value="cisterna" {{ 'selected' if cadastro and cadastro|length > 47 and cadastro[47] == 'cisterna' else '' }}>Cisterna</option>
+                            <option value="outros" {{ 'selected' if cadastro and cadastro|length > 47 and cadastro[47] == 'outros' else '' }}>Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Esgoto</label>
+                        <select name="esgoto">
+                            <option value="">Selecione</option>
+                            <option value="saneado" {{ 'selected' if cadastro and cadastro|length > 48 and cadastro[48] == 'saneado' else '' }}>Saneado</option>
+                            <option value="fossa" {{ 'selected' if cadastro and cadastro|length > 48 and cadastro[48] == 'fossa' else '' }}>Fossa</option>
+                            <option value="outros" {{ 'selected' if cadastro and cadastro|length > 48 and cadastro[48] == 'outros' else '' }}>Outros</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Observações</label>
+                    <textarea name="observacoes" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">{{ cadastro[49] if cadastro and cadastro|length > 49 else '' }}</textarea>
+                </div>
+                
+                <h3>DADOS DA SAÚDE DA FAMÍLIA</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tem doença crônica?</label>
+                        <select name="tem_doenca_cronica" onchange="toggleField(this, 'doencas_cronicas')">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 50 and cadastro[50] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 50 and cadastro[50] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quais doenças crônicas?</label>
+                        <input type="text" name="doencas_cronicas" id="doencas_cronicas" value="{{ cadastro[51] if cadastro and cadastro|length > 51 else '' }}" placeholder="Ex: Diabetes, Hipertensão">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Usa medicamento contínuo?</label>
+                        <select name="usa_medicamento_continuo" onchange="toggleField(this, 'medicamentos_continuos')">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 52 and cadastro[52] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 52 and cadastro[52] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quais medicamentos?</label>
+                        <input type="text" name="medicamentos_continuos" id="medicamentos_continuos" value="{{ cadastro[53] if cadastro and cadastro|length > 53 else '' }}" placeholder="Ex: Insulina, Captopril">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tem doença mental?</label>
+                        <select name="tem_doenca_mental" onchange="toggleField(this, 'doencas_mentais')">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 54 and cadastro[54] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 54 and cadastro[54] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quais doenças mentais?</label>
+                        <input type="text" name="doencas_mentais" id="doencas_mentais" value="{{ cadastro[55] if cadastro and cadastro|length > 55 else '' }}" placeholder="Ex: Depressão, Ansiedade">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tem deficiência?</label>
+                        <select name="tem_deficiencia" onchange="toggleField(this, 'tipo_deficiencia')">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 56 and cadastro[56] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 56 and cadastro[56] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de deficiência?</label>
+                        <input type="text" name="tipo_deficiencia" id="tipo_deficiencia" value="{{ cadastro[57] if cadastro and cadastro|length > 57 else '' }}" placeholder="Ex: Visual, Auditiva, Física">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Precisa de cuidados especiais?</label>
+                        <select name="precisa_cuidados_especiais" onchange="toggleField(this, 'cuidados_especiais')">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 58 and cadastro[58] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 58 and cadastro[58] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quais cuidados?</label>
+                        <input type="text" name="cuidados_especiais" id="cuidados_especiais" value="{{ cadastro[59] if cadastro and cadastro|length > 59 else '' }}" placeholder="Ex: Fisioterapia, Acompanhamento médico">
+                    </div>
+                </div>
+                
+                <h3>ANEXOS DE SAÚDE</h3>
+                <p style="color: #666; font-size: 14px;">Anexe laudos médicos, receitas ou imagens relacionadas à saúde (PDF, PNG, JPG, DOC - máx. 16MB cada)</p>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📋 Laudo Médico</label>
+                        <input type="file" name="laudo" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+                        <input type="text" name="descricao_laudo" placeholder="Descrição do laudo (opcional)" style="margin-top: 5px;">
+                    </div>
+                    <div class="form-group">
+                        <label>💊 Receita Médica</label>
+                        <input type="file" name="receita" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+                        <input type="text" name="descricao_receita" placeholder="Descrição da receita (opcional)" style="margin-top: 5px;">
+                    </div>
+                    <div class="form-group">
+                        <label>📷 Imagem/Exame</label>
+                        <input type="file" name="imagem" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+                        <input type="text" name="descricao_imagem" placeholder="Descrição da imagem (opcional)" style="margin-top: 5px;">
+                    </div>
+                </div>
+                
+                <script>
+                function toggleField(select, targetId) {
+                    const target = document.getElementById(targetId);
+                    if (select.value === 'Sim') {
+                        target.disabled = false;
+                        target.style.backgroundColor = '#fff';
+                    } else {
+                        target.disabled = true;
+                        target.value = '';
+                        target.style.backgroundColor = '#f5f5f5';
+                    }
+                }
+                
+                // Formatação e validação de CPF
+                function formatCPF(input) {
+                    let value = input.value.replace(/\D/g, '');
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                    input.value = value;
+                }
+                
+                function validarCPF(cpf) {
+                    cpf = cpf.replace(/[^\d]+/g, '');
+                    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+                    
+                    let soma = 0;
+                    for (let i = 0; i < 9; i++) soma += parseInt(cpf.charAt(i)) * (10 - i);
+                    let resto = (soma * 10) % 11;
+                    if (resto === 10 || resto === 11) resto = 0;
+                    if (resto !== parseInt(cpf.charAt(9))) return false;
+                    
+                    soma = 0;
+                    for (let i = 0; i < 10; i++) soma += parseInt(cpf.charAt(i)) * (11 - i);
+                    resto = (soma * 10) % 11;
+                    if (resto === 10 || resto === 11) resto = 0;
+                    return resto === parseInt(cpf.charAt(10));
+                }
+                
+                function validarCPFInput(input) {
+                    const cpf = input.value.replace(/[^\d]+/g, '');
+                    if (cpf.length === 11 && !validarCPF(cpf)) {
+                        input.setCustomValidity('CPF inválido');
+                        input.style.borderColor = '#e74c3c';
+                    } else {
+                        input.setCustomValidity('');
+                        input.style.borderColor = '#ddd';
+                    }
+                }
+                
+                // Formatação de telefone
+                function formatTelefone(input) {
+                    let value = input.value.replace(/\D/g, '');
+                    if (value.length <= 11) {
+                        value = value.replace(/(\d{2})(\d)/, '($1) $2');
+                        value = value.replace(/(\d{4})(\d)/, '$1-$2');
+                    }
+                    input.value = value;
+                }
+                
+                // Formatação de CEP
+                function formatCEP(input) {
+                    let value = input.value.replace(/\D/g, '');
+                    value = value.replace(/(\d{2})(\d)/, '$1.$2');
+                    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                    input.value = value;
+                }
+                
+                // Buscar endereço pelo CEP
+                function buscarCEP(cep) {
+                    const cepLimpo = cep.replace(/\D/g, '');
+                    if (cepLimpo.length === 8) {
+                        fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (!data.erro) {
+                                    document.querySelector('input[name="endereco"]').value = data.logradouro || '';
+                                    document.querySelector('input[name="bairro"]').value = data.bairro || '';
+                                    document.querySelector('input[name="numero"]').focus();
+                                } else {
+                                    alert('CEP não encontrado!');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Erro ao buscar CEP:', error);
+                            });
+                    }
+                }
+                
+                // Aplicar formatação aos campos
+                document.addEventListener('DOMContentLoaded', function() {
+                    const cpfInputs = document.querySelectorAll('input[name="cpf"], input[name="cpf_companheiro"]');
+                    cpfInputs.forEach(input => {
+                        input.addEventListener('input', function() {
+                            formatCPF(this);
+                            validarCPFInput(this);
+                        });
+                        input.maxLength = 14;
+                        input.pattern = '\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}';
+                    });
+                    
+                    const telefoneInput = document.querySelector('input[name="telefone"]');
+                    if (telefoneInput) {
+                        telefoneInput.addEventListener('input', function() {
+                            formatTelefone(this);
+                        });
+                        telefoneInput.maxLength = 15;
+                        telefoneInput.placeholder = '(XX) XXXX-XXXX';
+                    }
+                    
+                    const cepInput = document.querySelector('input[name="cep"]');
+                    if (cepInput) {
+                        cepInput.addEventListener('input', function() {
+                            formatCEP(this);
+                        });
+                        cepInput.addEventListener('blur', function() {
+                            buscarCEP(this.value);
+                        });
+                        cepInput.maxLength = 10;
+                        cepInput.placeholder = 'XX.XXX-XX';
+                    }
+                });
+
+                // Controlar campos do companheiro baseado no estado civil
+                const estadoCivil = document.querySelector('select[name="estado_civil"]');
+                const camposCompanheiro = ['idade_companheiro', 'data_nascimento_companheiro'];
+                
+                function toggleCamposCompanheiro() {
+                    const isSolteiro = estadoCivil.value === 'Solteiro(a)';
+                    camposCompanheiro.forEach(campo => {
+                        const input = document.querySelector(`input[name="${campo}"]`);
+                        if (input) {
+                            if (isSolteiro) {
+                                input.removeAttribute('required');
+                                input.value = '';
+                            } else {
+                                input.setAttribute('required', 'required');
+                            }
+                        }
+                    });
+                }
+                
+                if (estadoCivil) {
+                    estadoCivil.addEventListener('change', toggleCamposCompanheiro);
+                    toggleCamposCompanheiro();
+                }
+                </script>
+                
+                <!-- ATIVIDADE DE TRABALHO -->
+                <h3 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 30px;">📋 Atividade de Trabalho</h3>
+                
+                <div class="form-group">
+                    <label>Com o que você trabalha?</label>
+                    <input type="text" name="com_que_trabalha" value="{{ cadastro[60] if cadastro and cadastro|length > 60 else '' }}">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Onde trabalha?</label>
+                        <input type="text" name="onde_trabalha" value="{{ cadastro[61] if cadastro and cadastro|length > 61 else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Qual é o seu horário de trabalho?</label>
+                        <input type="text" name="horario_trabalho" value="{{ cadastro[62] if cadastro and cadastro|length > 62 else '' }}">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Há quanto tempo atua nessa atividade?</label>
+                        <input type="text" name="tempo_atividade" value="{{ cadastro[63] if cadastro and cadastro|length > 63 else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Atua em ponto fixo?</label>
+                        <select name="atua_ponto_fixo" onchange="toggleField(this, 'qual_ponto_fixo')">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 64 and cadastro[64] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 64 and cadastro[64] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Qual ponto?</label>
+                    <input type="text" name="qual_ponto_fixo" id="qual_ponto_fixo" value="{{ cadastro[65] if cadastro and cadastro|length > 65 else '' }}">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantos dias por semana trabalha?</label>
+                        <input type="number" name="dias_semana_trabalha" value="{{ cadastro[66] if cadastro and cadastro|length > 66 else '' }}" min="1" max="7">
+                    </div>
+                    <div class="form-group">
+                        <label>Seu trabalho é contínuo ou por temporada?</label>
+                        <select name="trabalho_continuo_temporada">
+                            <option value="">Selecione</option>
+                            <option value="Contínuo" {{ 'selected' if cadastro and cadastro|length > 67 and cadastro[67] == 'Contínuo' else '' }}>Contínuo</option>
+                            <option value="Temporada" {{ 'selected' if cadastro and cadastro|length > 67 and cadastro[67] == 'Temporada' else '' }}>Por temporada</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- CONDIÇÕES DE TRABALHO -->
+                <h3 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 30px;">⚠️ Condições de Trabalho</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Já sofreu acidente no ambiente de trabalho?</label>
+                        <select name="sofreu_acidente_trabalho" onchange="toggleField(this, 'qual_acidente')">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 68 and cadastro[68] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 68 and cadastro[68] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Qual acidente?</label>
+                        <input type="text" name="qual_acidente" id="qual_acidente" value="{{ cadastro[69] if cadastro and cadastro|length > 69 else '' }}">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>No seu trabalho, o que mais incomoda?</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="trabalho_incomoda_calor" value="Sim" {{ 'checked' if cadastro and cadastro|length > 70 and cadastro[70] == 'Sim' else '' }} style="margin-right: 5px;"> Calor
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="trabalho_incomoda_barulho" value="Sim" {{ 'checked' if cadastro and cadastro|length > 71 and cadastro[71] == 'Sim' else '' }} style="margin-right: 5px;"> Barulho
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="trabalho_incomoda_seguranca" value="Sim" {{ 'checked' if cadastro and cadastro|length > 72 and cadastro[72] == 'Sim' else '' }} style="margin-right: 5px;"> Segurança
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="trabalho_incomoda_banheiros" value="Sim" {{ 'checked' if cadastro and cadastro|length > 73 and cadastro[73] == 'Sim' else '' }} style="margin-right: 5px;"> Ausência de banheiros
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="trabalho_incomoda_outro" value="Sim" {{ 'checked' if cadastro and cadastro|length > 74 and cadastro[74] == 'Sim' else '' }} style="margin-right: 5px;" onchange="toggleField(this, 'trabalho_incomoda_outro_desc')"> Outro
+                        </label>
+                    </div>
+                    <input type="text" name="trabalho_incomoda_outro_desc" id="trabalho_incomoda_outro_desc" value="{{ cadastro[75] if cadastro and cadastro|length > 75 else '' }}" placeholder="Especifique" style="margin-top: 10px;">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tem acesso a banheiro e água potável durante o trabalho?</label>
+                        <select name="acesso_banheiro_agua">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 76 and cadastro[76] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 76 and cadastro[76] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Costuma trabalhar sozinho(a) ou com ajudantes? Quantos?</label>
+                        <input type="text" name="trabalha_sozinho_ajudantes" value="{{ cadastro[77] if cadastro and cadastro|length > 77 else '' }}">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Possui autorização/licença municipal para atuar?</label>
+                        <select name="possui_autorizacao_municipal">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 78 and cadastro[78] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 78 and cadastro[78] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Costuma ter problemas com fiscalização ou violência policial?</label>
+                        <select name="problemas_fiscalizacao_policia">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 79 and cadastro[79] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 79 and cadastro[79] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- ESTRUTURA DE TRABALHO -->
+                <h3 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 30px;">🏗️ Estrutura de Trabalho</h3>
+                
+                <div class="form-group">
+                    <label>Qual estrutura utiliza?</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="estrutura_barraca" value="Sim" {{ 'checked' if cadastro and cadastro|length > 80 and cadastro[80] == 'Sim' else '' }} style="margin-right: 5px;"> Barraca
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="estrutura_carrinho" value="Sim" {{ 'checked' if cadastro and cadastro|length > 81 and cadastro[81] == 'Sim' else '' }} style="margin-right: 5px;"> Carrinho
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="estrutura_mesa" value="Sim" {{ 'checked' if cadastro and cadastro|length > 82 and cadastro[82] == 'Sim' else '' }} style="margin-right: 5px;"> Mesa
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="estrutura_outro" value="Sim" {{ 'checked' if cadastro and cadastro|length > 83 and cadastro[83] == 'Sim' else '' }} style="margin-right: 5px;" onchange="toggleField(this, 'estrutura_outro_desc')"> Outro
+                        </label>
+                    </div>
+                    <input type="text" name="estrutura_outro_desc" id="estrutura_outro_desc" value="{{ cadastro[84] if cadastro and cadastro|length > 84 else '' }}" placeholder="Especifique" style="margin-top: 10px;">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Necessita energia elétrica?</label>
+                        <select name="necessita_energia_eletrica">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 85 and cadastro[85] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 85 and cadastro[85] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Utiliza gás de cozinha?</label>
+                        <select name="utiliza_gas_cozinha">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 86 and cadastro[86] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 86 and cadastro[86] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Usa veículo próprio para transporte?</label>
+                        <select name="usa_veiculo_proprio" onchange="toggleField(this, 'qual_veiculo')">
+                            <option value="">Selecione</option>
+                            <option value="Sim" {{ 'selected' if cadastro and cadastro|length > 87 and cadastro[87] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro and cadastro|length > 87 and cadastro[87] == 'Não' else '' }}>Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Qual veículo?</label>
+                        <input type="text" name="qual_veiculo" id="qual_veiculo" value="{{ cadastro[88] if cadastro and cadastro|length > 88 else '' }}">
+                    </div>
+                </div>
+                
+                <!-- RENDA E FAMÍLIA -->
+                <h3 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 30px;">💰 Renda e Família</h3>
+                
+                <div class="form-group">
+                    <label>Qual é a principal fonte de renda da sua família?</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="fonte_renda_trabalho_ambulante" value="Sim" {{ 'checked' if cadastro and cadastro|length > 89 and cadastro[89] == 'Sim' else '' }} style="margin-right: 5px;"> Trabalho ambulante
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="fonte_renda_aposentadoria" value="Sim" {{ 'checked' if cadastro and cadastro|length > 90 and cadastro[90] == 'Sim' else '' }} style="margin-right: 5px;"> Aposentadoria
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="fonte_renda_outro_trabalho" value="Sim" {{ 'checked' if cadastro and cadastro|length > 91 and cadastro[91] == 'Sim' else '' }} style="margin-right: 5px;"> Outro trabalho
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="fonte_renda_beneficio_social" value="Sim" {{ 'checked' if cadastro and cadastro|length > 92 and cadastro[92] == 'Sim' else '' }} style="margin-right: 5px;"> Benefício social
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="fonte_renda_outro" value="Sim" {{ 'checked' if cadastro and cadastro|length > 93 and cadastro[93] == 'Sim' else '' }} style="margin-right: 5px;" onchange="toggleField(this, 'fonte_renda_outro_desc')"> Outro
+                        </label>
+                    </div>
+                    <input type="text" name="fonte_renda_outro_desc" id="fonte_renda_outro_desc" value="{{ cadastro[94] if cadastro and cadastro|length > 94 else '' }}" placeholder="Especifique" style="margin-top: 10px;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Quantas pessoas dependem diretamente da sua renda?</label>
+                    <input type="number" name="pessoas_dependem_renda" value="{{ cadastro[95] if cadastro and cadastro|length > 95 else '' }}" min="0">
                 </div>
                 
                 <button type="submit" class="btn">Atualizar Cadastro</button>
