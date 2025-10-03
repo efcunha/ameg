@@ -229,6 +229,22 @@ def init_db_tables():
                 data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        
+        # Verificar e adicionar coluna arquivo_dados se não existir
+        logger.debug("Verificando se coluna arquivo_dados existe...")
+        cursor.execute("""
+            SELECT column_name FROM information_schema.columns 
+            WHERE table_name = 'arquivos_saude' AND column_name = 'arquivo_dados'
+        """)
+        coluna_existe = cursor.fetchone()
+        
+        if not coluna_existe:
+            logger.info("🔧 Adicionando coluna arquivo_dados à tabela arquivos_saude...")
+            cursor.execute("ALTER TABLE arquivos_saude ADD COLUMN arquivo_dados BYTEA")
+            logger.info("✅ Coluna arquivo_dados adicionada!")
+        else:
+            logger.debug("✅ Coluna arquivo_dados já existe")
+            
         logger.debug("✅ Tabela arquivos_saude criada")
         
         conn.commit()
