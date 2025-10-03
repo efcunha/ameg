@@ -478,6 +478,62 @@ def salvar_usuario():
     conn.close()
     return redirect(url_for('usuarios'))
 
+@app.route('/excluir_usuario/<int:usuario_id>')
+def excluir_usuario(usuario_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    if session['usuario'] != 'admin':
+        flash('Acesso negado! Apenas administradores podem excluir usuários.')
+        return redirect(url_for('dashboard'))
+    
+    logger.info(f"🗑️ Tentando excluir usuário ID: {usuario_id}")
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Verificar se é o admin
+        cursor.execute('SELECT usuario FROM usuarios WHERE id = %s', (usuario_id,))
+        user_data = cursor.fetchone()
+        
+        if not user_data:
+            logger.warning(f"⚠️ Usuário ID {usuario_id} não encontrado")
+            flash('Usuário não encontrado!')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios'))
+        
+        username = user_data[0] if isinstance(user_data, tuple) else user_data['usuario']
+        
+        if username == 'admin':
+            logger.warning("⚠️ Tentativa de excluir usuário admin bloqueada")
+            flash('Não é possível excluir o usuário admin!')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios'))
+        
+        # Excluir usuário
+        cursor.execute('DELETE FROM usuarios WHERE id = %s', (usuario_id,))
+        usuarios_deletados = cursor.rowcount
+        
+        if usuarios_deletados > 0:
+            conn.commit()
+            logger.info(f"✅ Usuário {username} (ID: {usuario_id}) excluído com sucesso")
+            flash(f'Usuário "{username}" excluído com sucesso!')
+        else:
+            logger.warning(f"⚠️ Nenhum usuário foi excluído (ID: {usuario_id})")
+            flash('Erro: Usuário não foi excluído.')
+        
+        cursor.close()
+        conn.close()
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao excluir usuário ID {usuario_id}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        flash(f'Erro ao excluir usuário: {str(e)}')
+    
+    return redirect(url_for('usuarios'))
+
 @app.route('/editar_cadastro/<int:cadastro_id>')
 def editar_cadastro(cadastro_id):
     if 'usuario' not in session:

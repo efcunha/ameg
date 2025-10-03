@@ -46,6 +46,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Usuário</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -53,6 +54,17 @@
                 <tr>
                     <td>{{ user[0] }}</td>
                     <td>{{ user[1] }}</td>
+                    <td>
+                        {% if user[1] != 'admin' %}
+                        <a href="/excluir_usuario/{{ user[0] }}" 
+                           onclick="return confirm('Tem certeza que deseja excluir o usuário {{ user[1] }}?')"
+                           style="background: #e74c3c; color: white; padding: 5px 10px; border-radius: 3px; text-decoration: none; font-size: 12px;">
+                           🗑️ Excluir
+                        </a>
+                        {% else %}
+                        <span style="color: #7f8c8d; font-size: 12px;">Admin protegido</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
