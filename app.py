@@ -174,50 +174,50 @@ def cadastrar():
          request.form.get('doencas_mentais'), request.form.get('tem_deficiencia'), request.form.get('tipo_deficiencia'),
          request.form.get('precisa_cuidados_especiais'), request.form.get('cuidados_especiais')))
         
-        # Para obter o ID do cadastro inserido, fazer uma query separada
-        conn, db_type = get_db()
-        cursor = conn.cursor()
-        
-        if db_type == 'postgresql':
-            cursor.execute('SELECT id FROM cadastros ORDER BY id DESC LIMIT 1')
-        else:
-            cursor.execute('SELECT last_insert_rowid()')
-        
-        result = cursor.fetchone()
-        if result:
-            # FIXED: Handle PostgreSQL dict vs SQLite tuple results
-            if hasattr(result, 'keys'):  # PostgreSQL RealDictCursor
-                cadastro_id = result['id']
-            else:  # SQLite Row or tuple
-                cadastro_id = result[0]
-        else:
-            cadastro_id = None
-        
-        # Upload de arquivos
-        uploaded_files = []
-        if cadastro_id:
-            for file_key in ['laudo', 'receita', 'imagem']:
-                if file_key in request.files:
-                    file = request.files[file_key]
-                    if file and file.filename and allowed_file(file.filename):
-                        logger.debug(f"Processando arquivo: {file.filename} ({file_key})")
-                        file_data = file.read()
-                        descricao = request.form.get(f'descricao_{file_key}', '')
-                        cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (%s, %s, %s, %s, %s)', 
-                                 (cadastro_id, file.filename, file_key, file_data, descricao))
-                        uploaded_files.append(file_key)
-                        logger.debug(f"Arquivo {file.filename} salvo com sucesso")
-        
-        conn.commit()
-        conn.close()
-        logger.info("✅ Cadastro salvo com sucesso no banco")
-        
-        if uploaded_files:
-            logger.info(f"📎 Arquivos enviados: {', '.join(uploaded_files)}")
-            flash(f'Cadastro realizado com sucesso! Arquivos enviados: {", ".join(uploaded_files)}')
-        else:
-            flash('Cadastro realizado com sucesso!')
-        return redirect(url_for('dashboard'))
+            # Para obter o ID do cadastro inserido, fazer uma query separada
+            conn, db_type = get_db()
+            cursor = conn.cursor()
+            
+            if db_type == 'postgresql':
+                cursor.execute('SELECT id FROM cadastros ORDER BY id DESC LIMIT 1')
+            else:
+                cursor.execute('SELECT last_insert_rowid()')
+            
+            result = cursor.fetchone()
+            if result:
+                # FIXED: Handle PostgreSQL dict vs SQLite tuple results
+                if hasattr(result, 'keys'):  # PostgreSQL RealDictCursor
+                    cadastro_id = result['id']
+                else:  # SQLite Row or tuple
+                    cadastro_id = result[0]
+            else:
+                cadastro_id = None
+            
+            # Upload de arquivos
+            uploaded_files = []
+            if cadastro_id:
+                for file_key in ['laudo', 'receita', 'imagem']:
+                    if file_key in request.files:
+                        file = request.files[file_key]
+                        if file and file.filename and allowed_file(file.filename):
+                            logger.debug(f"Processando arquivo: {file.filename} ({file_key})")
+                            file_data = file.read()
+                            descricao = request.form.get(f'descricao_{file_key}', '')
+                            cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (%s, %s, %s, %s, %s)', 
+                                     (cadastro_id, file.filename, file_key, file_data, descricao))
+                            uploaded_files.append(file_key)
+                            logger.debug(f"Arquivo {file.filename} salvo com sucesso")
+            
+            conn.commit()
+            conn.close()
+            logger.info("✅ Cadastro salvo com sucesso no banco")
+            
+            if uploaded_files:
+                logger.info(f"📎 Arquivos enviados: {', '.join(uploaded_files)}")
+                flash(f'Cadastro realizado com sucesso! Arquivos enviados: {", ".join(uploaded_files)}')
+            else:
+                flash('Cadastro realizado com sucesso!')
+            return redirect(url_for('dashboard'))
         
         except Exception as e:
             logger.error(f"❌ Erro ao salvar cadastro: {e}")
@@ -415,8 +415,8 @@ def editar_cadastro(cadastro_id):
         cadastro = cursor.fetchone()
         logger.debug(f"Cadastro encontrado: {cadastro is not None}")
         if cadastro:
-        print(f"DEBUG: Dados do cadastro: {dict(cadastro) if hasattr(cadastro, 'keys') else 'Dados existem'}")
-    
+            logger.debug(f"Dados do cadastro: {dict(cadastro) if hasattr(cadastro, 'keys') else 'Dados existem'}")
+        
         cursor.close()
         conn.close()
         logger.info("✅ Cadastro carregado para edição")
@@ -457,17 +457,17 @@ def atualizar_cadastro(cadastro_id):
         'escolaridade_companheiro', 'profissao_companheiro', 'qtd_filhos',
         'nomes_idades_filhos', 'renda_familiar', 'beneficio_governo',
         'qual_beneficio', 'casa_propria', 'tipo_casa', 'qtd_comodos',
-        'energia_eletrica', 'agua_encanada', 'rede_esgoto', 'coleta_lixo',
-        'doencas_familia', 'medicamentos_uso', 'deficiencia_familia',
-        'tipo_deficiencia', 'acompanhamento_medico', 'local_atendimento'
-    ]
-    
-    valores = [request.form.get(campo, '') for campo in campos]
-    valores.append(cadastro_id)
-    
-    sql_update = f"""
-    UPDATE cadastros SET 
-    nome_completo = {'%s' if db_type == 'postgresql' else '?'},
+            'energia_eletrica', 'agua_encanada', 'rede_esgoto', 'coleta_lixo',
+            'doencas_familia', 'medicamentos_uso', 'deficiencia_familia',
+            'tipo_deficiencia', 'acompanhamento_medico', 'local_atendimento'
+        ]
+        
+        valores = [request.form.get(campo, '') for campo in campos]
+        valores.append(cadastro_id)
+        
+        sql_update = f"""
+        UPDATE cadastros SET 
+        nome_completo = {'%s' if db_type == 'postgresql' else '?'},
     endereco = {'%s' if db_type == 'postgresql' else '?'},
     numero = {'%s' if db_type == 'postgresql' else '?'},
     bairro = {'%s' if db_type == 'postgresql' else '?'},
@@ -497,30 +497,35 @@ def atualizar_cadastro(cadastro_id):
     beneficio_governo = {'%s' if db_type == 'postgresql' else '?'},
     qual_beneficio = {'%s' if db_type == 'postgresql' else '?'},
     casa_propria = {'%s' if db_type == 'postgresql' else '?'},
-    tipo_casa = {'%s' if db_type == 'postgresql' else '?'},
-    qtd_comodos = {'%s' if db_type == 'postgresql' else '?'},
-    energia_eletrica = {'%s' if db_type == 'postgresql' else '?'},
-    agua_encanada = {'%s' if db_type == 'postgresql' else '?'},
-    rede_esgoto = {'%s' if db_type == 'postgresql' else '?'},
-    coleta_lixo = {'%s' if db_type == 'postgresql' else '?'},
-    doencas_familia = {'%s' if db_type == 'postgresql' else '?'},
-    medicamentos_uso = {'%s' if db_type == 'postgresql' else '?'},
-    deficiencia_familia = {'%s' if db_type == 'postgresql' else '?'},
-    tipo_deficiencia = {'%s' if db_type == 'postgresql' else '?'},
-    acompanhamento_medico = {'%s' if db_type == 'postgresql' else '?'},
-    local_atendimento = {'%s' if db_type == 'postgresql' else '?'}
-    WHERE id = {'%s' if db_type == 'postgresql' else '?'}
-    """
-    
-    try:
+        tipo_casa = {'%s' if db_type == 'postgresql' else '?'},
+        qtd_comodos = {'%s' if db_type == 'postgresql' else '?'},
+        energia_eletrica = {'%s' if db_type == 'postgresql' else '?'},
+        agua_encanada = {'%s' if db_type == 'postgresql' else '?'},
+        rede_esgoto = {'%s' if db_type == 'postgresql' else '?'},
+        coleta_lixo = {'%s' if db_type == 'postgresql' else '?'},
+        doencas_familia = {'%s' if db_type == 'postgresql' else '?'},
+        medicamentos_uso = {'%s' if db_type == 'postgresql' else '?'},
+        deficiencia_familia = {'%s' if db_type == 'postgresql' else '?'},
+        tipo_deficiencia = {'%s' if db_type == 'postgresql' else '?'},
+        acompanhamento_medico = {'%s' if db_type == 'postgresql' else '?'},
+        local_atendimento = {'%s' if db_type == 'postgresql' else '?'}
+        WHERE id = {'%s' if db_type == 'postgresql' else '?'}
+        """
+        
         cursor.execute(sql_update, valores)
         conn.commit()
+        logger.info(f"✅ Cadastro {cadastro_id} atualizado com sucesso")
         flash('Cadastro atualizado com sucesso!')
+        
     except Exception as e:
+        logger.error(f"❌ Erro ao atualizar cadastro {cadastro_id}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         flash(f'Erro ao atualizar cadastro: {str(e)}')
+    finally:
+        cursor.close()
+        conn.close()
+        logger.debug("Conexão fechada após atualização")
     
-    cursor.close()
-    conn.close()
     return redirect(url_for('dashboard'))
 
 @app.route('/deletar_cadastro/<int:cadastro_id>', methods=['POST'])
