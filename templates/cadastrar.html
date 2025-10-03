@@ -995,12 +995,36 @@
         const estadoCivil = document.querySelector('[name="estado_civil"]');
         const companheiroCampos = [
             'nome_companheiro', 'cpf_companheiro', 'rg_companheiro', 
-            'idade_companheiro', 'escolaridade_companheiro', 'profissao_companheiro'
+            'idade_companheiro', 'escolaridade_companheiro', 'profissao_companheiro',
+            'data_nascimento_companheiro', 'titulo_companheiro', 'cidade_titulo_companheiro', 'nis_companheiro'
         ];
         
-        if (estadoCivil && estadoCivil.value !== 'Solteiro(a)') {
-            let hasErrors = false;
+        if (estadoCivil && estadoCivil.value === 'Solteiro(a)') {
+            // Desabilitar e limpar campos do companheiro
             companheiroCampos.forEach(campo => {
+                const input = document.querySelector(`[name="${campo}"]`);
+                if (input) {
+                    input.disabled = true;
+                    input.value = '';
+                    input.style.backgroundColor = '#f5f5f5';
+                    clearFieldError(input);
+                }
+            });
+            return true;
+        } else if (estadoCivil && estadoCivil.value !== '') {
+            // Habilitar campos e validar preenchimento
+            let hasErrors = false;
+            const camposObrigatorios = ['nome_companheiro', 'cpf_companheiro', 'rg_companheiro', 'idade_companheiro', 'escolaridade_companheiro', 'profissao_companheiro'];
+            
+            companheiroCampos.forEach(campo => {
+                const input = document.querySelector(`[name="${campo}"]`);
+                if (input) {
+                    input.disabled = false;
+                    input.style.backgroundColor = '';
+                }
+            });
+            
+            camposObrigatorios.forEach(campo => {
                 const input = document.querySelector(`[name="${campo}"]`);
                 if (input && !input.value.trim()) {
                     showFieldError(input, 'Campo obrigatório para não solteiros');
@@ -1011,10 +1035,14 @@
             });
             return !hasErrors;
         } else {
-            // Limpar erros se solteiro
+            // Habilitar campos se estado civil não selecionado
             companheiroCampos.forEach(campo => {
                 const input = document.querySelector(`[name="${campo}"]`);
-                if (input) clearFieldError(input);
+                if (input) {
+                    input.disabled = false;
+                    input.style.backgroundColor = '';
+                    clearFieldError(input);
+                }
             });
             return true;
         }
@@ -1149,6 +1177,8 @@
         const estadoCivilInput = document.querySelector('[name="estado_civil"]');
         if (estadoCivilInput) {
             estadoCivilInput.addEventListener('change', validateCompanheiro);
+            // Validar estado inicial
+            validateCompanheiro();
         }
 
         // Validação soma família
