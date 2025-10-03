@@ -13,6 +13,9 @@ app.secret_key = os.environ.get('SECRET_KEY', 'ameg_secret_2024_fallback_key_cha
 app.config['UPLOAD_FOLDER'] = 'uploads/saude'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
+# Criar diretório de uploads se não existir
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
 # Inicializar banco na inicialização (apenas no Railway)
 if os.environ.get('RAILWAY_ENVIRONMENT'):
     try:
