@@ -139,6 +139,52 @@ def cadastrar():
             cursor = conn.cursor()
             logger.debug("Conexão com banco estabelecida para cadastro")
             
+            # Preparar dados para INSERT
+            dados_insert = (
+                request.form.get('nome_completo'), request.form.get('endereco'), request.form.get('numero'),
+                request.form.get('bairro'), request.form.get('cep'), request.form.get('telefone'),
+                request.form.get('ponto_referencia'), request.form.get('genero'), request.form.get('idade'),
+                request.form.get('data_nascimento'), request.form.get('titulo_eleitor'), request.form.get('cidade_titulo'),
+                request.form.get('cpf'), request.form.get('rg'), request.form.get('nis'),
+                request.form.get('estado_civil'), request.form.get('escolaridade'), request.form.get('profissao'),
+                request.form.get('nome_companheiro'), request.form.get('cpf_companheiro'), request.form.get('rg_companheiro'),
+                request.form.get('idade_companheiro'), request.form.get('escolaridade_companheiro'), request.form.get('profissao_companheiro'),
+                request.form.get('data_nascimento_companheiro'), request.form.get('titulo_companheiro'), request.form.get('cidade_titulo_companheiro'),
+                request.form.get('nis_companheiro'), request.form.get('tipo_trabalho'), request.form.get('pessoas_trabalham'),
+                request.form.get('aposentados_pensionistas'), request.form.get('num_pessoas_familia'), request.form.get('num_familias'),
+                request.form.get('adultos'), request.form.get('criancas'), request.form.get('adolescentes'),
+                request.form.get('idosos'), request.form.get('gestantes'), request.form.get('nutrizes'),
+                request.form.get('renda_familiar'), request.form.get('renda_per_capita'), request.form.get('bolsa_familia'),
+                request.form.get('casa_tipo'), request.form.get('casa_material'), request.form.get('energia'),
+                request.form.get('lixo'), request.form.get('agua'), request.form.get('esgoto'),
+                request.form.get('observacoes'), request.form.get('tem_doenca_cronica'), request.form.get('doencas_cronicas'),
+                request.form.get('usa_medicamento_continuo'), request.form.get('medicamentos_continuos'), request.form.get('tem_doenca_mental'),
+                request.form.get('doencas_mentais'), request.form.get('tem_deficiencia'), request.form.get('tipo_deficiencia'),
+                request.form.get('precisa_cuidados_especiais'), request.form.get('cuidados_especiais'),
+                # Novos campos de trabalho
+                request.form.get('com_que_trabalha'), request.form.get('onde_trabalha'), request.form.get('horario_trabalho'),
+                request.form.get('tempo_atividade'), request.form.get('atua_ponto_fixo'), request.form.get('qual_ponto_fixo'),
+                request.form.get('dias_semana_trabalha'), request.form.get('trabalho_continuo_temporada'),
+                request.form.get('sofreu_acidente_trabalho'), request.form.get('qual_acidente'),
+                request.form.get('trabalho_incomoda_calor'), request.form.get('trabalho_incomoda_barulho'),
+                request.form.get('trabalho_incomoda_seguranca'), request.form.get('trabalho_incomoda_banheiros'),
+                request.form.get('trabalho_incomoda_outro'), request.form.get('trabalho_incomoda_outro_desc'),
+                request.form.get('acesso_banheiro_agua'), request.form.get('trabalha_sozinho_ajudantes'),
+                request.form.get('possui_autorizacao_municipal'), request.form.get('problemas_fiscalizacao_policia'),
+                request.form.get('estrutura_barraca'), request.form.get('estrutura_carrinho'),
+                request.form.get('estrutura_mesa'), request.form.get('estrutura_outro'), request.form.get('estrutura_outro_desc'),
+                request.form.get('necessita_energia_eletrica'), request.form.get('utiliza_gas_cozinha'),
+                request.form.get('usa_veiculo_proprio'), request.form.get('qual_veiculo'),
+                request.form.get('fonte_renda_trabalho_ambulante'), request.form.get('fonte_renda_aposentadoria'),
+                request.form.get('fonte_renda_outro_trabalho'), request.form.get('fonte_renda_beneficio_social'),
+                request.form.get('fonte_renda_outro'), request.form.get('fonte_renda_outro_desc'),
+                request.form.get('pessoas_dependem_renda')
+            )
+            
+            logger.debug(f"📊 Preparando INSERT com {len(dados_insert)} valores")
+            logger.debug(f"🔍 Primeiros 5 valores: {dados_insert[:5]}")
+            logger.debug(f"🔍 Últimos 5 valores: {dados_insert[-5:]}")
+            
             logger.debug("Executando INSERT para novo cadastro...")
             execute_query("""INSERT INTO cadastros (
             nome_completo, endereco, numero, bairro, cep, telefone, ponto_referencia, genero, idade,
@@ -163,46 +209,12 @@ def cadastrar():
             fonte_renda_outro_trabalho, fonte_renda_beneficio_social, fonte_renda_outro,
             fonte_renda_outro_desc, pessoas_dependem_renda
         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-            (request.form.get('nome_completo'), request.form.get('endereco'), request.form.get('numero'),
-            request.form.get('bairro'), request.form.get('cep'), request.form.get('telefone'),
-            request.form.get('ponto_referencia'), request.form.get('genero'), request.form.get('idade'),
-            request.form.get('data_nascimento'), request.form.get('titulo_eleitor'), request.form.get('cidade_titulo'),
-            request.form.get('cpf'), request.form.get('rg'), request.form.get('nis'),
-            request.form.get('estado_civil'), request.form.get('escolaridade'), request.form.get('profissao'),
-            request.form.get('nome_companheiro'), request.form.get('cpf_companheiro'), request.form.get('rg_companheiro'),
-            request.form.get('idade_companheiro'), request.form.get('escolaridade_companheiro'), request.form.get('profissao_companheiro'),
-            request.form.get('data_nascimento_companheiro'), request.form.get('titulo_companheiro'), request.form.get('cidade_titulo_companheiro'),
-            request.form.get('nis_companheiro'), request.form.get('tipo_trabalho'), request.form.get('pessoas_trabalham'),
-            request.form.get('aposentados_pensionistas'), request.form.get('num_pessoas_familia'), request.form.get('num_familias'),
-            request.form.get('adultos'), request.form.get('criancas'), request.form.get('adolescentes'),
-            request.form.get('idosos'), request.form.get('gestantes'), request.form.get('nutrizes'),
-            request.form.get('renda_familiar'), request.form.get('renda_per_capita'), request.form.get('bolsa_familia'),
-            request.form.get('casa_tipo'), request.form.get('casa_material'), request.form.get('energia'),
-            request.form.get('lixo'), request.form.get('agua'), request.form.get('esgoto'),
-            request.form.get('observacoes'), request.form.get('tem_doenca_cronica'), request.form.get('doencas_cronicas'),
-            request.form.get('usa_medicamento_continuo'), request.form.get('medicamentos_continuos'), request.form.get('tem_doenca_mental'),
-            request.form.get('doencas_mentais'), request.form.get('tem_deficiencia'), request.form.get('tipo_deficiencia'),
-            request.form.get('precisa_cuidados_especiais'), request.form.get('cuidados_especiais'),
-            # Novos campos de trabalho
-            request.form.get('com_que_trabalha'), request.form.get('onde_trabalha'), request.form.get('horario_trabalho'),
-            request.form.get('tempo_atividade'), request.form.get('atua_ponto_fixo'), request.form.get('qual_ponto_fixo'),
-            request.form.get('dias_semana_trabalha'), request.form.get('trabalho_continuo_temporada'),
-            request.form.get('sofreu_acidente_trabalho'), request.form.get('qual_acidente'),
-            request.form.get('trabalho_incomoda_calor'), request.form.get('trabalho_incomoda_barulho'),
-            request.form.get('trabalho_incomoda_seguranca'), request.form.get('trabalho_incomoda_banheiros'),
-            request.form.get('trabalho_incomoda_outro'), request.form.get('trabalho_incomoda_outro_desc'),
-            request.form.get('acesso_banheiro_agua'), request.form.get('trabalha_sozinho_ajudantes'),
-            request.form.get('possui_autorizacao_municipal'), request.form.get('problemas_fiscalizacao_policia'),
-            request.form.get('estrutura_barraca'), request.form.get('estrutura_carrinho'),
-            request.form.get('estrutura_mesa'), request.form.get('estrutura_outro'), request.form.get('estrutura_outro_desc'),
-            request.form.get('necessita_energia_eletrica'), request.form.get('utiliza_gas_cozinha'),
-            request.form.get('usa_veiculo_proprio'), request.form.get('qual_veiculo'),
-            request.form.get('fonte_renda_trabalho_ambulante'), request.form.get('fonte_renda_aposentadoria'),
-            request.form.get('fonte_renda_outro_trabalho'), request.form.get('fonte_renda_beneficio_social'),
-            request.form.get('fonte_renda_outro'), request.form.get('fonte_renda_outro_desc'),
-            request.form.get('pessoas_dependem_renda')))
+            dados_insert)
+            
+            logger.info("✅ INSERT executado com sucesso!")
         
             # Para obter o ID do cadastro inserido, fazer uma query separada
+            logger.debug("🔍 Buscando ID do cadastro inserido...")
             conn, db_type = get_db()
             cursor = conn.cursor()
             
@@ -232,7 +244,7 @@ def cadastrar():
                             file_data = file.read()
                             descricao = request.form.get(f'descricao_{file_key}', '')
                             cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (%s, %s, %s, %s, %s)', 
-                                     (cadastro_id, file.filename, file_key, file_data, descricao))
+                                        (cadastro_id, file.filename, file_key, file_data, descricao))
                             uploaded_files.append(file_key)
                             logger.debug(f"Arquivo {file.filename} salvo com sucesso")
             
@@ -287,13 +299,13 @@ def relatorio_saude():
     precisa_cuidados = c.fetchone()[0]
     
     c.execute("""SELECT id, nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
-                 usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
-                 tem_deficiencia, tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais
-                 FROM cadastros 
-                 WHERE tem_doenca_cronica = "Sim" OR usa_medicamento_continuo = "Sim" 
-                 OR tem_doenca_mental = "Sim" OR tem_deficiencia = "Sim" 
-                 OR precisa_cuidados_especiais = "Sim"
-                 ORDER BY nome_completo""")
+                usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
+                tem_deficiencia, tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais
+                FROM cadastros 
+                WHERE tem_doenca_cronica = "Sim" OR usa_medicamento_continuo = "Sim" 
+                OR tem_doenca_mental = "Sim" OR tem_deficiencia = "Sim" 
+                OR precisa_cuidados_especiais = "Sim"
+                ORDER BY nome_completo""")
     cadastros_saude = c.fetchall()
     
     conn.close()
@@ -367,7 +379,7 @@ def upload_arquivo(cadastro_id):
         conn = get_db_connection()
         c = cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
         c.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (%s, %s, %s, %s, %s)', 
-                 (cadastro_id, file.filename, request.form.get('tipo_arquivo'), file_data, request.form.get('descricao')))
+                (cadastro_id, file.filename, request.form.get('tipo_arquivo'), file_data, request.form.get('descricao')))
         conn.commit()
         conn.close()
         
