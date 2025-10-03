@@ -216,10 +216,8 @@ def cadastrar():
             
             logger.info("✅ INSERT executado com sucesso!")
         
-            # Para obter o ID do cadastro inserido, fazer uma query separada
+            # Para obter o ID do cadastro inserido, usar a mesma conexão
             logger.debug("🔍 Buscando ID do cadastro inserido...")
-            conn, db_type = get_db()
-            cursor = conn.cursor()
             
             if db_type == 'postgresql':
                 cursor.execute('SELECT id FROM cadastros ORDER BY id DESC LIMIT 1')
@@ -233,10 +231,12 @@ def cadastrar():
                     cadastro_id = result['id']
                 else:  # SQLite Row or tuple
                     cadastro_id = result[0]
+                logger.debug(f"ID do cadastro inserido: {cadastro_id}")
             else:
                 cadastro_id = None
+                logger.error("❌ Não foi possível obter o ID do cadastro inserido")
             
-            # Upload de arquivos
+            # Upload de arquivos usando a mesma conexão
             uploaded_files = []
             if cadastro_id:
                 for file_key in ['laudo', 'receita', 'imagem']:
@@ -246,14 +246,20 @@ def cadastrar():
                             logger.debug(f"Processando arquivo: {file.filename} ({file_key})")
                             file_data = file.read()
                             descricao = request.form.get(f'descricao_{file_key}', '')
-                            cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (%s, %s, %s, %s, %s)', 
-                                        (cadastro_id, file.filename, file_key, file_data, descricao))
+                            
+                            if db_type == 'postgresql':
+                                cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (%s, %s, %s, %s, %s)', 
+                                            (cadastro_id, file.filename, file_key, file_data, descricao))
+                            else:
+                                cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (?, ?, ?, ?, ?)', 
+                                            (cadastro_id, file.filename, file_key, file_data, descricao))
+                            
                             uploaded_files.append(file_key)
                             logger.debug(f"Arquivo {file.filename} salvo com sucesso")
             
             conn.commit()
             conn.close()
-            logger.info("✅ Cadastro salvo com sucesso no banco")
+            logger.info("✅ Cadastro e arquivos salvos com sucesso no banco")
             
             if uploaded_files:
                 logger.info(f"📎 Arquivos enviados: {', '.join(uploaded_files)}")
