@@ -496,21 +496,21 @@ def deletar_cadastro(cadastro_id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn, db_type = get_db()
-    cursor = conn.cursor()
+    logger.info(f"Tentando deletar cadastro ID: {cadastro_id}")
     
     try:
+        conn = get_db_connection()
+        cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
+        
         # Deletar arquivos de saúde relacionados
-        if db_type == 'postgresql':
-            cursor.execute('DELETE FROM arquivos_saude WHERE cadastro_id = %s', (cadastro_id,))
-            cursor.execute('DELETE FROM cadastros WHERE id = %s', (cadastro_id,))
-        else:
-            cursor.execute('DELETE FROM arquivos_saude WHERE cadastro_id = ?', (cadastro_id,))
-            cursor.execute('DELETE FROM cadastros WHERE id = ?', (cadastro_id,))
+        cursor.execute('DELETE FROM arquivos_saude WHERE cadastro_id = %s', (cadastro_id,))
+        cursor.execute('DELETE FROM cadastros WHERE id = %s', (cadastro_id,))
         
         conn.commit()
+        logger.info(f"Cadastro {cadastro_id} deletado com sucesso")
         flash('Cadastro deletado com sucesso!')
     except Exception as e:
+        logger.error(f"Erro ao deletar cadastro {cadastro_id}: {str(e)}")
         flash(f'Erro ao deletar cadastro: {str(e)}')
     
     cursor.close()
