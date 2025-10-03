@@ -1096,7 +1096,28 @@
         return !hasErrors;
     }
 
-    // Função para validar formato de horário
+    // Função para validar campos "Outro" obrigatórios
+    function validateOutroFields() {
+        const validations = [
+            { checkbox: 'trabalho_incomoda_outro', field: 'trabalho_incomoda_outro_desc', label: 'Especifique o que incomoda no trabalho' },
+            { checkbox: 'fonte_renda_outro', field: 'fonte_renda_outro_desc', label: 'Especifique a outra fonte de renda' }
+        ];
+        
+        let hasErrors = false;
+        validations.forEach(validation => {
+            const checkbox = document.querySelector(`[name="${validation.checkbox}"]`);
+            const field = document.querySelector(`[name="${validation.field}"]`);
+            
+            if (checkbox && field && checkbox.value === 'Sim' && !field.value.trim()) {
+                showFieldError(field, `${validation.label} é obrigatório quando marcado como "Sim"`);
+                hasErrors = true;
+            } else if (field) {
+                clearFieldError(field);
+            }
+        });
+        
+        return !hasErrors;
+    }
     function validateHorario() {
         const horarioInput = document.querySelector('[name="horario_trabalho"]');
         if (horarioInput && horarioInput.value) {
@@ -1199,6 +1220,15 @@
             }
         });
 
+        // Validação campos "Outro"
+        const outroCheckboxes = ['trabalho_incomoda_outro', 'fonte_renda_outro'];
+        outroCheckboxes.forEach(fieldName => {
+            const input = document.querySelector(`[name="${fieldName}"]`);
+            if (input) {
+                input.addEventListener('change', validateOutroFields);
+            }
+        });
+
         // Validação horário trabalho
         const horarioInput = document.querySelector('[name="horario_trabalho"]');
         if (horarioInput) {
@@ -1222,6 +1252,7 @@
             if (!validateCompanheiro()) hasErrors = true;
             if (!validateFamiliaSum()) hasErrors = true;
             if (!validateSaude()) hasErrors = true;
+            if (!validateOutroFields()) hasErrors = true;
             if (!validateHorario()) hasErrors = true;
             
             if (hasErrors) {
