@@ -35,6 +35,18 @@
     </div>
     
     <div class="container">
+        <!-- DEBUG INFO -->
+        <div style="background: #f8f9fa; padding: 10px; margin-bottom: 20px; border: 1px solid #dee2e6; border-radius: 5px; font-family: monospace; font-size: 12px;">
+            <strong>DEBUG - Dados do Cadastro:</strong><br>
+            ID: {{ cadastro[0] if cadastro else 'N/A' }}<br>
+            Nome: {{ cadastro[1] if cadastro else 'N/A' }}<br>
+            Gênero (índice 8): {{ cadastro[8] if cadastro and cadastro|length > 8 else 'N/A' }}<br>
+            Estado Civil (índice 16): {{ cadastro[16] if cadastro and cadastro|length > 16 else 'N/A' }}<br>
+            Tipo Trabalho (índice 28): {{ cadastro[28] if cadastro and cadastro|length > 28 else 'N/A' }}<br>
+            Casa Tipo (índice 43): {{ cadastro[43] if cadastro and cadastro|length > 43 else 'N/A' }}<br>
+            Total campos: {{ cadastro|length if cadastro else 0 }}
+        </div>
+        
         <div class="form-card">
             <h2>Editar Cadastro Familiar</h2>
             
@@ -149,7 +161,7 @@
                 
                 <div class="form-group">
                     <label>Nome Companheiro</label>
-                    <input type="text" name="nome_companheiro">
+                    <input type="text" name="nome_companheiro" value="{{ cadastro[19] or '' }}">
                 </div>
                 
                 <div class="form-row">
@@ -203,15 +215,15 @@
                     <label>Tipo de Trabalho</label>
                     <select name="tipo_trabalho">
                         <option value="">Selecione</option>
-                        <option value="Assalariado com carteira">Assalariado com carteira</option>
-                        <option value="Assalariado sem carteira">Assalariado sem carteira</option>
-                        <option value="Trabalhador Autônomo">Trabalhador Autônomo</option>
-                        <option value="Aposentado">Aposentado</option>
-                        <option value="Pensionista">Pensionista</option>
-                        <option value="BPC">BPC</option>
-                        <option value="Funcionário Público">Funcionário Público</option>
-                        <option value="Desempregado">Desempregado</option>
-                        <option value="Outros">Outros</option>
+                        <option value="Assalariado com carteira" {{ 'selected' if cadastro[28] == 'Assalariado com carteira' else '' }}>Assalariado com carteira</option>
+                        <option value="Assalariado sem carteira" {{ 'selected' if cadastro[28] == 'Assalariado sem carteira' else '' }}>Assalariado sem carteira</option>
+                        <option value="Trabalhador Autônomo" {{ 'selected' if cadastro[28] == 'Trabalhador Autônomo' else '' }}>Trabalhador Autônomo</option>
+                        <option value="Aposentado" {{ 'selected' if cadastro[28] == 'Aposentado' else '' }}>Aposentado</option>
+                        <option value="Pensionista" {{ 'selected' if cadastro[28] == 'Pensionista' else '' }}>Pensionista</option>
+                        <option value="BPC" {{ 'selected' if cadastro[28] == 'BPC' else '' }}>BPC</option>
+                        <option value="Funcionário Público" {{ 'selected' if cadastro[28] == 'Funcionário Público' else '' }}>Funcionário Público</option>
+                        <option value="Desempregado" {{ 'selected' if cadastro[28] == 'Desempregado' else '' }}>Desempregado</option>
+                        <option value="Outros" {{ 'selected' if cadastro[28] == 'Outros' else '' }}>Outros</option>
                     </select>
                 </div>
                 
@@ -296,29 +308,29 @@
                         <label>Casa</label>
                         <select name="casa_tipo">
                             <option value="">Selecione</option>
-                            <option value="própria">Própria</option>
-                            <option value="alugada">Alugada</option>
-                            <option value="cedida">Cedida</option>
-                            <option value="invadida">Invadida</option>
-                            <option value="compartilhada">Compartilhada</option>
-                            <option value="outros">Outros</option>
+                            <option value="própria" {{ 'selected' if cadastro[43] == 'própria' else '' }}>Própria</option>
+                            <option value="alugada" {{ 'selected' if cadastro[43] == 'alugada' else '' }}>Alugada</option>
+                            <option value="cedida" {{ 'selected' if cadastro[43] == 'cedida' else '' }}>Cedida</option>
+                            <option value="invadida" {{ 'selected' if cadastro[43] == 'invadida' else '' }}>Invadida</option>
+                            <option value="compartilhada" {{ 'selected' if cadastro[43] == 'compartilhada' else '' }}>Compartilhada</option>
+                            <option value="outros" {{ 'selected' if cadastro[43] == 'outros' else '' }}>Outros</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Tipo Material</label>
                         <select name="casa_material">
                             <option value="">Selecione</option>
-                            <option value="alvenaria">Alvenaria</option>
-                            <option value="mista">Mista</option>
-                            <option value="taipa">Taipa</option>
+                            <option value="alvenaria" {{ 'selected' if cadastro[44] == 'alvenaria' else '' }}>Alvenaria</option>
+                            <option value="mista" {{ 'selected' if cadastro[44] == 'mista' else '' }}>Mista</option>
+                            <option value="taipa" {{ 'selected' if cadastro[44] == 'taipa' else '' }}>Taipa</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Energia</label>
                         <select name="energia">
                             <option value="">Selecione</option>
-                            <option value="Sim">Sim</option>
-                            <option value="Não">Não</option>
+                            <option value="Sim" {{ 'selected' if cadastro[45] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro[45] == 'Não' else '' }}>Não</option>
                         </select>
                     </div>
                 </div>
@@ -338,26 +350,26 @@
                         <label>Água</label>
                         <select name="agua">
                             <option value="">Selecione</option>
-                            <option value="encanada">Encanada</option>
-                            <option value="poço">Poço</option>
-                            <option value="cisterna">Cisterna</option>
-                            <option value="outros">Outros</option>
+                            <option value="encanada" {{ 'selected' if cadastro[47] == 'encanada' else '' }}>Encanada</option>
+                            <option value="poço" {{ 'selected' if cadastro[47] == 'poço' else '' }}>Poço</option>
+                            <option value="cisterna" {{ 'selected' if cadastro[47] == 'cisterna' else '' }}>Cisterna</option>
+                            <option value="outros" {{ 'selected' if cadastro[47] == 'outros' else '' }}>Outros</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Esgoto</label>
                         <select name="esgoto">
                             <option value="">Selecione</option>
-                            <option value="saneado">Saneado</option>
-                            <option value="fossa">Fossa</option>
-                            <option value="outros">Outros</option>
+                            <option value="saneado" {{ 'selected' if cadastro[48] == 'saneado' else '' }}>Saneado</option>
+                            <option value="fossa" {{ 'selected' if cadastro[48] == 'fossa' else '' }}>Fossa</option>
+                            <option value="outros" {{ 'selected' if cadastro[48] == 'outros' else '' }}>Outros</option>
                         </select>
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label>Observações</label>
-                    <textarea name="observacoes" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                    <textarea name="observacoes" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">{{ cadastro[49] or '' }}</textarea>
                 </div>
                 
                 <h3>DADOS DA SAÚDE DA FAMÍLIA</h3>
@@ -367,8 +379,8 @@
                         <label>Tem doença crônica?</label>
                         <select name="tem_doenca_cronica" onchange="toggleField(this, 'doencas_cronicas')">
                             <option value="">Selecione</option>
-                            <option value="Sim">Sim</option>
-                            <option value="Não">Não</option>
+                            <option value="Sim" {{ 'selected' if cadastro[50] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro[50] == 'Não' else '' }}>Não</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -382,8 +394,8 @@
                         <label>Usa medicamento contínuo?</label>
                         <select name="usa_medicamento_continuo" onchange="toggleField(this, 'medicamentos_continuos')">
                             <option value="">Selecione</option>
-                            <option value="Sim">Sim</option>
-                            <option value="Não">Não</option>
+                            <option value="Sim" {{ 'selected' if cadastro[52] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro[52] == 'Não' else '' }}>Não</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -397,8 +409,8 @@
                         <label>Tem doença mental?</label>
                         <select name="tem_doenca_mental" onchange="toggleField(this, 'doencas_mentais')">
                             <option value="">Selecione</option>
-                            <option value="Sim">Sim</option>
-                            <option value="Não">Não</option>
+                            <option value="Sim" {{ 'selected' if cadastro[54] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro[54] == 'Não' else '' }}>Não</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -412,8 +424,8 @@
                         <label>Tem deficiência?</label>
                         <select name="tem_deficiencia" onchange="toggleField(this, 'tipo_deficiencia')">
                             <option value="">Selecione</option>
-                            <option value="Sim">Sim</option>
-                            <option value="Não">Não</option>
+                            <option value="Sim" {{ 'selected' if cadastro[56] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro[56] == 'Não' else '' }}>Não</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -427,8 +439,8 @@
                         <label>Precisa de cuidados especiais?</label>
                         <select name="precisa_cuidados_especiais" onchange="toggleField(this, 'cuidados_especiais')">
                             <option value="">Selecione</option>
-                            <option value="Sim">Sim</option>
-                            <option value="Não">Não</option>
+                            <option value="Sim" {{ 'selected' if cadastro[58] == 'Sim' else '' }}>Sim</option>
+                            <option value="Não" {{ 'selected' if cadastro[58] == 'Não' else '' }}>Não</option>
                         </select>
                     </div>
                     <div class="form-group">
