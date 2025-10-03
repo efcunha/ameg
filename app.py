@@ -4,27 +4,62 @@ from db_helper import get_db, execute_query
 import csv
 import io
 import os
+import logging
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+
+# Configurar logging detalhado
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'ameg_secret_2024_fallback_key_change_in_production')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
+logger.info("🚀 Iniciando aplicação AMEG")
+logger.info(f"RAILWAY_ENVIRONMENT: {os.environ.get('RAILWAY_ENVIRONMENT')}")
+logger.info(f"DATABASE_URL presente: {'DATABASE_URL' in os.environ}")
+
 # Inicializar banco na inicialização (apenas no Railway)
 if os.environ.get('RAILWAY_ENVIRONMENT'):
     try:
+        logger.info("Iniciando inicialização do banco...")
         init_db_tables()
+        logger.info("Tabelas criadas com sucesso")
+        
         create_admin_user()
+        logger.info("Usuário admin criado")
         
         # Migração da tabela arquivos_saude
-        from migrate_db import migrate_arquivos_saude
-        migrate_arquivos_saude()
+        logger.info("Iniciando migração da tabela arquivos_saude...")
+        conn = get_db_connection()
+        cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
         
-        print("✅ Banco inicializado no Railway")
+        # Verificar se a coluna já existe
+        cursor.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'arquivos_saude' 
+            AND column_name = 'arquivo_dados'
+        """)
+        
+        if not cursor.fetchone():
+            logger.info("Adicionando coluna arquivo_dados...")
+            cursor.execute("ALTER TABLE arquivos_saude ADD COLUMN arquivo_dados BYTEA")
+            conn.commit()
+            logger.info("Coluna arquivo_dados adicionada com sucesso")
+        else:
+            logger.info("Coluna arquivo_dados já existe")
+        
+        cursor.close()
+        conn.close()
+        
+        logger.info("✅ Banco inicializado no Railway")
     except Exception as e:
-        print(f"Erro na inicialização do banco: {e}")
+        logger.error(f"❌ Erro na inicialização do banco: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
 
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
 
@@ -512,5 +547,7 @@ def download_arquivo(arquivo_id):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    print(f"🚀 Iniciando AMEG na porta {port}")
+    logger.info(f"🚀 Iniciando AMEG na porta {port}")
+    logger.info(f"Debug mode: {app.debug}")
+    logger.info(f"Environment: {'Railway' if os.environ.get('RAILWAY_ENVIRONMENT') else 'Local'}")
     app.run(host='0.0.0.0', port=port, debug=False)
