@@ -108,7 +108,51 @@ def init_db_tables():
                 tipo_deficiencia TEXT,
                 precisa_cuidados_especiais VARCHAR(10),
                 cuidados_especiais TEXT,
-                data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                
+                -- ATIVIDADE DE TRABALHO
+                com_que_trabalha TEXT,
+                onde_trabalha TEXT,
+                horario_trabalho TEXT,
+                tempo_atividade TEXT,
+                atua_ponto_fixo VARCHAR(10),
+                qual_ponto_fixo TEXT,
+                dias_semana_trabalha INTEGER,
+                trabalho_continuo_temporada VARCHAR(20),
+                
+                -- CONDIÇÕES DE TRABALHO
+                sofreu_acidente_trabalho VARCHAR(10),
+                qual_acidente TEXT,
+                trabalho_incomoda_calor VARCHAR(10),
+                trabalho_incomoda_barulho VARCHAR(10),
+                trabalho_incomoda_seguranca VARCHAR(10),
+                trabalho_incomoda_banheiros VARCHAR(10),
+                trabalho_incomoda_outro VARCHAR(10),
+                trabalho_incomoda_outro_desc TEXT,
+                acesso_banheiro_agua VARCHAR(10),
+                trabalha_sozinho_ajudantes TEXT,
+                possui_autorizacao_municipal VARCHAR(10),
+                problemas_fiscalizacao_policia VARCHAR(10),
+                
+                -- ESTRUTURA DE TRABALHO
+                estrutura_barraca VARCHAR(10),
+                estrutura_carrinho VARCHAR(10),
+                estrutura_mesa VARCHAR(10),
+                estrutura_outro VARCHAR(10),
+                estrutura_outro_desc TEXT,
+                necessita_energia_eletrica VARCHAR(10),
+                utiliza_gas_cozinha VARCHAR(10),
+                usa_veiculo_proprio VARCHAR(10),
+                qual_veiculo TEXT,
+                
+                -- RENDA E FAMÍLIA
+                fonte_renda_trabalho_ambulante VARCHAR(10),
+                fonte_renda_aposentadoria VARCHAR(10),
+                fonte_renda_outro_trabalho VARCHAR(10),
+                fonte_renda_beneficio_social VARCHAR(10),
+                fonte_renda_outro VARCHAR(10),
+                fonte_renda_outro_desc TEXT,
+                pessoas_dependem_renda INTEGER
             )
         ''')
         logger.debug("✅ Tabela cadastros criada")

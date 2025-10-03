@@ -151,8 +151,18 @@ def cadastrar():
             renda_per_capita, bolsa_familia, casa_tipo, casa_material, energia, lixo, agua,
             esgoto, observacoes, tem_doenca_cronica, doencas_cronicas, usa_medicamento_continuo,
             medicamentos_continuos, tem_doenca_mental, doencas_mentais, tem_deficiencia,
-            tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais,
+            com_que_trabalha, onde_trabalha, horario_trabalho, tempo_atividade, atua_ponto_fixo,
+            qual_ponto_fixo, dias_semana_trabalha, trabalho_continuo_temporada, sofreu_acidente_trabalho,
+            qual_acidente, trabalho_incomoda_calor, trabalho_incomoda_barulho, trabalho_incomoda_seguranca,
+            trabalho_incomoda_banheiros, trabalho_incomoda_outro, trabalho_incomoda_outro_desc,
+            acesso_banheiro_agua, trabalha_sozinho_ajudantes, possui_autorizacao_municipal,
+            problemas_fiscalizacao_policia, estrutura_barraca, estrutura_carrinho, estrutura_mesa,
+            estrutura_outro, estrutura_outro_desc, necessita_energia_eletrica, utiliza_gas_cozinha,
+            usa_veiculo_proprio, qual_veiculo, fonte_renda_trabalho_ambulante, fonte_renda_aposentadoria,
+            fonte_renda_outro_trabalho, fonte_renda_beneficio_social, fonte_renda_outro,
+            fonte_renda_outro_desc, pessoas_dependem_renda
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (request.form.get('nome_completo'), request.form.get('endereco'), request.form.get('numero'),
          request.form.get('bairro'), request.form.get('cep'), request.form.get('telefone'),
          request.form.get('ponto_referencia'), request.form.get('genero'), request.form.get('idade'),
@@ -172,7 +182,25 @@ def cadastrar():
          request.form.get('observacoes'), request.form.get('tem_doenca_cronica'), request.form.get('doencas_cronicas'),
          request.form.get('usa_medicamento_continuo'), request.form.get('medicamentos_continuos'), request.form.get('tem_doenca_mental'),
          request.form.get('doencas_mentais'), request.form.get('tem_deficiencia'), request.form.get('tipo_deficiencia'),
-         request.form.get('precisa_cuidados_especiais'), request.form.get('cuidados_especiais')))
+         request.form.get('precisa_cuidados_especiais'), request.form.get('cuidados_especiais'),
+         # Novos campos de trabalho
+         request.form.get('com_que_trabalha'), request.form.get('onde_trabalha'), request.form.get('horario_trabalho'),
+         request.form.get('tempo_atividade'), request.form.get('atua_ponto_fixo'), request.form.get('qual_ponto_fixo'),
+         request.form.get('dias_semana_trabalha'), request.form.get('trabalho_continuo_temporada'),
+         request.form.get('sofreu_acidente_trabalho'), request.form.get('qual_acidente'),
+         request.form.get('trabalho_incomoda_calor'), request.form.get('trabalho_incomoda_barulho'),
+         request.form.get('trabalho_incomoda_seguranca'), request.form.get('trabalho_incomoda_banheiros'),
+         request.form.get('trabalho_incomoda_outro'), request.form.get('trabalho_incomoda_outro_desc'),
+         request.form.get('acesso_banheiro_agua'), request.form.get('trabalha_sozinho_ajudantes'),
+         request.form.get('possui_autorizacao_municipal'), request.form.get('problemas_fiscalizacao_policia'),
+         request.form.get('estrutura_barraca'), request.form.get('estrutura_carrinho'),
+         request.form.get('estrutura_mesa'), request.form.get('estrutura_outro'), request.form.get('estrutura_outro_desc'),
+         request.form.get('necessita_energia_eletrica'), request.form.get('utiliza_gas_cozinha'),
+         request.form.get('usa_veiculo_proprio'), request.form.get('qual_veiculo'),
+         request.form.get('fonte_renda_trabalho_ambulante'), request.form.get('fonte_renda_aposentadoria'),
+         request.form.get('fonte_renda_outro_trabalho'), request.form.get('fonte_renda_beneficio_social'),
+         request.form.get('fonte_renda_outro'), request.form.get('fonte_renda_outro_desc'),
+         request.form.get('pessoas_dependem_renda')))
         
             # Para obter o ID do cadastro inserido, fazer uma query separada
             conn, db_type = get_db()
@@ -452,14 +480,29 @@ def atualizar_cadastro(cadastro_id):
         campos = [
             'nome_completo', 'endereco', 'numero', 'bairro', 'cep', 'telefone', 'ponto_referencia',
             'genero', 'idade', 'data_nascimento', 'titulo_eleitor', 'cidade_titulo',
-        'cpf', 'rg', 'nis', 'estado_civil', 'escolaridade', 'profissao',
-        'nome_companheiro', 'cpf_companheiro', 'rg_companheiro', 'idade_companheiro',
-        'escolaridade_companheiro', 'profissao_companheiro', 'qtd_filhos',
-        'nomes_idades_filhos', 'renda_familiar', 'beneficio_governo',
-        'qual_beneficio', 'casa_propria', 'tipo_casa', 'qtd_comodos',
-            'energia_eletrica', 'agua_encanada', 'rede_esgoto', 'coleta_lixo',
-            'doencas_familia', 'medicamentos_uso', 'deficiencia_familia',
-            'tipo_deficiencia', 'acompanhamento_medico', 'local_atendimento'
+            'cpf', 'rg', 'nis', 'estado_civil', 'escolaridade', 'profissao',
+            'nome_companheiro', 'cpf_companheiro', 'rg_companheiro', 'idade_companheiro',
+            'escolaridade_companheiro', 'profissao_companheiro', 'data_nascimento_companheiro',
+            'titulo_companheiro', 'cidade_titulo_companheiro', 'nis_companheiro', 'tipo_trabalho',
+            'pessoas_trabalham', 'aposentados_pensionistas', 'num_pessoas_familia', 'num_familias',
+            'adultos', 'criancas', 'adolescentes', 'idosos', 'gestantes', 'nutrizes',
+            'renda_familiar', 'renda_per_capita', 'bolsa_familia', 'casa_tipo', 'casa_material',
+            'energia', 'lixo', 'agua', 'esgoto', 'observacoes', 'tem_doenca_cronica',
+            'doencas_cronicas', 'usa_medicamento_continuo', 'medicamentos_continuos',
+            'tem_doenca_mental', 'doencas_mentais', 'tem_deficiencia', 'tipo_deficiencia',
+            'precisa_cuidados_especiais', 'cuidados_especiais',
+            # Novos campos de trabalho
+            'com_que_trabalha', 'onde_trabalha', 'horario_trabalho', 'tempo_atividade',
+            'atua_ponto_fixo', 'qual_ponto_fixo', 'dias_semana_trabalha', 'trabalho_continuo_temporada',
+            'sofreu_acidente_trabalho', 'qual_acidente', 'trabalho_incomoda_calor',
+            'trabalho_incomoda_barulho', 'trabalho_incomoda_seguranca', 'trabalho_incomoda_banheiros',
+            'trabalho_incomoda_outro', 'trabalho_incomoda_outro_desc', 'acesso_banheiro_agua',
+            'trabalha_sozinho_ajudantes', 'possui_autorizacao_municipal', 'problemas_fiscalizacao_policia',
+            'estrutura_barraca', 'estrutura_carrinho', 'estrutura_mesa', 'estrutura_outro',
+            'estrutura_outro_desc', 'necessita_energia_eletrica', 'utiliza_gas_cozinha',
+            'usa_veiculo_proprio', 'qual_veiculo', 'fonte_renda_trabalho_ambulante',
+            'fonte_renda_aposentadoria', 'fonte_renda_outro_trabalho', 'fonte_renda_beneficio_social',
+            'fonte_renda_outro', 'fonte_renda_outro_desc', 'pessoas_dependem_renda'
         ]
         
         valores = [request.form.get(campo, '') for campo in campos]

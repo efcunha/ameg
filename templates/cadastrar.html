@@ -669,6 +669,220 @@
                 toggleCamposCompanheiro(); // Executar na carga da página
                 </script>
                 
+                <!-- ATIVIDADE DE TRABALHO -->
+                <h3 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 30px;">📋 Atividade de Trabalho</h3>
+                
+                <div class="form-group">
+                    <label>Com o que você trabalha?</label>
+                    <input type="text" name="com_que_trabalha">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Onde trabalha?</label>
+                        <input type="text" name="onde_trabalha">
+                    </div>
+                    <div class="form-group">
+                        <label>Qual é o seu horário de trabalho?</label>
+                        <input type="text" name="horario_trabalho">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Há quanto tempo atua nessa atividade?</label>
+                        <input type="text" name="tempo_atividade">
+                    </div>
+                    <div class="form-group">
+                        <label>Atua em ponto fixo?</label>
+                        <select name="atua_ponto_fixo" onchange="toggleField(this, 'qual_ponto_fixo')">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Qual ponto?</label>
+                    <input type="text" name="qual_ponto_fixo" id="qual_ponto_fixo" disabled>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantos dias por semana trabalha?</label>
+                        <input type="number" name="dias_semana_trabalha" min="1" max="7">
+                    </div>
+                    <div class="form-group">
+                        <label>Seu trabalho é contínuo ou por temporada?</label>
+                        <select name="trabalho_continuo_temporada">
+                            <option value="">Selecione</option>
+                            <option value="Contínuo">Contínuo</option>
+                            <option value="Temporada">Por temporada</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- CONDIÇÕES DE TRABALHO -->
+                <h3 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 30px;">⚠️ Condições de Trabalho</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Já sofreu acidente no ambiente de trabalho?</label>
+                        <select name="sofreu_acidente_trabalho" onchange="toggleField(this, 'qual_acidente')">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Qual acidente?</label>
+                        <input type="text" name="qual_acidente" id="qual_acidente" disabled>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>No seu trabalho, o que mais incomoda?</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="trabalho_incomoda_calor" value="Sim" style="margin-right: 5px;"> Calor
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="trabalho_incomoda_barulho" value="Sim" style="margin-right: 5px;"> Barulho
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="trabalho_incomoda_seguranca" value="Sim" style="margin-right: 5px;"> Segurança
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="trabalho_incomoda_banheiros" value="Sim" style="margin-right: 5px;"> Ausência de banheiros
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="trabalho_incomoda_outro" value="Sim" style="margin-right: 5px;" onchange="toggleField(this, 'trabalho_incomoda_outro_desc')"> Outro
+                        </label>
+                    </div>
+                    <input type="text" name="trabalho_incomoda_outro_desc" id="trabalho_incomoda_outro_desc" placeholder="Especifique" style="margin-top: 10px;" disabled>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tem acesso a banheiro e água potável durante o trabalho?</label>
+                        <select name="acesso_banheiro_agua">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Costuma trabalhar sozinho(a) ou com ajudantes? Quantos?</label>
+                        <input type="text" name="trabalha_sozinho_ajudantes">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Possui autorização/licença municipal para atuar?</label>
+                        <select name="possui_autorizacao_municipal">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Costuma ter problemas com fiscalização ou violência policial?</label>
+                        <select name="problemas_fiscalizacao_policia">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- ESTRUTURA DE TRABALHO -->
+                <h3 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 30px;">🏗️ Estrutura de Trabalho</h3>
+                
+                <div class="form-group">
+                    <label>Qual estrutura utiliza?</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="estrutura_barraca" value="Sim" style="margin-right: 5px;"> Barraca
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="estrutura_carrinho" value="Sim" style="margin-right: 5px;"> Carrinho
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="estrutura_mesa" value="Sim" style="margin-right: 5px;"> Mesa
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="estrutura_outro" value="Sim" style="margin-right: 5px;" onchange="toggleField(this, 'estrutura_outro_desc')"> Outro
+                        </label>
+                    </div>
+                    <input type="text" name="estrutura_outro_desc" id="estrutura_outro_desc" placeholder="Especifique" style="margin-top: 10px;" disabled>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Necessita energia elétrica?</label>
+                        <select name="necessita_energia_eletrica">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Utiliza gás de cozinha?</label>
+                        <select name="utiliza_gas_cozinha">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Usa veículo próprio para transporte?</label>
+                        <select name="usa_veiculo_proprio" onchange="toggleField(this, 'qual_veiculo')">
+                            <option value="">Selecione</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Qual veículo?</label>
+                        <input type="text" name="qual_veiculo" id="qual_veiculo" disabled>
+                    </div>
+                </div>
+                
+                <!-- RENDA E FAMÍLIA -->
+                <h3 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 30px;">💰 Renda e Família</h3>
+                
+                <div class="form-group">
+                    <label>Qual é a principal fonte de renda da sua família?</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="fonte_renda_trabalho_ambulante" value="Sim" style="margin-right: 5px;"> Trabalho ambulante
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="fonte_renda_aposentadoria" value="Sim" style="margin-right: 5px;"> Aposentadoria
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="fonte_renda_outro_trabalho" value="Sim" style="margin-right: 5px;"> Outro trabalho
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="fonte_renda_beneficio_social" value="Sim" style="margin-right: 5px;"> Benefício social
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="checkbox" name="fonte_renda_outro" value="Sim" style="margin-right: 5px;" onchange="toggleField(this, 'fonte_renda_outro_desc')"> Outro
+                        </label>
+                    </div>
+                    <input type="text" name="fonte_renda_outro_desc" id="fonte_renda_outro_desc" placeholder="Especifique" style="margin-top: 10px;" disabled>
+                </div>
+                
+                <div class="form-group">
+                    <label>Quantas pessoas dependem diretamente da sua renda?</label>
+                    <input type="number" name="pessoas_dependem_renda" min="0">
+                </div>
+                
                 <button type="submit" class="btn">Salvar Cadastro</button>
             </form>
         </div>
