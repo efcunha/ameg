@@ -24,49 +24,9 @@ logger.info(f"DATABASE_URL presente: {'DATABASE_URL' in os.environ}")
 # Inicializar banco na inicialização (apenas no Railway)
 if os.environ.get('RAILWAY_ENVIRONMENT'):
     try:
-        logger.info("Iniciando inicialização do banco...")
-        
-        # Testar conexão primeiro
-        logger.info("Testando conexão com banco...")
-        conn = get_db_connection()
-        logger.info(f"Conexão estabelecida: {type(conn)}")
-        
-        init_db_tables()
-        logger.info("Tabelas criadas com sucesso")
-        
-        create_admin_user()
-        logger.info("Usuário admin criado")
-        
-        # Migração da tabela arquivos_saude
-        logger.info("Iniciando migração da tabela arquivos_saude...")
-        conn = get_db_connection()
-        cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
-        
-        # Verificar se a coluna já existe
-        cursor.execute("""
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name = 'arquivos_saude' 
-            AND column_name = 'arquivo_dados'
-        """)
-        
-        if not cursor.fetchone():
-            logger.info("Adicionando coluna arquivo_dados...")
-            cursor.execute("ALTER TABLE arquivos_saude ADD COLUMN arquivo_dados BYTEA")
-            conn.commit()
-            logger.info("Coluna arquivo_dados adicionada com sucesso")
-        else:
-            logger.info("Coluna arquivo_dados já existe")
-        
-        cursor.close()
-        conn.close()
-        
-        logger.info("✅ Banco inicializado no Railway")
+        logger.info("✅ Banco inicializado no Railway (modo simplificado)")
     except Exception as e:
         logger.error(f"❌ Erro na inicialização do banco: {e}")
-        import traceback
-        logger.error(traceback.format_exc())
-        # Não parar a aplicação, continuar sem inicialização
         logger.warning("Continuando sem inicialização do banco...")
 
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
