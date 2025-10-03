@@ -20,31 +20,32 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 logger.info("🚀 Iniciando aplicação AMEG")
 logger.info(f"RAILWAY_ENVIRONMENT: {os.environ.get('RAILWAY_ENVIRONMENT')}")
 logger.info(f"DATABASE_URL presente: {'DATABASE_URL' in os.environ}")
+logger.debug(f"SECRET_KEY configurada: {bool(app.secret_key)}")
 
 # Inicializar banco na inicialização (apenas no Railway)
 if os.environ.get('RAILWAY_ENVIRONMENT'):
+    logger.info("🔧 Iniciando configuração do banco PostgreSQL...")
     try:
-        # Adicionar coluna arquivo_dados se não existir
-        conn = get_db_connection()
-        cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
+        logger.info("🔧 Inicializando tabelas do banco primeiro...")
+        logger.debug("Chamando init_db_tables()...")
+        init_db_tables()
+        logger.info("✅ Tabelas inicializadas")
         
-        try:
-            cursor.execute("ALTER TABLE arquivos_saude ADD COLUMN arquivo_dados BYTEA")
-            conn.commit()
-            logger.info("Coluna arquivo_dados adicionada")
-        except Exception as e:
-            if "already exists" in str(e) or "duplicate column" in str(e):
-                logger.info("Coluna arquivo_dados já existe")
-            else:
-                logger.error(f"Erro ao adicionar coluna: {e}")
+        logger.info("👤 Criando usuário admin...")
+        logger.debug("Chamando create_admin_user()...")
+        create_admin_user()
+        logger.info("✅ Usuário admin configurado")
         
-        cursor.close()
-        conn.close()
-        
-        logger.info("✅ Banco inicializado no Railway (modo simplificado)")
+        logger.info("✅ Banco inicializado completamente no Railway")
     except Exception as e:
         logger.error(f"❌ Erro na inicialização do banco: {e}")
-        logger.warning("Continuando sem inicialização do banco...")
+        logger.error(f"Tipo do erro: {type(e)}")
+        logger.error(f"Args do erro: {e.args}")
+        import traceback
+        logger.error(f"Traceback completo: {traceback.format_exc()}")
+        logger.warning("⚠️ Continuando sem inicialização do banco...")
+else:
+    logger.info("🏠 Ambiente local detectado - usando SQLite")
 
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
 
