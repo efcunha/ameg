@@ -25,6 +25,12 @@ logger.info(f"DATABASE_URL presente: {'DATABASE_URL' in os.environ}")
 if os.environ.get('RAILWAY_ENVIRONMENT'):
     try:
         logger.info("Iniciando inicialização do banco...")
+        
+        # Testar conexão primeiro
+        logger.info("Testando conexão com banco...")
+        conn = get_db_connection()
+        logger.info(f"Conexão estabelecida: {type(conn)}")
+        
         init_db_tables()
         logger.info("Tabelas criadas com sucesso")
         
@@ -60,6 +66,8 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
         logger.error(f"❌ Erro na inicialização do banco: {e}")
         import traceback
         logger.error(traceback.format_exc())
+        # Não parar a aplicação, continuar sem inicialização
+        logger.warning("Continuando sem inicialização do banco...")
 
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
 
