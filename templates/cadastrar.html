@@ -956,6 +956,164 @@
         }
     }
 
+    // Função para calcular idade baseada na data de nascimento
+    function calculateAge(birthDate) {
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        
+        return age;
+    }
+
+    // Função para validar idade vs data nascimento
+    function validateAge() {
+        const idadeInput = document.querySelector('[name="idade"]');
+        const dataNascInput = document.querySelector('[name="data_nascimento"]');
+        
+        if (idadeInput && dataNascInput && dataNascInput.value) {
+            const calculatedAge = calculateAge(dataNascInput.value);
+            const inputAge = parseInt(idadeInput.value);
+            
+            if (inputAge !== calculatedAge) {
+                showFieldError(idadeInput, `Idade deve ser ${calculatedAge} anos baseada na data de nascimento`);
+                return false;
+            } else {
+                clearFieldError(idadeInput);
+                return true;
+            }
+        }
+        return true;
+    }
+
+    // Função para validar campos do companheiro
+    function validateCompanheiro() {
+        const estadoCivil = document.querySelector('[name="estado_civil"]');
+        const companheiroCampos = [
+            'nome_companheiro', 'cpf_companheiro', 'rg_companheiro', 
+            'idade_companheiro', 'escolaridade_companheiro', 'profissao_companheiro'
+        ];
+        
+        if (estadoCivil && estadoCivil.value !== 'Solteiro(a)') {
+            let hasErrors = false;
+            companheiroCampos.forEach(campo => {
+                const input = document.querySelector(`[name="${campo}"]`);
+                if (input && !input.value.trim()) {
+                    showFieldError(input, 'Campo obrigatório para não solteiros');
+                    hasErrors = true;
+                } else if (input) {
+                    clearFieldError(input);
+                }
+            });
+            return !hasErrors;
+        } else {
+            // Limpar erros se solteiro
+            companheiroCampos.forEach(campo => {
+                const input = document.querySelector(`[name="${campo}"]`);
+                if (input) clearFieldError(input);
+            });
+            return true;
+        }
+    }
+
+    // Função para validar soma da família
+    function validateFamiliaSum() {
+        const numPessoas = parseInt(document.querySelector('[name="num_pessoas_familia"]')?.value || 0);
+        const adultos = parseInt(document.querySelector('[name="adultos"]')?.value || 0);
+        const criancas = parseInt(document.querySelector('[name="criancas"]')?.value || 0);
+        const adolescentes = parseInt(document.querySelector('[name="adolescentes"]')?.value || 0);
+        const idosos = parseInt(document.querySelector('[name="idosos"]')?.value || 0);
+        const gestantes = parseInt(document.querySelector('[name="gestantes"]')?.value || 0);
+        const nutrizes = parseInt(document.querySelector('[name="nutrizes"]')?.value || 0);
+        
+        const soma = adultos + criancas + adolescentes + idosos + gestantes + nutrizes;
+        const numPessoasInput = document.querySelector('[name="num_pessoas_familia"]');
+        
+        if (soma > numPessoas) {
+            showFieldError(numPessoasInput, `Soma dos membros (${soma}) não pode ser maior que o total (${numPessoas})`);
+            return false;
+        } else {
+            clearFieldError(numPessoasInput);
+            return true;
+        }
+    }
+
+    // Função para validar campos de saúde obrigatórios
+    function validateSaude() {
+        const validations = [
+            { checkbox: 'tem_doenca_cronica', field: 'doencas_cronicas', label: 'Quais doenças crônicas?' },
+            { checkbox: 'usa_medicamento_continuo', field: 'medicamentos_continuos', label: 'Quais medicamentos?' },
+            { checkbox: 'tem_doenca_mental', field: 'doencas_mentais', label: 'Quais doenças mentais?' },
+            { checkbox: 'tem_deficiencia', field: 'tipo_deficiencia', label: 'Tipo de deficiência?' },
+            { checkbox: 'precisa_cuidados_especiais', field: 'cuidados_especiais', label: 'Quais cuidados?' }
+        ];
+        
+        let hasErrors = false;
+        validations.forEach(validation => {
+            const checkbox = document.querySelector(`[name="${validation.checkbox}"]`);
+            const field = document.querySelector(`[name="${validation.field}"]`);
+            
+            if (checkbox && field && checkbox.value === 'Sim' && !field.value.trim()) {
+                showFieldError(field, `${validation.label} é obrigatório quando marcado como "Sim"`);
+                hasErrors = true;
+            } else if (field) {
+                clearFieldError(field);
+            }
+        });
+        
+        return !hasErrors;
+    }
+
+    // Função para validar formato de horário
+    function validateHorario() {
+        const horarioInput = document.querySelector('[name="horario_trabalho"]');
+        if (horarioInput && horarioInput.value) {
+            const horarioRegex = /^\d{2}:\d{2}\s*a\s*\d{2}:\d{2}$/i;
+            if (!horarioRegex.test(horarioInput.value)) {
+                showFieldError(horarioInput, 'Formato deve ser HH:MM a HH:MM (ex: 08:00 a 17:00)');
+                return false;
+            } else {
+                clearFieldError(horarioInput);
+                return true;
+            }
+        }
+        return true;
+    }
+
+    // Função para mostrar erro no campo
+    function showFieldError(input, message) {
+        input.style.borderColor = '#dc3545';
+        input.style.backgroundColor = '#fff5f5';
+        
+        let existingError = input.parentNode.querySelector('.validation-error');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        const error = document.createElement('div');
+        error.className = 'validation-error';
+        error.style.color = '#dc3545';
+        error.style.fontSize = '12px';
+        error.style.marginTop = '2px';
+        error.textContent = message;
+        input.parentNode.appendChild(error);
+    }
+
+    // Função para limpar erro do campo
+    function clearFieldError(input) {
+        input.style.borderColor = '';
+        input.style.backgroundColor = '';
+        
+        let existingError = input.parentNode.querySelector('.validation-error');
+        if (existingError) {
+            existingError.remove();
+        }
+    }
+
     // Adicionar validação em tempo real para todos os campos com limite
     document.addEventListener('DOMContentLoaded', function() {
         Object.keys(FIELD_LIMITS).forEach(fieldName => {
@@ -970,17 +1128,71 @@
                 });
             }
         });
+
+        // Validação idade vs data nascimento
+        const idadeInput = document.querySelector('[name="idade"]');
+        const dataNascInput = document.querySelector('[name="data_nascimento"]');
+        
+        if (idadeInput && dataNascInput) {
+            dataNascInput.addEventListener('change', function() {
+                if (this.value) {
+                    const calculatedAge = calculateAge(this.value);
+                    idadeInput.value = calculatedAge;
+                }
+                validateAge();
+            });
+            
+            idadeInput.addEventListener('input', validateAge);
+        }
+
+        // Validação estado civil vs companheiro
+        const estadoCivilInput = document.querySelector('[name="estado_civil"]');
+        if (estadoCivilInput) {
+            estadoCivilInput.addEventListener('change', validateCompanheiro);
+        }
+
+        // Validação soma família
+        const familiaInputs = ['num_pessoas_familia', 'adultos', 'criancas', 'adolescentes', 'idosos', 'gestantes', 'nutrizes'];
+        familiaInputs.forEach(fieldName => {
+            const input = document.querySelector(`[name="${fieldName}"]`);
+            if (input) {
+                input.addEventListener('input', validateFamiliaSum);
+            }
+        });
+
+        // Validação campos saúde
+        const saudeCheckboxes = ['tem_doenca_cronica', 'usa_medicamento_continuo', 'tem_doenca_mental', 'tem_deficiencia', 'precisa_cuidados_especiais'];
+        saudeCheckboxes.forEach(fieldName => {
+            const input = document.querySelector(`[name="${fieldName}"]`);
+            if (input) {
+                input.addEventListener('change', validateSaude);
+            }
+        });
+
+        // Validação horário trabalho
+        const horarioInput = document.querySelector('[name="horario_trabalho"]');
+        if (horarioInput) {
+            horarioInput.addEventListener('blur', validateHorario);
+        }
         
         // Validação no envio do formulário
         document.querySelector('form').addEventListener('submit', function(e) {
             let hasErrors = false;
             
+            // Validar limites de caracteres
             Object.keys(FIELD_LIMITS).forEach(fieldName => {
                 const input = document.querySelector(`[name="${fieldName}"]`);
                 if (input && !validateField(input)) {
                     hasErrors = true;
                 }
             });
+            
+            // Validar regras de negócio
+            if (!validateAge()) hasErrors = true;
+            if (!validateCompanheiro()) hasErrors = true;
+            if (!validateFamiliaSum()) hasErrors = true;
+            if (!validateSaude()) hasErrors = true;
+            if (!validateHorario()) hasErrors = true;
             
             if (hasErrors) {
                 e.preventDefault();
