@@ -244,6 +244,21 @@ def init_db_tables():
             logger.info("✅ Coluna arquivo_dados adicionada!")
         else:
             logger.debug("✅ Coluna arquivo_dados já existe")
+        
+        # Verificar e tornar caminho_arquivo opcional se existir
+        logger.debug("Verificando se coluna caminho_arquivo existe...")
+        cursor.execute("""
+            SELECT column_name FROM information_schema.columns 
+            WHERE table_name = 'arquivos_saude' AND column_name = 'caminho_arquivo'
+        """)
+        caminho_existe = cursor.fetchone()
+        
+        if caminho_existe:
+            logger.info("🔧 Tornando coluna caminho_arquivo opcional...")
+            cursor.execute("ALTER TABLE arquivos_saude ALTER COLUMN caminho_arquivo DROP NOT NULL")
+            logger.info("✅ Coluna caminho_arquivo agora é opcional!")
+        else:
+            logger.debug("✅ Coluna caminho_arquivo não existe")
             
         logger.debug("✅ Tabela arquivos_saude criada")
         
