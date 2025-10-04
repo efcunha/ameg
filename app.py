@@ -765,19 +765,19 @@ def exportar():
             if tipo == 'completo':
                 # Usar índices corretos baseados na estrutura da tabela
                 row_data = [
-                    row[2] if hasattr(row, '__getitem__') else getattr(row, 'nome_completo', ''),  # nome_completo
-                    row[7] if hasattr(row, '__getitem__') else getattr(row, 'telefone', ''),      # telefone
-                    row[3] if hasattr(row, '__getitem__') else getattr(row, 'endereco', ''),      # endereco
-                    row[4] if hasattr(row, '__getitem__') else getattr(row, 'numero', ''),        # numero
-                    row[5] if hasattr(row, '__getitem__') else getattr(row, 'bairro', ''),        # bairro
-                    row[6] if hasattr(row, '__getitem__') else getattr(row, 'cep', ''),           # cep
-                    row[9] if hasattr(row, '__getitem__') else getattr(row, 'genero', ''),        # genero
-                    row[10] if hasattr(row, '__getitem__') else getattr(row, 'idade', ''),        # idade
-                    row[14] if hasattr(row, '__getitem__') else getattr(row, 'cpf', ''),          # cpf
-                    row[15] if hasattr(row, '__getitem__') else getattr(row, 'rg', ''),           # rg
-                    row[17] if hasattr(row, '__getitem__') else getattr(row, 'estado_civil', ''), # estado_civil
-                    row[18] if hasattr(row, '__getitem__') else getattr(row, 'escolaridade', ''), # escolaridade
-                    row[41] if hasattr(row, '__getitem__') else getattr(row, 'renda_familiar', '') # renda_familiar
+                    row[1] if hasattr(row, '__getitem__') else getattr(row, 'nome_completo', ''),  # nome_completo
+                    row[6] if hasattr(row, '__getitem__') else getattr(row, 'telefone', ''),      # telefone
+                    row[2] if hasattr(row, '__getitem__') else getattr(row, 'endereco', ''),      # endereco
+                    row[3] if hasattr(row, '__getitem__') else getattr(row, 'numero', ''),        # numero
+                    row[4] if hasattr(row, '__getitem__') else getattr(row, 'bairro', ''),        # bairro
+                    row[5] if hasattr(row, '__getitem__') else getattr(row, 'cep', ''),           # cep
+                    row[8] if hasattr(row, '__getitem__') else getattr(row, 'genero', ''),        # genero
+                    row[9] if hasattr(row, '__getitem__') else getattr(row, 'idade', ''),         # idade
+                    row[13] if hasattr(row, '__getitem__') else getattr(row, 'cpf', ''),          # cpf
+                    row[14] if hasattr(row, '__getitem__') else getattr(row, 'rg', ''),           # rg
+                    row[16] if hasattr(row, '__getitem__') else getattr(row, 'estado_civil', ''), # estado_civil
+                    row[17] if hasattr(row, '__getitem__') else getattr(row, 'escolaridade', ''), # escolaridade
+                    row[40] if hasattr(row, '__getitem__') else getattr(row, 'renda_familiar', '') # renda_familiar
                 ]
             elif tipo in ['estatistico', 'bairro', 'renda']:
                 row_data = [
@@ -853,10 +853,10 @@ def exportar():
             for row in dados:
                 table_data.append([
                     str(row[1] if hasattr(row, '__getitem__') else getattr(row, 'nome_completo', '')),
-                    str(row[8] if hasattr(row, '__getitem__') else getattr(row, 'telefone', '')),
+                    str(row[6] if hasattr(row, '__getitem__') else getattr(row, 'telefone', '')),
                     str(row[4] if hasattr(row, '__getitem__') else getattr(row, 'bairro', '')),
-                    str(row[11] if hasattr(row, '__getitem__') else getattr(row, 'idade', '')),
-                    f"R$ {row[42] or '0'}" if (hasattr(row, '__getitem__') and row[42]) else 'Não informado'
+                    str(row[9] if hasattr(row, '__getitem__') else getattr(row, 'idade', '')),
+                    f"R$ {row[40] or '0'}" if (hasattr(row, '__getitem__') and row[40]) else 'Não informado'
                 ])
         
         # Criar tabela
