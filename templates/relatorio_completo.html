@@ -39,6 +39,17 @@
         <div class="stats">
             <h2>📋 Relatório Completo de Cadastros</h2>
             <p><strong>Total de cadastros:</strong> {{ cadastros|length }}</p>
+            
+            <!-- Filtros e Pesquisa -->
+            <div style="margin: 15px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="text" id="searchInput" placeholder="🔍 Pesquisar por nome..." style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; width: 250px;">
+                <select id="sortOrder" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="asc">📈 A-Z</option>
+                    <option value="desc">📉 Z-A</option>
+                </select>
+                <button onclick="clearSearch()" style="padding: 8px 15px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">🗑️ Limpar</button>
+            </div>
+            
             <div style="margin: 15px 0;">
                 <a href="/exportar?tipo=completo&formato=pdf" class="btn btn-warning">📄 Exportar PDF</a>
                 <a href="/exportar?tipo=completo&formato=csv" class="btn btn-success">📊 Exportar CSV</a>
@@ -59,7 +70,7 @@
                         <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tableBody">
                     {% for cadastro in cadastros %}
                     <tr>
                         <td>{{ cadastro.nome_completo or cadastro[1] }}</td>
@@ -78,5 +89,59 @@
             </table>
         </div>
     </div>
+
+    <script>
+        let allRows = [];
+        
+        // Capturar todas as linhas da tabela
+        document.addEventListener('DOMContentLoaded', function() {
+            const tbody = document.getElementById('tableBody');
+            allRows = Array.from(tbody.querySelectorAll('tr'));
+        });
+        
+        // Função de pesquisa
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterAndSort();
+        });
+        
+        // Função de ordenação
+        document.getElementById('sortOrder').addEventListener('change', function() {
+            filterAndSort();
+        });
+        
+        function filterAndSort() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const sortOrder = document.getElementById('sortOrder').value;
+            
+            // Filtrar por nome
+            let filteredRows = allRows.filter(row => {
+                const nome = row.cells[0].textContent.toLowerCase();
+                return nome.includes(searchTerm);
+            });
+            
+            // Ordenar
+            filteredRows.sort((a, b) => {
+                const nomeA = a.cells[0].textContent.toLowerCase();
+                const nomeB = b.cells[0].textContent.toLowerCase();
+                
+                if (sortOrder === 'asc') {
+                    return nomeA.localeCompare(nomeB);
+                } else {
+                    return nomeB.localeCompare(nomeA);
+                }
+            });
+            
+            // Atualizar tabela
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            filteredRows.forEach(row => tbody.appendChild(row));
+        }
+        
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('sortOrder').value = 'asc';
+            filterAndSort();
+        }
+    </script>
 </body>
 </html>

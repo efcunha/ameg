@@ -399,7 +399,7 @@ def relatorio_simplificado():
     
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT id, nome_completo, telefone, bairro, renda_familiar FROM cadastros ORDER BY nome_completo')
+    cursor.execute('SELECT nome_completo, telefone, bairro, renda_familiar FROM cadastros ORDER BY nome_completo')
     cadastros = cursor.fetchall()
     cursor.close()
     conn.close()
