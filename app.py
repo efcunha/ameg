@@ -380,31 +380,104 @@ def relatorios():
 
 @app.route('/relatorio_completo')
 def relatorio_completo():
+    logger.info("🔍 INICIANDO relatorio_completo")
+    
     if 'usuario' not in session:
+        logger.warning("⚠️ Usuário não logado tentando acessar relatorio_completo")
         return redirect(url_for('login'))
     
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
-    cadastros = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return render_template('relatorio_completo.html', cadastros=cadastros)
+    try:
+        logger.info("📊 Obtendo conexão com banco de dados...")
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        logger.info("✅ Conexão estabelecida")
+        
+        logger.info("🔍 Executando query SELECT * FROM cadastros...")
+        cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
+        logger.info("✅ Query executada com sucesso")
+        
+        logger.info("📋 Fazendo fetchall()...")
+        cadastros = cursor.fetchall()
+        logger.info(f"✅ Dados obtidos: {len(cadastros)} registros encontrados")
+        
+        if cadastros:
+            logger.info(f"🔍 Primeiro registro: tipo={type(cadastros[0])}")
+            logger.info(f"🔍 Primeiro registro length: {len(cadastros[0]) if cadastros[0] else 'None'}")
+            logger.info(f"🔍 Primeiros 5 campos do primeiro registro: {cadastros[0][:5] if len(cadastros[0]) > 5 else cadastros[0]}")
+        
+        cursor.close()
+        conn.close()
+        logger.info("✅ Conexão fechada")
+        
+        logger.info("🎨 Renderizando template relatorio_completo.html...")
+        return render_template('relatorio_completo.html', cadastros=cadastros)
+        
+    except Exception as e:
+        logger.error(f"❌ ERRO em relatorio_completo: {str(e)}")
+        logger.error(f"❌ Tipo do erro: {type(e)}")
+        import traceback
+        logger.error(f"❌ Traceback completo: {traceback.format_exc()}")
+        
+        # Tentar fechar conexões se existirem
+        try:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+        except:
+            pass
+            
+        flash('Erro ao carregar relatório completo. Verifique os logs.')
+        return redirect(url_for('relatorios'))
 
 @app.route('/relatorio_simplificado')
 def relatorio_simplificado():
+    logger.info("🔍 INICIANDO relatorio_simplificado")
+    
     if 'usuario' not in session:
+        logger.warning("⚠️ Usuário não logado tentando acessar relatorio_simplificado")
         return redirect(url_for('login'))
     
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT nome_completo, telefone, bairro, renda_familiar FROM cadastros ORDER BY nome_completo')
-    cadastros = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return render_template('relatorio_simplificado.html', cadastros=cadastros)
+    try:
+        logger.info("📊 Obtendo conexão com banco de dados...")
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        logger.info("✅ Conexão estabelecida")
+        
+        query = 'SELECT nome_completo, telefone, bairro, renda_familiar FROM cadastros ORDER BY nome_completo'
+        logger.info(f"🔍 Executando query: {query}")
+        cursor.execute(query)
+        logger.info("✅ Query executada com sucesso")
+        
+        cadastros = cursor.fetchall()
+        logger.info(f"✅ Dados obtidos: {len(cadastros)} registros encontrados")
+        
+        if cadastros:
+            logger.info(f"🔍 Primeiro registro: {cadastros[0]}")
+        
+        cursor.close()
+        conn.close()
+        logger.info("✅ Conexão fechada")
+        
+        logger.info("🎨 Renderizando template relatorio_simplificado.html...")
+        return render_template('relatorio_simplificado.html', cadastros=cadastros)
+        
+    except Exception as e:
+        logger.error(f"❌ ERRO em relatorio_simplificado: {str(e)}")
+        logger.error(f"❌ Tipo do erro: {type(e)}")
+        import traceback
+        logger.error(f"❌ Traceback completo: {traceback.format_exc()}")
+        
+        try:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+        except:
+            pass
+            
+        flash('Erro ao carregar relatório simplificado. Verifique os logs.')
+        return redirect(url_for('relatorios'))
 
 @app.route('/relatorio_estatistico')
 def relatorio_estatistico():

@@ -74,16 +74,16 @@
                 <tbody id="tableBody">
                     {% for cadastro in cadastros %}
                     <tr>
-                        <td>{{ cadastro.nome_completo or cadastro[2] }}</td>
-                        <td>{{ cadastro.telefone or cadastro[7] }}</td>
-                        <td>{{ (cadastro.endereco or cadastro[3]) + ', ' + (cadastro.numero or cadastro[4] or '') }}</td>
-                        <td>{{ cadastro.bairro or cadastro[5] }}</td>
-                        <td>{{ cadastro.cep or cadastro[6] }}</td>
-                        <td>{{ cadastro.idade or cadastro[10] }}</td>
-                        <td>{{ cadastro.cpf or cadastro[14] }}</td>
-                        <td>{{ 'R$ ' + (cadastro.renda_familiar or cadastro[41] or '0') if (cadastro.renda_familiar or cadastro[41]) else 'Não informado' }}</td>
+                        <td>{{ cadastro.nome_completo if cadastro.nome_completo else (cadastro[2] if cadastro|length > 2 else 'N/A') }}</td>
+                        <td>{{ cadastro.telefone if cadastro.telefone else (cadastro[7] if cadastro|length > 7 else 'N/A') }}</td>
+                        <td>{{ (cadastro.endereco or (cadastro[3] if cadastro|length > 3 else '')) + ', ' + (cadastro.numero or (cadastro[4] if cadastro|length > 4 else '')) }}</td>
+                        <td>{{ cadastro.bairro if cadastro.bairro else (cadastro[5] if cadastro|length > 5 else 'N/A') }}</td>
+                        <td>{{ cadastro.cep if cadastro.cep else (cadastro[6] if cadastro|length > 6 else 'N/A') }}</td>
+                        <td>{{ cadastro.idade if cadastro.idade else (cadastro[10] if cadastro|length > 10 else 'N/A') }}</td>
+                        <td>{{ cadastro.cpf if cadastro.cpf else (cadastro[14] if cadastro|length > 14 else 'N/A') }}</td>
+                        <td>{{ 'R$ ' + (cadastro.renda_familiar|string if cadastro.renda_familiar else (cadastro[41]|string if cadastro|length > 41 and cadastro[41] else '0')) if (cadastro.renda_familiar or (cadastro|length > 41 and cadastro[41])) else 'Não informado' }}</td>
                         <td>
-                            <a href="/editar_cadastro/{{ cadastro.id or cadastro[0] }}" class="btn">✏️ Editar</a>
+                            <a href="/editar_cadastro/{{ cadastro.id if cadastro.id else cadastro[0] }}" class="btn">✏️ Editar</a>
                         </td>
                     </tr>
                     {% endfor %}
