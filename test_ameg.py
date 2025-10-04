@@ -8,7 +8,8 @@ import sqlite3
 import os
 import sys
 import subprocess
-from app import app, init_db
+from app import app
+from database import init_db_tables
 
 def run_all_tests():
     """Executa todos os testes automaticamente"""
@@ -84,7 +85,7 @@ def test_database_structure():
     try:
         # Criar banco se não existir
         if not os.path.exists('ameg.db'):
-            init_db()
+            init_db_tables()
         
         conn = sqlite3.connect('ameg.db')
         c = conn.cursor()
@@ -210,7 +211,7 @@ def run_quick_integration_test():
     
     try:
         # Testar se consegue inicializar o sistema
-        init_db()
+        init_db_tables()
         
         # Testar cliente Flask
         app.config['TESTING'] = True

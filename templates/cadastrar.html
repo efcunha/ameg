@@ -70,6 +70,17 @@
                 
                 <div class="form-row">
                     <div class="form-group">
+                        <label>Cidade *</label>
+                        <input type="text" name="cidade" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado *</label>
+                        <input type="text" name="estado" required maxlength="2" placeholder="PB">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
                         <label>Telefone Celular *</label>
                         <input type="text" name="telefone" required>
                     </div>
@@ -598,6 +609,8 @@
                                 if (!data.erro) {
                                     document.querySelector('input[name="endereco"]').value = data.logradouro || '';
                                     document.querySelector('input[name="bairro"]').value = data.bairro || '';
+                                    document.querySelector('input[name="cidade"]').value = data.localidade || '';
+                                    document.querySelector('input[name="estado"]').value = data.uf || '';
                                     // Foca no campo número após preencher
                                     document.querySelector('input[name="numero"]').focus();
                                 } else {
@@ -894,6 +907,8 @@
         'nome_completo': 255,
         'numero': 10,
         'bairro': 100,
+        'cidade': 100,
+        'estado': 2,
         'cep': 10,
         'telefone': 20,
         'titulo_eleitor': 20,

@@ -157,6 +157,22 @@ def init_db_tables():
         ''')
         logger.debug("✅ Tabela cadastros criada")
         
+        # Verificar e adicionar campos cidade e estado se não existirem
+        logger.debug("Verificando se campos cidade e estado existem...")
+        cursor.execute("""
+            SELECT column_name FROM information_schema.columns 
+            WHERE table_name = 'cadastros' AND column_name = 'cidade'
+        """)
+        cidade_existe = cursor.fetchone()
+        
+        if not cidade_existe:
+            logger.info("🔧 Adicionando campos cidade e estado à tabela...")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS cidade VARCHAR(100)")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS estado VARCHAR(2)")
+            logger.info("✅ Campos cidade e estado adicionados!")
+        else:
+            logger.debug("✅ Campos cidade e estado já existem")
+        
         # Verificar e adicionar novos campos se não existirem
         logger.debug("Verificando se novos campos de trabalho existem...")
         cursor.execute("""

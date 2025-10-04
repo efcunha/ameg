@@ -226,7 +226,7 @@ def cadastrar():
             
             dados_insert = (
                 request.form.get('nome_completo'), request.form.get('endereco'), request.form.get('numero'),
-                request.form.get('bairro'), request.form.get('cep'), request.form.get('telefone'),
+                request.form.get('bairro'), request.form.get('cep'), request.form.get('cidade'), request.form.get('estado'), request.form.get('telefone'),
                 request.form.get('ponto_referencia'), request.form.get('genero'), safe_int(request.form.get('idade')),
                 request.form.get('data_nascimento'), request.form.get('titulo_eleitor'), request.form.get('cidade_titulo'),
                 request.form.get('cpf'), request.form.get('rg'), request.form.get('nis'),
@@ -271,7 +271,7 @@ def cadastrar():
             
             logger.debug("Executando INSERT para novo cadastro...")
             execute_query("""INSERT INTO cadastros (
-            nome_completo, endereco, numero, bairro, cep, telefone, ponto_referencia, genero, idade,
+            nome_completo, endereco, numero, bairro, cep, cidade, estado, telefone, ponto_referencia, genero, idade,
             data_nascimento, titulo_eleitor, cidade_titulo, cpf, rg, nis, estado_civil,
             escolaridade, profissao, nome_companheiro, cpf_companheiro, rg_companheiro,
             idade_companheiro, escolaridade_companheiro, profissao_companheiro, data_nascimento_companheiro,
@@ -292,7 +292,7 @@ def cadastrar():
             usa_veiculo_proprio, qual_veiculo, fonte_renda_trabalho_ambulante, fonte_renda_aposentadoria,
             fonte_renda_outro_trabalho, fonte_renda_beneficio_social, fonte_renda_outro,
             fonte_renda_outro_desc, pessoas_dependem_renda
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             dados_insert)
             
             logger.info("✅ INSERT executado com sucesso!")
@@ -734,7 +734,7 @@ def atualizar_cadastro(cadastro_id):
         
         # Campos do formulário
         campos = [
-            'nome_completo', 'endereco', 'numero', 'bairro', 'cep', 'telefone', 'ponto_referencia',
+            'nome_completo', 'endereco', 'numero', 'bairro', 'cep', 'cidade', 'estado', 'telefone', 'ponto_referencia',
             'genero', 'idade', 'data_nascimento', 'titulo_eleitor', 'cidade_titulo',
             'cpf', 'rg', 'nis', 'estado_civil', 'escolaridade', 'profissao',
             'nome_companheiro', 'cpf_companheiro', 'rg_companheiro', 'idade_companheiro',
@@ -771,6 +771,8 @@ def atualizar_cadastro(cadastro_id):
     numero = {'%s' if db_type == 'postgresql' else '?'},
     bairro = {'%s' if db_type == 'postgresql' else '?'},
     cep = {'%s' if db_type == 'postgresql' else '?'},
+    cidade = {'%s' if db_type == 'postgresql' else '?'},
+    estado = {'%s' if db_type == 'postgresql' else '?'},
     telefone = {'%s' if db_type == 'postgresql' else '?'},
     ponto_referencia = {'%s' if db_type == 'postgresql' else '?'},
     genero = {'%s' if db_type == 'postgresql' else '?'},
