@@ -716,21 +716,28 @@ def atualizar_cadastro(cadastro_id):
         logger.debug("Usuário não logado tentando acessar /atualizar_cadastro")
         return redirect(url_for('login'))
     
-    logger.info(f"💾 Atualizando cadastro ID {cadastro_id}")
+    logger.info(f"💾 Iniciando atualização do cadastro ID {cadastro_id}")
     logger.debug(f"Dados recebidos: nome_completo={request.form.get('nome_completo')}")
+    logger.debug(f"Total de campos no formulário: {len(request.form)}")
+    logger.debug(f"Campos recebidos: {list(request.form.keys())[:10]}...")  # Primeiros 10 campos
     
     # Validar limites dos campos
+    logger.debug("Iniciando validação de limites dos campos...")
     validation_errors = validate_field_lengths(request.form)
     if validation_errors:
-        logger.warning(f"❌ Validação falhou: {len(validation_errors)} erros encontrados")
+        logger.error(f"❌ Validação falhou: {len(validation_errors)} erros encontrados")
+        logger.error(f"Erros: {validation_errors}")
         for error in validation_errors:
             flash(f"Erro de validação: {error}", 'error')
         return redirect(url_for('editar_cadastro', cadastro_id=cadastro_id))
     
+    logger.debug("✅ Validação de limites passou")
+    
     try:
+        logger.debug("Obtendo conexão com banco de dados...")
         conn, db_type = get_db()
         cursor = conn.cursor()
-        logger.debug("Conexão estabelecida para atualização")
+        logger.debug(f"Conexão estabelecida - Tipo: {db_type}")
         
         # Campos do formulário
         campos = [
@@ -761,8 +768,14 @@ def atualizar_cadastro(cadastro_id):
             'fonte_renda_outro', 'fonte_renda_outro_desc', 'pessoas_dependem_renda'
         ]
         
+        logger.debug(f"Total de campos para atualização: {len(campos)}")
+        
         valores = [request.form.get(campo, '') for campo in campos]
         valores.append(cadastro_id)
+        
+        logger.debug(f"Valores coletados: {len(valores)} valores")
+        logger.debug(f"Primeiros 5 valores: {valores[:5]}")
+        logger.debug(f"Últimos 5 valores: {valores[-5:]}")
         
         # Construir query UPDATE dinamicamente baseada na lista de campos
         placeholder = '%s' if db_type == 'postgresql' else '?'
@@ -773,18 +786,35 @@ def atualizar_cadastro(cadastro_id):
         WHERE id = {placeholder}
         """
         
+        logger.debug(f"Query UPDATE construída com {len(set_clauses)} campos")
+        logger.debug(f"Query: {sql_update[:200]}...")
+        
+        logger.debug("Executando query UPDATE...")
         cursor.execute(sql_update, valores)
-        conn.commit()
-        logger.info(f"✅ Cadastro {cadastro_id} atualizado com sucesso")
-        flash('Cadastro atualizado com sucesso!')
+        
+        rows_affected = cursor.rowcount
+        logger.debug(f"Linhas afetadas: {rows_affected}")
+        
+        if rows_affected > 0:
+            conn.commit()
+            logger.info(f"✅ Cadastro {cadastro_id} atualizado com sucesso")
+            flash('Cadastro atualizado com sucesso!')
+        else:
+            logger.warning(f"⚠️ Nenhuma linha foi atualizada para cadastro {cadastro_id}")
+            flash('Nenhuma alteração foi feita no cadastro.')
         
     except Exception as e:
-        logger.error(f"❌ Erro ao atualizar cadastro {cadastro_id}: {e}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
+        logger.error(f"❌ Erro ao atualizar cadastro {cadastro_id}: {str(e)}")
+        logger.error(f"Tipo do erro: {type(e)}")
+        import traceback
+        logger.error(f"Traceback completo: {traceback.format_exc()}")
         flash(f'Erro ao atualizar cadastro: {str(e)}')
     finally:
-        cursor.close()
-        conn.close()
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
+        logger.debug("Conexões fechadas")
         logger.debug("Conexão fechada após atualização")
     
     return redirect(url_for('dashboard'))
