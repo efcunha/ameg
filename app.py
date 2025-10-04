@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, send_from_directory
 from database import get_db_connection, init_db_tables, create_admin_user
-from db_helper import get_db, execute_query
 import csv
 import io
 import os
@@ -45,7 +44,7 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
         logger.error(f"Traceback completo: {traceback.format_exc()}")
         logger.warning("⚠️ Continuando sem inicialização do banco...")
 else:
-    logger.info("🏠 Ambiente local detectado - usando SQLite")
+    logger.info("🏠 Ambiente local detectado - usando PostgreSQL")
 
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
 
@@ -216,7 +215,7 @@ def cadastrar():
             return render_template('cadastrar.html')
         
         try:
-            conn, db_type = get_db()
+            conn = get_db_connection()
             cursor = conn.cursor()
             logger.debug("Conexão com banco estabelecida para cadastro")
             
@@ -283,7 +282,7 @@ def cadastrar():
             logger.debug(f"🔍 Últimos 5 valores: {dados_insert[-5:]}")
             
             logger.debug("Executando INSERT para novo cadastro...")
-            execute_query("""INSERT INTO cadastros (
+            cursor.execute("""INSERT INTO cadastros (
             nome_completo, endereco, numero, bairro, cep, cidade, estado, telefone, ponto_referencia, genero, idade,
             data_nascimento, titulo_eleitor, cidade_titulo, cpf, rg, nis, estado_civil,
             escolaridade, profissao, nome_companheiro, cpf_companheiro, rg_companheiro,
@@ -307,23 +306,21 @@ def cadastrar():
             fonte_renda_outro_desc, pessoas_dependem_renda
         ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
             dados_insert)
+            conn.commit()
             
             logger.info("✅ INSERT executado com sucesso!")
         
             # Para obter o ID do cadastro inserido, usar a mesma conexão
             logger.debug("🔍 Buscando ID do cadastro inserido...")
             
-            if db_type == 'postgresql':
-                cursor.execute('SELECT id FROM cadastros ORDER BY id DESC LIMIT 1')
-            else:
-                cursor.execute('SELECT last_insert_rowid()')
+            cursor.execute('SELECT id FROM cadastros ORDER BY id DESC LIMIT 1')
             
             result = cursor.fetchone()
             if result:
-                # FIXED: Handle PostgreSQL dict vs SQLite tuple results
-                if hasattr(result, 'keys'):  # PostgreSQL RealDictCursor
+                # PostgreSQL RealDictCursor
+                if hasattr(result, 'keys'):
                     cadastro_id = result['id']
-                else:  # SQLite Row or tuple
+                else:  # Tuple result
                     cadastro_id = result[0]
                 logger.debug(f"ID do cadastro inserido: {cadastro_id}")
             else:
@@ -341,12 +338,8 @@ def cadastrar():
                             file_data = file.read()
                             descricao = request.form.get(f'descricao_{file_key}', '')
                             
-                            if db_type == 'postgresql':
-                                cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (%s, %s, %s, %s, %s)', 
-                                            (cadastro_id, file.filename, file_key, file_data, descricao))
-                            else:
-                                cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (?, ?, ?, ?, ?)', 
-                                            (cadastro_id, file.filename, file_key, file_data, descricao))
+                            cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (%s, %s, %s, %s, %s)', 
+                                        (cadastro_id, file.filename, file_key, file_data, descricao))
                             
                             uploaded_files.append(file_key)
                             logger.debug(f"Arquivo {file.filename} salvo com sucesso")
@@ -1630,14 +1623,11 @@ def editar_cadastro(cadastro_id):
     
     logger.info(f"📝 Carregando cadastro para edição: ID {cadastro_id}")
     try:
-        conn, db_type = get_db()
+        conn = get_db_connection()
         cursor = conn.cursor()
         logger.debug(f"Buscando cadastro ID {cadastro_id}")
         
-        if db_type == 'postgresql':
-            cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
-        else:
-            cursor.execute('SELECT * FROM cadastros WHERE id = ?', (cadastro_id,))
+        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
         
         cadastro = cursor.fetchone()
         logger.debug(f"Cadastro encontrado: {cadastro is not None}")
@@ -1646,10 +1636,7 @@ def editar_cadastro(cadastro_id):
         arquivos_saude = []
         if cadastro:
             logger.debug("Buscando arquivos de saúde...")
-            if db_type == 'postgresql':
-                cursor.execute('SELECT id, nome_arquivo, tipo_arquivo, descricao, data_upload FROM arquivos_saude WHERE cadastro_id = %s ORDER BY data_upload DESC', (cadastro_id,))
-            else:
-                cursor.execute('SELECT id, nome_arquivo, tipo_arquivo, descricao, data_upload FROM arquivos_saude WHERE cadastro_id = ? ORDER BY data_upload DESC', (cadastro_id,))
+            cursor.execute('SELECT id, nome_arquivo, tipo_arquivo, descricao, data_upload FROM arquivos_saude WHERE cadastro_id = %s ORDER BY data_upload DESC', (cadastro_id,))
             
             arquivos_saude = cursor.fetchall()
             logger.debug(f"Encontrados {len(arquivos_saude)} arquivos de saúde")
@@ -1677,14 +1664,11 @@ def excluir_arquivo(arquivo_id):
         return redirect(url_for('login'))
     
     try:
-        conn, db_type = get_db()
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Buscar o cadastro_id antes de excluir
-        if db_type == 'postgresql':
-            cursor.execute('SELECT cadastro_id FROM arquivos_saude WHERE id = %s', (arquivo_id,))
-        else:
-            cursor.execute('SELECT cadastro_id FROM arquivos_saude WHERE id = ?', (arquivo_id,))
+        cursor.execute('SELECT cadastro_id FROM arquivos_saude WHERE id = %s', (arquivo_id,))
         
         result = cursor.fetchone()
         if not result:
@@ -1694,10 +1678,7 @@ def excluir_arquivo(arquivo_id):
         cadastro_id = result[0] if isinstance(result, tuple) else result['cadastro_id']
         
         # Excluir o arquivo
-        if db_type == 'postgresql':
-            cursor.execute('DELETE FROM arquivos_saude WHERE id = %s', (arquivo_id,))
-        else:
-            cursor.execute('DELETE FROM arquivos_saude WHERE id = ?', (arquivo_id,))
+        cursor.execute('DELETE FROM arquivos_saude WHERE id = %s', (arquivo_id,))
         
         conn.commit()
         cursor.close()
@@ -1748,9 +1729,9 @@ def atualizar_cadastro(cadastro_id):
     
     try:
         logger.debug("Obtendo conexão com banco de dados...")
-        conn, db_type = get_db()
+        conn = get_db_connection()
         cursor = conn.cursor()
-        logger.debug(f"Conexão estabelecida - Tipo: {db_type}")
+        logger.debug("Conexão PostgreSQL estabelecida")
         
         # Campos do formulário
         campos = [
@@ -1825,8 +1806,7 @@ def atualizar_cadastro(cadastro_id):
         logger.debug(f"Últimos 5 valores: {valores[-5:]}")
         
         # Construir query UPDATE dinamicamente baseada na lista de campos
-        placeholder = '%s' if db_type == 'postgresql' else '?'
-        set_clauses = [f"{campo} = {placeholder}" for campo in campos]
+        set_clauses = [f"{campo} = %s" for campo in campos]
         sql_update = f"""
         UPDATE cadastros SET 
         {', '.join(set_clauses)}
