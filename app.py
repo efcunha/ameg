@@ -868,7 +868,7 @@ def exportar():
         elif tipo == 'saude':
             title = Paragraph("AMEG - Relatório de Saúde", styles['Title'])
         elif tipo == 'estatistico':
-            title = Paragraph("AMEG - Relatório Estatístico por Bairro", styles['Title'])
+            title = Paragraph("AMEG - Relatório Estatístico", styles['Title'])
         elif tipo == 'bairro':
             title = Paragraph("AMEG - Relatório por Bairro", styles['Title'])
         elif tipo == 'renda':

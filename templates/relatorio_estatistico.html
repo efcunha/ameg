@@ -42,34 +42,115 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <h3>📍 Por Bairro</h3>
-                {% for item in stats.por_bairro %}
-                <div class="stat-item">
-                    <span>{{ item[0] or 'Não informado' }}</span>
-                    <strong>{{ item[1] }}</strong>
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        {% for item in stats.por_bairro %}
+                        <div class="stat-item">
+                            <span>{{ item[0] or 'Não informado' }}</span>
+                            <strong>{{ item[1] }}</strong>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div style="flex: 1;">
+                        <canvas id="chartBairro" width="200" height="200"></canvas>
+                    </div>
                 </div>
-                {% endfor %}
             </div>
             
             <div class="stat-card">
                 <h3>👥 Por Gênero</h3>
-                {% for item in stats.por_genero %}
-                <div class="stat-item">
-                    <span>{{ item[0] or 'Não informado' }}</span>
-                    <strong>{{ item[1] }}</strong>
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        {% for item in stats.por_genero %}
+                        <div class="stat-item">
+                            <span>{{ item[0] or 'Não informado' }}</span>
+                            <strong>{{ item[1] }}</strong>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div style="flex: 1;">
+                        <canvas id="chartGenero" width="200" height="200"></canvas>
+                    </div>
                 </div>
-                {% endfor %}
             </div>
             
             <div class="stat-card">
                 <h3>🎂 Por Faixa Etária</h3>
-                {% for item in stats.por_idade %}
-                <div class="stat-item">
-                    <span>{{ item[0] }}</span>
-                    <strong>{{ item[1] }}</strong>
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        {% for item in stats.por_idade %}
+                        <div class="stat-item">
+                            <span>{{ item[0] }}</span>
+                            <strong>{{ item[1] }}</strong>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div style="flex: 1;">
+                        <canvas id="chartIdade" width="200" height="200"></canvas>
+                    </div>
                 </div>
-                {% endfor %}
             </div>
         </div>
     </div>
+
+    <script>
+        // Função para criar gráfico de pizza
+        function createPieChart(canvasId, data, colors) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 80;
+            
+            let total = data.reduce((sum, item) => sum + item.value, 0);
+            let currentAngle = -Math.PI / 2;
+            
+            // Desenhar fatias
+            data.forEach((item, index) => {
+                const sliceAngle = (item.value / total) * 2 * Math.PI;
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+                ctx.closePath();
+                ctx.fillStyle = colors[index % colors.length];
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                currentAngle += sliceAngle;
+            });
+        }
+        
+        // Cores para os gráficos
+        const colors = ['#3498db', '#e74c3c', '#f39c12', '#2ecc71', '#9b59b6', '#1abc9c', '#34495e', '#e67e22'];
+        
+        // Dados dos gráficos
+        const dadosBairro = [
+            {% for item in stats.por_bairro %}
+            {label: '{{ item[0] or "Não informado" }}', value: {{ item[1] }}},
+            {% endfor %}
+        ];
+        
+        const dadosGenero = [
+            {% for item in stats.por_genero %}
+            {label: '{{ item[0] or "Não informado" }}', value: {{ item[1] }}},
+            {% endfor %}
+        ];
+        
+        const dadosIdade = [
+            {% for item in stats.por_idade %}
+            {label: '{{ item[0] }}', value: {{ item[1] }}},
+            {% endfor %}
+        ];
+        
+        // Criar gráficos quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            createPieChart('chartBairro', dadosBairro, colors);
+            createPieChart('chartGenero', dadosGenero, colors);
+            createPieChart('chartIdade', dadosIdade, colors);
+        });
+    </script>
 </body>
 </html>
