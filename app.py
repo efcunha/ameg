@@ -481,106 +481,159 @@ def relatorio_simplificado():
 
 @app.route('/relatorio_estatistico')
 def relatorio_estatistico():
+    logger.info("🔍 INICIANDO relatorio_estatistico")
+    
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Estatísticas gerais
-    cursor.execute('SELECT COUNT(*) FROM cadastros')
-    total = cursor.fetchone()[0]
-    
-    # Por bairro
-    cursor.execute('SELECT bairro, COUNT(*) FROM cadastros GROUP BY bairro ORDER BY COUNT(*) DESC')
-    por_bairro = cursor.fetchall()
-    
-    # Por gênero
-    cursor.execute('SELECT genero, COUNT(*) FROM cadastros GROUP BY genero')
-    por_genero = cursor.fetchall()
-    
-    # Por faixa etária
-    cursor.execute('''SELECT 
-        CASE 
-            WHEN idade < 18 THEN 'Menor de 18'
-            WHEN idade BETWEEN 18 AND 30 THEN '18-30 anos'
-            WHEN idade BETWEEN 31 AND 50 THEN '31-50 anos'
-            WHEN idade BETWEEN 51 AND 65 THEN '51-65 anos'
-            ELSE 'Acima de 65'
-        END as faixa_etaria,
-        COUNT(*) 
-        FROM cadastros 
-        WHERE idade IS NOT NULL 
-        GROUP BY faixa_etaria''')
-    por_idade = cursor.fetchall()
-    
-    cursor.close()
-    conn.close()
-    
-    stats = {
-        'total': total,
-        'por_bairro': por_bairro,
-        'por_genero': por_genero,
-        'por_idade': por_idade
-    }
-    
-    return render_template('relatorio_estatistico.html', stats=stats)
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        logger.info("✅ Conexão estabelecida para estatístico")
+        
+        # Estatísticas gerais
+        cursor.execute('SELECT COUNT(*) FROM cadastros')
+        total = cursor.fetchone()[0]
+        logger.info(f"📊 Total de cadastros: {total}")
+        
+        # Por bairro
+        cursor.execute('SELECT bairro, COUNT(*) FROM cadastros GROUP BY bairro ORDER BY COUNT(*) DESC')
+        por_bairro = cursor.fetchall()
+        logger.info(f"📊 Bairros encontrados: {len(por_bairro)}")
+        
+        # Por gênero
+        cursor.execute('SELECT genero, COUNT(*) FROM cadastros GROUP BY genero')
+        por_genero = cursor.fetchall()
+        logger.info(f"📊 Gêneros encontrados: {len(por_genero)}")
+        
+        # Por faixa etária
+        cursor.execute('''SELECT 
+            CASE 
+                WHEN idade < 18 THEN 'Menor de 18'
+                WHEN idade BETWEEN 18 AND 30 THEN '18-30 anos'
+                WHEN idade BETWEEN 31 AND 50 THEN '31-50 anos'
+                WHEN idade BETWEEN 51 AND 65 THEN '51-65 anos'
+                ELSE 'Acima de 65'
+            END as faixa_etaria,
+            COUNT(*) 
+            FROM cadastros 
+            WHERE idade IS NOT NULL 
+            GROUP BY faixa_etaria''')
+        por_idade = cursor.fetchall()
+        logger.info(f"📊 Faixas etárias encontradas: {len(por_idade)}")
+        
+        cursor.close()
+        conn.close()
+        
+        stats = {
+            'total': total,
+            'por_bairro': por_bairro,
+            'por_genero': por_genero,
+            'por_idade': por_idade
+        }
+        
+        logger.info("✅ Dados estatísticos preparados com sucesso")
+        return render_template('relatorio_estatistico.html', stats=stats)
+        
+    except Exception as e:
+        logger.error(f"❌ ERRO em relatorio_estatistico: {str(e)}")
+        import traceback
+        logger.error(f"❌ Traceback: {traceback.format_exc()}")
+        flash('Erro ao carregar relatório estatístico.')
+        return redirect(url_for('relatorios'))
 
 @app.route('/relatorio_por_bairro')
 def relatorio_por_bairro():
+    logger.info("🔍 INICIANDO relatorio_por_bairro")
+    
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('''SELECT bairro, COUNT(*) as total, 
-                     AVG(CASE WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' THEN renda_familiar::numeric ELSE NULL END) as renda_media
-                     FROM cadastros 
-                     WHERE bairro IS NOT NULL 
-                     GROUP BY bairro 
-                     ORDER BY total DESC''')
-    bairros = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return render_template('relatorio_por_bairro.html', bairros=bairros)
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        logger.info("✅ Conexão estabelecida para relatório por bairro")
+        
+        query = '''SELECT bairro, COUNT(*) as total, 
+                   AVG(CASE WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' THEN renda_familiar::numeric ELSE NULL END) as renda_media
+                   FROM cadastros 
+                   WHERE bairro IS NOT NULL 
+                   GROUP BY bairro 
+                   ORDER BY total DESC'''
+        logger.info(f"🔍 Executando query: {query}")
+        cursor.execute(query)
+        
+        bairros = cursor.fetchall()
+        logger.info(f"✅ Bairros encontrados: {len(bairros)}")
+        
+        if bairros:
+            logger.info(f"🔍 Primeiro bairro: {bairros[0]}")
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template('relatorio_por_bairro.html', bairros=bairros)
+        
+    except Exception as e:
+        logger.error(f"❌ ERRO em relatorio_por_bairro: {str(e)}")
+        import traceback
+        logger.error(f"❌ Traceback: {traceback.format_exc()}")
+        flash('Erro ao carregar relatório por bairro.')
+        return redirect(url_for('relatorios'))
 
 @app.route('/relatorio_renda')
 def relatorio_renda():
+    logger.info("🔍 INICIANDO relatorio_renda")
+    
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Faixas de renda - corrigido para PostgreSQL
-    cursor.execute('''SELECT 
-        CASE 
-            WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric <= 1000 THEN 'Até R$ 1.000'
-            WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric BETWEEN 1001 AND 2000 THEN 'R$ 1.001 - R$ 2.000'
-            WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric BETWEEN 2001 AND 3000 THEN 'R$ 2.001 - R$ 3.000'
-            WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric > 3000 THEN 'Acima de R$ 3.000'
-            ELSE 'Não informado'
-        END as faixa_renda,
-        COUNT(*) 
-        FROM cadastros 
-        GROUP BY faixa_renda''')
-    faixas_renda = cursor.fetchall()
-    
-    # Renda por bairro - corrigido para PostgreSQL
-    cursor.execute('''SELECT bairro, 
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        logger.info("✅ Conexão estabelecida para relatório de renda")
+        
+        # Faixas de renda - corrigido para PostgreSQL
+        query1 = '''SELECT 
+            CASE 
+                WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric <= 1000 THEN 'Até R$ 1.000'
+                WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric BETWEEN 1001 AND 2000 THEN 'R$ 1.001 - R$ 2.000'
+                WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric BETWEEN 2001 AND 3000 THEN 'R$ 2.001 - R$ 3.000'
+                WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric > 3000 THEN 'Acima de R$ 3.000'
+                ELSE 'Não informado'
+            END as faixa_renda,
+            COUNT(*) 
+            FROM cadastros 
+            GROUP BY faixa_renda'''
+        logger.info(f"🔍 Executando query faixas de renda: {query1}")
+        cursor.execute(query1)
+        faixas_renda = cursor.fetchall()
+        logger.info(f"✅ Faixas de renda encontradas: {len(faixas_renda)}")
+        
+        # Renda por bairro - corrigido para PostgreSQL
+        query2 = '''SELECT bairro, 
                      AVG(CASE WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' THEN renda_familiar::numeric ELSE NULL END) as renda_media, 
                      COUNT(*) as total
                      FROM cadastros 
                      WHERE bairro IS NOT NULL
                      GROUP BY bairro 
-                     ORDER BY renda_media DESC NULLS LAST''')
-    renda_bairro = cursor.fetchall()
-    
-    cursor.close()
-    conn.close()
-    
-    return render_template('relatorio_renda.html', faixas_renda=faixas_renda, renda_bairro=renda_bairro)
+                     ORDER BY renda_media DESC NULLS LAST'''
+        logger.info(f"🔍 Executando query renda por bairro: {query2}")
+        cursor.execute(query2)
+        renda_bairro = cursor.fetchall()
+        logger.info(f"✅ Renda por bairro encontrada: {len(renda_bairro)}")
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template('relatorio_renda.html', faixas_renda=faixas_renda, renda_bairro=renda_bairro)
+        
+    except Exception as e:
+        logger.error(f"❌ ERRO em relatorio_renda: {str(e)}")
+        import traceback
+        logger.error(f"❌ Traceback: {traceback.format_exc()}")
+        flash('Erro ao carregar relatório de renda.')
+        return redirect(url_for('relatorios'))
 
 @app.route('/relatorio_saude')
 def relatorio_saude():

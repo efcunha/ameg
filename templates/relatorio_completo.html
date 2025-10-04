@@ -74,14 +74,14 @@
                 <tbody id="tableBody">
                     {% for cadastro in cadastros %}
                     <tr>
-                        <td>{{ cadastro[2] if cadastro|length > 2 else 'N/A' }}</td>
-                        <td>{{ cadastro[7] if cadastro|length > 7 else 'N/A' }}</td>
-                        <td>{{ (cadastro[3] if cadastro|length > 3 else '') + ', ' + (cadastro[4] if cadastro|length > 4 else '') }}</td>
-                        <td>{{ cadastro[5] if cadastro|length > 5 else 'N/A' }}</td>
+                        <td>{{ cadastro[1] if cadastro|length > 1 else 'N/A' }}</td>
                         <td>{{ cadastro[6] if cadastro|length > 6 else 'N/A' }}</td>
-                        <td>{{ cadastro[10] if cadastro|length > 10 else 'N/A' }}</td>
-                        <td>{{ cadastro[14] if cadastro|length > 14 else 'N/A' }}</td>
-                        <td>{{ 'R$ ' + (cadastro[41]|string if cadastro|length > 41 and cadastro[41] else '0') if (cadastro|length > 41 and cadastro[41]) else 'Não informado' }}</td>
+                        <td>{{ (cadastro[2] if cadastro|length > 2 else '') + (', ' + cadastro[3] if cadastro|length > 3 and cadastro[3] else '') }}</td>
+                        <td>{{ cadastro[4] if cadastro|length > 4 else 'N/A' }}</td>
+                        <td>{{ cadastro[5] if cadastro|length > 5 else 'N/A' }}</td>
+                        <td>{{ cadastro[9] if cadastro|length > 9 else 'N/A' }}</td>
+                        <td>{{ cadastro[13] if cadastro|length > 13 else 'N/A' }}</td>
+                        <td>{{ 'R$ ' + (cadastro[40]|string if cadastro|length > 40 and cadastro[40] else '0') if (cadastro|length > 40 and cadastro[40]) else 'Não informado' }}</td>
                         <td>
                             <a href="/editar_cadastro/{{ cadastro[0] }}" class="btn">✏️ Editar</a>
                         </td>
