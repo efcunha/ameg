@@ -84,6 +84,7 @@
                         <td>{{ 'R$ ' + (cadastro[40]|string if cadastro|length > 40 and cadastro[40] else '0') if (cadastro|length > 40 and cadastro[40]) else 'Não informado' }}</td>
                         <td>
                             <a href="/editar_cadastro/{{ cadastro[0] }}" class="btn">✏️ Editar</a>
+                            <a href="/exportar?tipo=completo&formato=pdf&cadastro_id={{ cadastro[0] }}" class="btn">📄 PDF</a>
                         </td>
                     </tr>
                     {% endfor %}

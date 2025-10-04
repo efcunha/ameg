@@ -687,14 +687,20 @@ def exportar():
     
     tipo = request.args.get('tipo', 'completo')
     formato = request.args.get('formato', 'csv')
+    cadastro_id = request.args.get('cadastro_id')  # Para exportar cadastro individual
     
     conn = get_db_connection()
     cursor = conn.cursor()
     
     if tipo == 'completo':
-        cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
-        dados = cursor.fetchall()
-        filename = 'relatorio_completo'
+        if cadastro_id:
+            cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
+            dados = cursor.fetchall()
+            filename = f'cadastro_{cadastro_id}'
+        else:
+            cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
+            dados = cursor.fetchall()
+            filename = 'relatorio_completo'
     elif tipo == 'simplificado':
         cursor.execute('SELECT nome_completo, telefone, bairro, renda_familiar FROM cadastros ORDER BY nome_completo')
         dados = cursor.fetchall()
@@ -1111,18 +1117,111 @@ def exportar():
                     str(row[2] or '0')
                 ])
         else:  # completo
-            table_data = [['Nome', 'Telefone', 'Bairro', 'Idade', 'Renda']]
-            for row in dados:
-                table_data.append([
-                    str(row[1] if hasattr(row, '__getitem__') else getattr(row, 'nome_completo', '')),
-                    str(row[6] if hasattr(row, '__getitem__') else getattr(row, 'telefone', '')),
-                    str(row[4] if hasattr(row, '__getitem__') else getattr(row, 'bairro', '')),
-                    str(row[9] if hasattr(row, '__getitem__') else getattr(row, 'idade', '')),
-                    f"R$ {row[40] or '0'}" if (hasattr(row, '__getitem__') and row[40]) else 'Não informado'
-                ])
+            if cadastro_id:
+                # PDF detalhado para um cadastro específico
+                for row in dados:
+                    # Título do cadastro
+                    nome_para = Paragraph(f"<b>Cadastro: {row[1] or 'Não informado'}</b>", styles['Heading2'])
+                    elements.append(nome_para)
+                    elements.append(Spacer(1, 12))
+                    
+                    # Dados Pessoais
+                    pessoais_para = Paragraph("<b>📋 Dados Pessoais</b>", styles['Heading3'])
+                    elements.append(pessoais_para)
+                    elements.append(Spacer(1, 6))
+                    
+                    pessoais_data = [
+                        ['Nome Completo:', str(row[1] or '')],
+                        ['Endereço:', f"{row[2] or ''}, {row[3] or ''}"],
+                        ['Bairro:', str(row[4] or '')],
+                        ['CEP:', str(row[5] or '')],
+                        ['Telefone:', str(row[6] or '')],
+                        ['Gênero:', str(row[8] or '')],
+                        ['Idade:', str(row[9] or '')],
+                        ['Data Nascimento:', str(row[10] or '')],
+                        ['CPF:', str(row[13] or '')],
+                        ['RG:', str(row[14] or '')],
+                        ['Estado Civil:', str(row[16] or '')],
+                        ['Escolaridade:', str(row[17] or '')],
+                        ['Profissão:', str(row[18] or '')]
+                    ]
+                    
+                    pessoais_table = Table(pessoais_data, colWidths=[150, 300])
+                    pessoais_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 9),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                    ]))
+                    elements.append(pessoais_table)
+                    elements.append(Spacer(1, 15))
+                    
+                    # Dados Familiares
+                    familia_para = Paragraph("<b>👨‍👩‍👧‍👦 Dados Familiares</b>", styles['Heading3'])
+                    elements.append(familia_para)
+                    elements.append(Spacer(1, 6))
+                    
+                    familia_data = [
+                        ['Companheiro(a):', str(row[19] or '')],
+                        ['Pessoas na Família:', str(row[32] or '')],
+                        ['Adultos:', str(row[34] or '')],
+                        ['Crianças:', str(row[35] or '')],
+                        ['Adolescentes:', str(row[36] or '')],
+                        ['Idosos:', str(row[37] or '')],
+                        ['Renda Familiar:', f"R$ {row[40] or '0'}"],
+                        ['Renda Per Capita:', f"R$ {row[41] or '0'}"]
+                    ]
+                    
+                    familia_table = Table(familia_data, colWidths=[150, 300])
+                    familia_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 9),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                    ]))
+                    elements.append(familia_table)
+                    elements.append(Spacer(1, 15))
+                    
+                    # Dados de Saúde
+                    saude_para = Paragraph("<b>🏥 Dados de Saúde</b>", styles['Heading3'])
+                    elements.append(saude_para)
+                    elements.append(Spacer(1, 6))
+                    
+                    saude_data = [
+                        ['Doença Crônica:', str(row[49] or '')],
+                        ['Quais Doenças:', str(row[50] or '')],
+                        ['Medicamento Contínuo:', str(row[51] or '')],
+                        ['Quais Medicamentos:', str(row[52] or '')],
+                        ['Doença Mental:', str(row[53] or '')],
+                        ['Deficiência:', str(row[55] or '')],
+                        ['Tipo Deficiência:', str(row[56] or '')]
+                    ]
+                    
+                    saude_table = Table(saude_data, colWidths=[150, 300])
+                    saude_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 9),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                    ]))
+                    elements.append(saude_table)
+            else:
+                # Tabela resumida para todos os cadastros
+                table_data = [['Nome', 'Telefone', 'Bairro', 'Idade', 'Renda']]
+                for row in dados:
+                    table_data.append([
+                        str(row[1] if hasattr(row, '__getitem__') else getattr(row, 'nome_completo', '')),
+                        str(row[6] if hasattr(row, '__getitem__') else getattr(row, 'telefone', '')),
+                        str(row[4] if hasattr(row, '__getitem__') else getattr(row, 'bairro', '')),
+                        str(row[9] if hasattr(row, '__getitem__') else getattr(row, 'idade', '')),
+                        f"R$ {row[40] or '0'}" if (hasattr(row, '__getitem__') and row[40]) else 'Não informado'
+                    ])
         
-        # Criar tabela (exceto para estatístico que já criou suas próprias tabelas)
-        if tipo != 'estatistico':
+        # Criar tabela (exceto para estatístico e cadastro individual que já criaram seus próprios elementos)
+        if tipo != 'estatistico' and not cadastro_id:
             table = Table(table_data)
             table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
