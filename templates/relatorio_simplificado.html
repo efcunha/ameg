@@ -67,10 +67,10 @@
                 <tbody id="tableBody">
                     {% for cadastro in cadastros %}
                     <tr>
-                        <td>{{ cadastro.nome_completo or cadastro[0] }}</td>
-                        <td>{{ cadastro.telefone or cadastro[1] }}</td>
-                        <td>{{ cadastro.bairro or cadastro[2] }}</td>
-                        <td>{{ 'R$ ' + (cadastro.renda_familiar or cadastro[3] or '0') if (cadastro.renda_familiar or cadastro[3]) else 'Não informado' }}</td>
+                        <td>{{ cadastro[0] }}</td>
+                        <td>{{ cadastro[1] }}</td>
+                        <td>{{ cadastro[2] }}</td>
+                        <td>{{ 'R$ ' + (cadastro[3]|string if cadastro[3] else '0') if cadastro[3] else 'Não informado' }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

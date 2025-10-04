@@ -732,6 +732,10 @@ def exportar():
                     f'{row[1]:.2f}' if row[1] and len(row) > 2 else str(row[1] or ''),
                     str(row[2]) if len(row) > 2 else ''
                 ]
+            elif tipo == 'simplificado':
+                row_data = list(row)
+            elif tipo == 'saude':
+                row_data = list(row)
             else:
                 row_data = list(row)
             writer.writerow(row_data)
