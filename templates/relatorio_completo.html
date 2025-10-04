@@ -75,7 +75,7 @@
                     {% for cadastro in cadastros %}
                     <tr>
                         <td>{{ cadastro[1] if cadastro|length > 1 else 'N/A' }}</td>
-                        <td>{{ cadastro[6] if cadastro|length > 6 else 'N/A' }}</td>
+                        <td class="telefone-cell">{{ cadastro[6] if cadastro|length > 6 else 'N/A' }}</td>
                         <td>{{ (cadastro[2] if cadastro|length > 2 else '') + (', ' + cadastro[3] if cadastro|length > 3 and cadastro[3] else '') }}</td>
                         <td>{{ cadastro[4] if cadastro|length > 4 else 'N/A' }}</td>
                         <td>{{ cadastro[5] if cadastro|length > 5 else 'N/A' }}</td>
@@ -143,6 +143,32 @@
             document.getElementById('searchInput').value = '';
             document.getElementById('sortOrder').value = 'asc';
             filterAndSort();
+        }
+        
+        // Formatar telefones após carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            const telefoneCells = document.querySelectorAll('.telefone-cell');
+            telefoneCells.forEach(cell => {
+                const telefone = cell.textContent.trim();
+                if (telefone && telefone !== 'N/A') {
+                    cell.textContent = formatTelefoneDisplay(telefone);
+                }
+            });
+        });
+        
+        function formatTelefoneDisplay(telefone) {
+            // Remove tudo que não é número
+            const numbers = telefone.replace(/\D/g, '');
+            
+            if (numbers.length === 11) {
+                // Celular: (XX) XXXXX-XXXX
+                return `(${numbers.substring(0,2)}) ${numbers.substring(2,7)}-${numbers.substring(7)}`;
+            } else if (numbers.length === 10) {
+                // Fixo: (XX) XXXX-XXXX
+                return `(${numbers.substring(0,2)} ${numbers.substring(2,6)}-${numbers.substring(6)}`;
+            }
+            
+            return telefone; // Retorna original se não conseguir formatar
         }
     </script>
 </body>
