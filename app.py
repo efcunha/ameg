@@ -782,7 +782,41 @@ def atualizar_cadastro(cadastro_id):
         
         logger.debug(f"Total de campos para atualização: {len(campos)}")
         
-        valores = [request.form.get(campo, '') for campo in campos]
+        # Tratar campos numéricos vazios como NULL
+        def safe_int_or_null(value):
+            if value == '' or value is None:
+                return None
+            try:
+                return int(value)
+            except (ValueError, TypeError):
+                return None
+        
+        def safe_decimal_or_null(value):
+            if value == '' or value is None:
+                return None
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                return None
+        
+        # Campos que devem ser tratados como inteiros
+        campos_int = ['idade', 'idade_companheiro', 'pessoas_trabalham', 'aposentados_pensionistas', 
+                     'num_pessoas_familia', 'num_familias', 'adultos', 'criancas', 'adolescentes', 
+                     'idosos', 'gestantes', 'nutrizes', 'dias_semana_trabalha', 'pessoas_dependem_renda']
+        
+        # Campos que devem ser tratados como decimais
+        campos_decimal = ['renda_familiar', 'renda_per_capita', 'bolsa_familia']
+        
+        valores = []
+        for campo in campos:
+            value = request.form.get(campo, '')
+            if campo in campos_int:
+                valores.append(safe_int_or_null(value))
+            elif campo in campos_decimal:
+                valores.append(safe_decimal_or_null(value))
+            else:
+                valores.append(value)
+        
         valores.append(cadastro_id)
         
         logger.debug(f"Valores coletados: {len(valores)} valores")
@@ -820,7 +854,8 @@ def atualizar_cadastro(cadastro_id):
         logger.error(f"Tipo do erro: {type(e)}")
         import traceback
         logger.error(f"Traceback completo: {traceback.format_exc()}")
-        flash(f'Erro ao atualizar cadastro: {str(e)}')
+        # Não mostrar erro técnico para o usuário
+        flash('Erro interno do sistema. Tente novamente.')
     finally:
         if 'cursor' in locals():
             cursor.close()
