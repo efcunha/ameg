@@ -709,8 +709,37 @@ def exportar():
         dados = cursor.fetchall()
         filename = 'relatorio_saude'
     elif tipo == 'estatistico':
-        cursor.execute('SELECT bairro, COUNT(*) FROM cadastros GROUP BY bairro ORDER BY COUNT(*) DESC')
-        dados = cursor.fetchall()
+        # Buscar todas as estatísticas como no relatório web
+        cursor.execute('SELECT COUNT(*) FROM cadastros')
+        total = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT bairro, COUNT(*) FROM cadastros WHERE bairro IS NOT NULL GROUP BY bairro ORDER BY COUNT(*) DESC')
+        por_bairro = cursor.fetchall()
+        
+        cursor.execute('SELECT genero, COUNT(*) FROM cadastros WHERE genero IS NOT NULL GROUP BY genero ORDER BY COUNT(*) DESC')
+        por_genero = cursor.fetchall()
+        
+        cursor.execute('''SELECT 
+            CASE 
+                WHEN idade < 18 THEN 'Menor de 18 anos'
+                WHEN idade BETWEEN 18 AND 30 THEN '18-30 anos'
+                WHEN idade BETWEEN 31 AND 50 THEN '31-50 anos'
+                WHEN idade BETWEEN 51 AND 65 THEN '51-65 anos'
+                ELSE 'Acima de 65 anos'
+            END as faixa_etaria,
+            COUNT(*) 
+            FROM cadastros 
+            WHERE idade IS NOT NULL 
+            GROUP BY faixa_etaria''')
+        por_idade = cursor.fetchall()
+        
+        # Combinar todos os dados para exportação
+        dados = {
+            'total': total,
+            'por_bairro': por_bairro,
+            'por_genero': por_genero,
+            'por_idade': por_idade
+        }
         filename = 'relatorio_estatistico'
     elif tipo == 'bairro':
         cursor.execute('''SELECT bairro, COUNT(*) as total, 
@@ -751,7 +780,24 @@ def exportar():
                            'Medicamento Contínuo', 'Medicamentos', 'Doença Mental', 'Doenças Mentais',
                            'Deficiência', 'Tipo Deficiência'])
         elif tipo == 'estatistico':
-            writer.writerow(['Bairro', 'Total de Cadastros'])
+            writer.writerow(['=== RELATÓRIO ESTATÍSTICO COMPLETO ==='])
+            writer.writerow([''])
+            writer.writerow(['TOTAL DE CADASTROS:', dados['total']])
+            writer.writerow([''])
+            writer.writerow(['=== POR BAIRRO ==='])
+            writer.writerow(['Bairro', 'Total'])
+            for row in dados['por_bairro']:
+                writer.writerow([row[0] or 'Não informado', row[1]])
+            writer.writerow([''])
+            writer.writerow(['=== POR GÊNERO ==='])
+            writer.writerow(['Gênero', 'Total'])
+            for row in dados['por_genero']:
+                writer.writerow([row[0] or 'Não informado', row[1]])
+            writer.writerow([''])
+            writer.writerow(['=== POR FAIXA ETÁRIA ==='])
+            writer.writerow(['Faixa Etária', 'Total'])
+            for row in dados['por_idade']:
+                writer.writerow([row[0] or 'Não informado', row[1]])
         elif tipo == 'bairro':
             writer.writerow(['Bairro', 'Total de Cadastros', 'Renda Média'])
         elif tipo == 'renda':
@@ -779,7 +825,7 @@ def exportar():
                     row[17] if hasattr(row, '__getitem__') else getattr(row, 'escolaridade', ''), # escolaridade
                     row[40] if hasattr(row, '__getitem__') else getattr(row, 'renda_familiar', '') # renda_familiar
                 ]
-            elif tipo in ['estatistico', 'bairro', 'renda']:
+            elif tipo in ['bairro', 'renda']:
                 row_data = [
                     str(row[0] or 'Não informado'),
                     f'{row[1]:.2f}' if row[1] and len(row) > 2 else str(row[1] or ''),
@@ -855,12 +901,75 @@ def exportar():
                     str(row[6] or '')
                 ])
         elif tipo == 'estatistico':
-            table_data = [['Bairro', 'Total de Cadastros']]
-            for row in dados:
-                table_data.append([
-                    str(row[0] or 'Não informado'),
-                    str(row[1] or '0')
-                ])
+            # Criar múltiplas tabelas para o relatório estatístico completo
+            from reportlab.platypus import Paragraph, Spacer
+            
+            # Total
+            total_para = Paragraph(f"<b>Total de Cadastros: {dados['total']}</b>", styles['Heading2'])
+            elements.append(total_para)
+            elements.append(Spacer(1, 12))
+            
+            # Por Bairro
+            bairro_para = Paragraph("<b>📍 Por Bairro</b>", styles['Heading3'])
+            elements.append(bairro_para)
+            elements.append(Spacer(1, 6))
+            
+            table_data = [['Bairro', 'Total']]
+            for row in dados['por_bairro']:
+                table_data.append([str(row[0] or 'Não informado'), str(row[1])])
+            
+            table = Table(table_data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(table)
+            elements.append(Spacer(1, 20))
+            
+            # Por Gênero
+            genero_para = Paragraph("<b>👥 Por Gênero</b>", styles['Heading3'])
+            elements.append(genero_para)
+            elements.append(Spacer(1, 6))
+            
+            table_data = [['Gênero', 'Total']]
+            for row in dados['por_genero']:
+                table_data.append([str(row[0] or 'Não informado'), str(row[1])])
+            
+            table = Table(table_data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(table)
+            elements.append(Spacer(1, 20))
+            
+            # Por Idade
+            idade_para = Paragraph("<b>🎂 Por Faixa Etária</b>", styles['Heading3'])
+            elements.append(idade_para)
+            elements.append(Spacer(1, 6))
+            
+            table_data = [['Faixa Etária', 'Total']]
+            for row in dados['por_idade']:
+                table_data.append([str(row[0] or 'Não informado'), str(row[1])])
+            
+            table = Table(table_data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(table)
         elif tipo == 'bairro':
             table_data = [['Bairro', 'Total de Cadastros', 'Renda Média']]
             for row in dados:
@@ -888,20 +997,20 @@ def exportar():
                     f"R$ {row[40] or '0'}" if (hasattr(row, '__getitem__') and row[40]) else 'Não informado'
                 ])
         
-        # Criar tabela
-        table = Table(table_data)
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
-        
-        elements.append(table)
+        # Criar tabela (exceto para estatístico que já criou suas próprias tabelas)
+        if tipo != 'estatistico':
+            table = Table(table_data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(table)
         doc.build(elements)
         
         buffer.seek(0)
