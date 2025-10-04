@@ -821,6 +821,12 @@ def exportar():
             title = Paragraph("AMEG - Relatório Simplificado", styles['Title'])
         elif tipo == 'saude':
             title = Paragraph("AMEG - Relatório de Saúde", styles['Title'])
+        elif tipo == 'estatistico':
+            title = Paragraph("AMEG - Relatório Estatístico por Bairro", styles['Title'])
+        elif tipo == 'bairro':
+            title = Paragraph("AMEG - Relatório por Bairro", styles['Title'])
+        elif tipo == 'renda':
+            title = Paragraph("AMEG - Relatório de Renda por Bairro", styles['Title'])
         else:
             title = Paragraph("AMEG - Relatório Geral", styles['Title'])
         
@@ -847,6 +853,29 @@ def exportar():
                     str(row[3] or ''),
                     str(row[4] or ''),
                     str(row[6] or '')
+                ])
+        elif tipo == 'estatistico':
+            table_data = [['Bairro', 'Total de Cadastros']]
+            for row in dados:
+                table_data.append([
+                    str(row[0] or 'Não informado'),
+                    str(row[1] or '0')
+                ])
+        elif tipo == 'bairro':
+            table_data = [['Bairro', 'Total de Cadastros', 'Renda Média']]
+            for row in dados:
+                table_data.append([
+                    str(row[0] or 'Não informado'),
+                    str(row[1] or '0'),
+                    f"R$ {row[2]:.2f}" if row[2] else 'Não informado'
+                ])
+        elif tipo == 'renda':
+            table_data = [['Bairro', 'Renda Média', 'Total de Cadastros']]
+            for row in dados:
+                table_data.append([
+                    str(row[0] or 'Não informado'),
+                    f"R$ {row[1]:.2f}" if row[1] else 'Não informado',
+                    str(row[2] or '0')
                 ])
         else:  # completo
             table_data = [['Nome', 'Telefone', 'Bairro', 'Idade', 'Renda']]
