@@ -17,10 +17,11 @@
         td { padding: 10px; border-bottom: 1px solid #eee; }
         tr:hover { background: #f8f9fa; }
         .logout { float: right; color: white; text-decoration: none; }
-        .btn { background: #3498db; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; margin: 2px; }
+        .btn { background: #3498db; color: white; padding: 6px 10px; text-decoration: none; border-radius: 3px; margin: 1px; font-size: 12px; display: inline-block; }
         .btn:hover { background: #2980b9; }
         .btn-success { background: #27ae60; }
         .btn-warning { background: #f39c12; }
+        .actions-cell { min-width: 120px; white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -82,7 +83,7 @@
                         <td>{{ cadastro[9] if cadastro|length > 9 else 'N/A' }}</td>
                         <td>{{ cadastro[13] if cadastro|length > 13 else 'N/A' }}</td>
                         <td>{{ 'R$ ' + (cadastro[40]|string if cadastro|length > 40 and cadastro[40] else '0') if (cadastro|length > 40 and cadastro[40]) else 'Não informado' }}</td>
-                        <td>
+                        <td class="actions-cell">
                             <a href="/editar_cadastro/{{ cadastro[0] }}" class="btn">✏️ Editar</a>
                             <a href="/exportar?tipo=completo&formato=pdf&cadastro_id={{ cadastro[0] }}" class="btn">📄 PDF</a>
                         </td>

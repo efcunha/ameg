@@ -1118,7 +1118,7 @@ def exportar():
                 ])
         else:  # completo
             if cadastro_id:
-                # PDF detalhado para um cadastro específico
+                # PDF detalhado para um cadastro específico com TODOS os campos
                 for row in dados:
                     # Título do cadastro
                     nome_para = Paragraph(f"<b>Cadastro: {row[1] or 'Não informado'}</b>", styles['Heading2'])
@@ -1136,52 +1136,117 @@ def exportar():
                         ['Bairro:', str(row[4] or '')],
                         ['CEP:', str(row[5] or '')],
                         ['Telefone:', str(row[6] or '')],
+                        ['Ponto Referência:', str(row[7] or '')],
                         ['Gênero:', str(row[8] or '')],
                         ['Idade:', str(row[9] or '')],
                         ['Data Nascimento:', str(row[10] or '')],
+                        ['Título Eleitor:', str(row[11] or '')],
+                        ['Cidade Título:', str(row[12] or '')],
                         ['CPF:', str(row[13] or '')],
                         ['RG:', str(row[14] or '')],
+                        ['NIS:', str(row[15] or '')],
                         ['Estado Civil:', str(row[16] or '')],
                         ['Escolaridade:', str(row[17] or '')],
                         ['Profissão:', str(row[18] or '')]
                     ]
                     
-                    pessoais_table = Table(pessoais_data, colWidths=[150, 300])
+                    pessoais_table = Table(pessoais_data, colWidths=[120, 350])
                     pessoais_table.setStyle(TableStyle([
                         ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
                         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                        ('FONTSIZE', (0, 0), (-1, -1), 9),
+                        ('FONTSIZE', (0, 0), (-1, -1), 8),
                         ('GRID', (0, 0), (-1, -1), 1, colors.black)
                     ]))
                     elements.append(pessoais_table)
                     elements.append(Spacer(1, 15))
                     
-                    # Dados Familiares
-                    familia_para = Paragraph("<b>👨‍👩‍👧‍👦 Dados Familiares</b>", styles['Heading3'])
+                    # Dados do Companheiro
+                    if row[19]:  # Se tem companheiro
+                        comp_para = Paragraph("<b>💑 Dados do Companheiro(a)</b>", styles['Heading3'])
+                        elements.append(comp_para)
+                        elements.append(Spacer(1, 6))
+                        
+                        comp_data = [
+                            ['Nome Companheiro:', str(row[19] or '')],
+                            ['CPF Companheiro:', str(row[20] or '')],
+                            ['RG Companheiro:', str(row[21] or '')],
+                            ['Idade Companheiro:', str(row[22] or '')],
+                            ['Escolaridade Companheiro:', str(row[23] or '')],
+                            ['Profissão Companheiro:', str(row[24] or '')],
+                            ['Data Nasc. Companheiro:', str(row[25] or '')],
+                            ['Título Companheiro:', str(row[26] or '')],
+                            ['Cidade Título Comp.:', str(row[27] or '')],
+                            ['NIS Companheiro:', str(row[28] or '')]
+                        ]
+                        
+                        comp_table = Table(comp_data, colWidths=[120, 350])
+                        comp_table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, -1), 8),
+                            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                        ]))
+                        elements.append(comp_table)
+                        elements.append(Spacer(1, 15))
+                    
+                    # Dados Familiares e Trabalho
+                    familia_para = Paragraph("<b>👨‍👩‍👧‍👦 Dados Familiares e Trabalho</b>", styles['Heading3'])
                     elements.append(familia_para)
                     elements.append(Spacer(1, 6))
                     
                     familia_data = [
-                        ['Companheiro(a):', str(row[19] or '')],
+                        ['Tipo Trabalho:', str(row[29] or '')],
+                        ['Pessoas Trabalham:', str(row[30] or '')],
+                        ['Aposentados/Pensionistas:', str(row[31] or '')],
                         ['Pessoas na Família:', str(row[32] or '')],
+                        ['Número Famílias:', str(row[33] or '')],
                         ['Adultos:', str(row[34] or '')],
                         ['Crianças:', str(row[35] or '')],
                         ['Adolescentes:', str(row[36] or '')],
                         ['Idosos:', str(row[37] or '')],
+                        ['Gestantes:', str(row[38] or '')],
+                        ['Nutrizes:', str(row[39] or '')],
                         ['Renda Familiar:', f"R$ {row[40] or '0'}"],
-                        ['Renda Per Capita:', f"R$ {row[41] or '0'}"]
+                        ['Renda Per Capita:', f"R$ {row[41] or '0'}"],
+                        ['Bolsa Família:', f"R$ {row[42] or '0'}"]
                     ]
                     
-                    familia_table = Table(familia_data, colWidths=[150, 300])
+                    familia_table = Table(familia_data, colWidths=[120, 350])
                     familia_table.setStyle(TableStyle([
                         ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
                         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                        ('FONTSIZE', (0, 0), (-1, -1), 9),
+                        ('FONTSIZE', (0, 0), (-1, -1), 8),
                         ('GRID', (0, 0), (-1, -1), 1, colors.black)
                     ]))
                     elements.append(familia_table)
+                    elements.append(Spacer(1, 15))
+                    
+                    # Dados Habitacionais
+                    casa_para = Paragraph("<b>🏠 Dados Habitacionais</b>", styles['Heading3'])
+                    elements.append(casa_para)
+                    elements.append(Spacer(1, 6))
+                    
+                    casa_data = [
+                        ['Tipo Casa:', str(row[43] or '')],
+                        ['Material Casa:', str(row[44] or '')],
+                        ['Energia:', str(row[45] or '')],
+                        ['Lixo:', str(row[46] or '')],
+                        ['Água:', str(row[47] or '')],
+                        ['Esgoto:', str(row[48] or '')]
+                    ]
+                    
+                    casa_table = Table(casa_data, colWidths=[120, 350])
+                    casa_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 8),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                    ]))
+                    elements.append(casa_table)
                     elements.append(Spacer(1, 15))
                     
                     # Dados de Saúde
@@ -1195,19 +1260,31 @@ def exportar():
                         ['Medicamento Contínuo:', str(row[51] or '')],
                         ['Quais Medicamentos:', str(row[52] or '')],
                         ['Doença Mental:', str(row[53] or '')],
+                        ['Quais Doenças Mentais:', str(row[54] or '')],
                         ['Deficiência:', str(row[55] or '')],
-                        ['Tipo Deficiência:', str(row[56] or '')]
+                        ['Tipo Deficiência:', str(row[56] or '')],
+                        ['Cuidados Especiais:', str(row[57] or '')],
+                        ['Quais Cuidados:', str(row[58] or '')]
                     ]
                     
-                    saude_table = Table(saude_data, colWidths=[150, 300])
+                    saude_table = Table(saude_data, colWidths=[120, 350])
                     saude_table.setStyle(TableStyle([
                         ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
                         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                        ('FONTSIZE', (0, 0), (-1, -1), 9),
+                        ('FONTSIZE', (0, 0), (-1, -1), 8),
                         ('GRID', (0, 0), (-1, -1), 1, colors.black)
                     ]))
                     elements.append(saude_table)
+                    
+                    # Observações
+                    if len(row) > 59 and row[59]:
+                        elements.append(Spacer(1, 15))
+                        obs_para = Paragraph("<b>📝 Observações</b>", styles['Heading3'])
+                        elements.append(obs_para)
+                        elements.append(Spacer(1, 6))
+                        obs_text = Paragraph(str(row[59] or ''), styles['Normal'])
+                        elements.append(obs_text)
             else:
                 # Tabela resumida para todos os cadastros
                 table_data = [['Nome', 'Telefone', 'Bairro', 'Idade', 'Renda']]
