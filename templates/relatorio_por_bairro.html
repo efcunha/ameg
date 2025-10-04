@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AMEG - Relatório Simplificado</title>
+    <title>AMEG - Relatório por Bairro</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
@@ -17,14 +17,12 @@
         td { padding: 10px; border-bottom: 1px solid #eee; }
         tr:hover { background: #f8f9fa; }
         .logout { float: right; color: white; text-decoration: none; }
-        .btn { background: #3498db; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; margin: 2px; }
-        .btn-success { background: #27ae60; }
-        .btn-warning { background: #f39c12; }
+        .btn { background: #f39c12; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px 0; display: inline-block; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>AMEG - Relatório Simplificado</h1>
+        <h1>AMEG - Relatório por Bairro</h1>
         <a href="/logout" class="logout">Sair</a>
     </div>
     
@@ -35,31 +33,26 @@
     
     <div class="container">
         <div class="stats">
-            <h2>📄 Relatório Simplificado</h2>
-            <p><strong>Total:</strong> {{ cadastros|length }} cadastros</p>
-            <div style="margin: 15px 0;">
-                <a href="/exportar?tipo=simplificado&formato=pdf" class="btn btn-warning">📄 PDF</a>
-                <a href="/exportar?tipo=simplificado&formato=csv" class="btn btn-success">📊 CSV</a>
-            </div>
+            <h2>🏠 Cadastros por Bairro</h2>
+            <p>Distribuição dos cadastros agrupados por bairro</p>
+            <a href="/exportar?tipo=bairro&formato=pdf" class="btn">📄 Exportar PDF</a>
         </div>
         
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Nome</th>
-                        <th>Telefone</th>
                         <th>Bairro</th>
-                        <th>Renda Familiar</th>
+                        <th>Total de Cadastros</th>
+                        <th>Renda Média</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for cadastro in cadastros %}
+                    {% for bairro in bairros %}
                     <tr>
-                        <td>{{ cadastro.nome_completo or cadastro[1] }}</td>
-                        <td>{{ cadastro.telefone or cadastro[2] }}</td>
-                        <td>{{ cadastro.bairro or cadastro[3] }}</td>
-                        <td>{{ 'R$ ' + (cadastro.renda_familiar or cadastro[4] or '0') if (cadastro.renda_familiar or cadastro[4]) else 'Não informado' }}</td>
+                        <td>{{ bairro[0] or 'Não informado' }}</td>
+                        <td>{{ bairro[1] }}</td>
+                        <td>{{ 'R$ %.2f'|format(bairro[2]) if bairro[2] else 'Não informado' }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

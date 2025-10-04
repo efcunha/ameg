@@ -378,6 +378,135 @@ def relatorios():
         return redirect(url_for('login'))
     return render_template('tipos_relatorios.html')
 
+@app.route('/relatorio_completo')
+def relatorio_completo():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
+    cadastros = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    return render_template('relatorio_completo.html', cadastros=cadastros)
+
+@app.route('/relatorio_simplificado')
+def relatorio_simplificado():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, nome_completo, telefone, bairro, renda_familiar FROM cadastros ORDER BY nome_completo')
+    cadastros = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    return render_template('relatorio_simplificado.html', cadastros=cadastros)
+
+@app.route('/relatorio_estatistico')
+def relatorio_estatistico():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Estatísticas gerais
+    cursor.execute('SELECT COUNT(*) FROM cadastros')
+    total = cursor.fetchone()[0]
+    
+    # Por bairro
+    cursor.execute('SELECT bairro, COUNT(*) FROM cadastros GROUP BY bairro ORDER BY COUNT(*) DESC')
+    por_bairro = cursor.fetchall()
+    
+    # Por gênero
+    cursor.execute('SELECT genero, COUNT(*) FROM cadastros GROUP BY genero')
+    por_genero = cursor.fetchall()
+    
+    # Por faixa etária
+    cursor.execute('''SELECT 
+        CASE 
+            WHEN idade < 18 THEN 'Menor de 18'
+            WHEN idade BETWEEN 18 AND 30 THEN '18-30 anos'
+            WHEN idade BETWEEN 31 AND 50 THEN '31-50 anos'
+            WHEN idade BETWEEN 51 AND 65 THEN '51-65 anos'
+            ELSE 'Acima de 65'
+        END as faixa_etaria,
+        COUNT(*) 
+        FROM cadastros 
+        WHERE idade IS NOT NULL 
+        GROUP BY faixa_etaria''')
+    por_idade = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    stats = {
+        'total': total,
+        'por_bairro': por_bairro,
+        'por_genero': por_genero,
+        'por_idade': por_idade
+    }
+    
+    return render_template('relatorio_estatistico.html', stats=stats)
+
+@app.route('/relatorio_por_bairro')
+def relatorio_por_bairro():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''SELECT bairro, COUNT(*) as total, 
+                     AVG(CAST(renda_familiar as DECIMAL)) as renda_media
+                     FROM cadastros 
+                     WHERE bairro IS NOT NULL 
+                     GROUP BY bairro 
+                     ORDER BY total DESC''')
+    bairros = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    return render_template('relatorio_por_bairro.html', bairros=bairros)
+
+@app.route('/relatorio_renda')
+def relatorio_renda():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Faixas de renda
+    cursor.execute('''SELECT 
+        CASE 
+            WHEN CAST(renda_familiar as DECIMAL) <= 1000 THEN 'Até R$ 1.000'
+            WHEN CAST(renda_familiar as DECIMAL) BETWEEN 1001 AND 2000 THEN 'R$ 1.001 - R$ 2.000'
+            WHEN CAST(renda_familiar as DECIMAL) BETWEEN 2001 AND 3000 THEN 'R$ 2.001 - R$ 3.000'
+            ELSE 'Acima de R$ 3.000'
+        END as faixa_renda,
+        COUNT(*) 
+        FROM cadastros 
+        WHERE renda_familiar IS NOT NULL AND renda_familiar != ''
+        GROUP BY faixa_renda''')
+    faixas_renda = cursor.fetchall()
+    
+    # Renda por bairro
+    cursor.execute('''SELECT bairro, AVG(CAST(renda_familiar as DECIMAL)) as renda_media, COUNT(*) as total
+                     FROM cadastros 
+                     WHERE renda_familiar IS NOT NULL AND renda_familiar != '' AND bairro IS NOT NULL
+                     GROUP BY bairro 
+                     ORDER BY renda_media DESC''')
+    renda_bairro = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('relatorio_renda.html', faixas_renda=faixas_renda, renda_bairro=renda_bairro)
+
 @app.route('/relatorio_saude')
 def relatorio_saude():
     if 'usuario' not in session:

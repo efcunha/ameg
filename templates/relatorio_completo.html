@@ -4,21 +4,23 @@
     <title>AMEG - Relatório Completo</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/mobile.css">
     <style>
         body { font-family: Arial; margin: 0; background: #f4f4f4; }
         .header { background: #2c3e50; color: white; padding: 20px; }
         .nav { background: #34495e; padding: 15px; }
         .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
-        .container { padding: 20px; }
-        .stats { display: flex; gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 20px; border-radius: 10px; flex: 1; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .stat-number { font-size: 2em; font-weight: bold; color: #3498db; }
-        table { width: 100%; background: white; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
-        th { background: #3498db; color: white; }
+        .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .stats { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .table-container { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #3498db; color: white; padding: 12px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f8f9fa; }
         .logout { float: right; color: white; text-decoration: none; }
-        .export-btn { background: #27ae60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px; display: inline-block; }
+        .btn { background: #3498db; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; margin: 2px; }
+        .btn:hover { background: #2980b9; }
+        .btn-success { background: #27ae60; }
+        .btn-warning { background: #f39c12; }
     </style>
 </head>
 <body>
@@ -29,58 +31,52 @@
     
     <div class="nav">
         <a href="/dashboard">Dashboard</a>
-        <a href="/relatorios">← Voltar aos Relatórios</a>
-        <a href="/exportar?tipo=completo&formato=csv" class="export-btn">📄 CSV</a>
-        <a href="/exportar?tipo=completo&formato=pdf" class="export-btn" style="background: #e74c3c;">📋 PDF</a>
+        <a href="/cadastrar">Novo Cadastro</a>
+        <a href="/relatorios">Relatórios</a>
     </div>
     
     <div class="container">
         <div class="stats">
-            <div class="stat-card">
-                <div class="stat-number">{{ total }}</div>
-                <div>Total de Cadastros</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">R$ {{ "%.2f"|format(renda_media) }}</div>
-                <div>Renda Média</div>
+            <h2>📋 Relatório Completo de Cadastros</h2>
+            <p><strong>Total de cadastros:</strong> {{ cadastros|length }}</p>
+            <div style="margin: 15px 0;">
+                <a href="/exportar?tipo=completo&formato=pdf" class="btn btn-warning">📄 Exportar PDF</a>
+                <a href="/exportar?tipo=completo&formato=csv" class="btn btn-success">📊 Exportar CSV</a>
             </div>
         </div>
         
-        <h3>Todos os Cadastros - Relatório Completo</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Telefone</th>
-                    <th>Bairro</th>
-                    <th>Gênero</th>
-                    <th>Idade</th>
-                    <th>CPF</th>
-                    <th>Profissão</th>
-                    <th>Renda</th>
-                    <th>Data</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for cadastro in cadastros %}
-                <tr>
-                    <td>{{ cadastro[0] }}</td>
-                    <td>{{ cadastro[1] }}</td>
-                    <td>{{ cadastro[4] or '-' }}</td>
-                    <td>{{ cadastro[3] or '-' }}</td>
-                    <td>{{ cadastro[6] or '-' }}</td>
-                    <td>{{ cadastro[7] or '-' }}</td>
-                    <td>{{ cadastro[10] or '-' }}</td>
-                    <td>{{ cadastro[16] or '-' }}</td>
-                    <td>{{ ("R$ %.2f"|format(cadastro[37])) if cadastro[37] else '-' }}</td>
-                    <td>{{ cadastro[47] }}</td>
-                    <td><a href="/ficha/{{ cadastro[0] }}" style="color: #3498db; text-decoration: none;">👁️ Ver Ficha</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Telefone</th>
+                        <th>Endereço</th>
+                        <th>Bairro</th>
+                        <th>Idade</th>
+                        <th>Renda Familiar</th>
+                        <th>Cadastro</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cadastro in cadastros %}
+                    <tr>
+                        <td>{{ cadastro.nome_completo or cadastro[1] }}</td>
+                        <td>{{ cadastro.telefone or cadastro[8] }}</td>
+                        <td>{{ (cadastro.endereco or cadastro[2]) + ', ' + (cadastro.numero or cadastro[3] or '') }}</td>
+                        <td>{{ cadastro.bairro or cadastro[4] }}</td>
+                        <td>{{ cadastro.idade or cadastro[11] }}</td>
+                        <td>{{ 'R$ ' + (cadastro.renda_familiar or cadastro[42] or '0') if (cadastro.renda_familiar or cadastro[42]) else 'Não informado' }}</td>
+                        <td>{{ (cadastro.data_cadastro or cadastro[-1] or '')[:10] }}</td>
+                        <td>
+                            <a href="/editar_cadastro/{{ cadastro.id or cadastro[0] }}" class="btn">✏️ Editar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </body>
 </html>

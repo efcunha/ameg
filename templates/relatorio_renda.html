@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AMEG - Relatório de Renda</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .stats { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .table-container { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #3498db; color: white; padding: 12px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f8f9fa; }
+        .logout { float: right; color: white; text-decoration: none; }
+        .btn { background: #f39c12; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px 0; display: inline-block; }
+        h3 { color: #2c3e50; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AMEG - Relatório de Renda</h1>
+        <a href="/logout" class="logout">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/relatorios">Relatórios</a>
+    </div>
+    
+    <div class="container">
+        <div class="stats">
+            <h2>💰 Análise de Renda Familiar</h2>
+            <p>Distribuição de renda por faixas salariais e regiões</p>
+            <a href="/exportar?tipo=renda&formato=pdf" class="btn">📄 Exportar PDF</a>
+        </div>
+        
+        <div class="reports-grid">
+            <div class="table-container">
+                <h3 style="padding: 15px;">📊 Por Faixa de Renda</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Faixa de Renda</th>
+                            <th>Quantidade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for faixa in faixas_renda %}
+                        <tr>
+                            <td>{{ faixa[0] }}</td>
+                            <td>{{ faixa[1] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="table-container">
+                <h3 style="padding: 15px;">🏠 Renda Média por Bairro</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bairro</th>
+                            <th>Renda Média</th>
+                            <th>Cadastros</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in renda_bairro %}
+                        <tr>
+                            <td>{{ item[0] }}</td>
+                            <td>{{ 'R$ %.2f'|format(item[1]) if item[1] else 'N/A' }}</td>
+                            <td>{{ item[2] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
