@@ -552,6 +552,93 @@ def relatorio_saude():
     
     return render_template('relatorio_saude.html', stats=stats, cadastros=cadastros_saude)
 
+@app.route('/exportar')
+def exportar():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    tipo = request.args.get('tipo', 'completo')
+    formato = request.args.get('formato', 'csv')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    if tipo == 'completo':
+        cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
+        dados = cursor.fetchall()
+        filename = 'relatorio_completo'
+    elif tipo == 'simplificado':
+        cursor.execute('SELECT nome_completo, telefone, bairro, renda_familiar FROM cadastros ORDER BY nome_completo')
+        dados = cursor.fetchall()
+        filename = 'relatorio_simplificado'
+    elif tipo == 'saude':
+        cursor.execute('''SELECT nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
+                         usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
+                         tem_deficiencia, tipo_deficiencia FROM cadastros 
+                         WHERE tem_doenca_cronica = "Sim" OR usa_medicamento_continuo = "Sim" 
+                         OR tem_doenca_mental = "Sim" OR tem_deficiencia = "Sim"
+                         ORDER BY nome_completo''')
+        dados = cursor.fetchall()
+        filename = 'relatorio_saude'
+    else:
+        cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
+        dados = cursor.fetchall()
+        filename = 'relatorio_geral'
+    
+    cursor.close()
+    conn.close()
+    
+    if formato == 'csv':
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Cabeçalhos baseados no tipo
+        if tipo == 'simplificado':
+            writer.writerow(['Nome', 'Telefone', 'Bairro', 'Renda Familiar'])
+        elif tipo == 'saude':
+            writer.writerow(['Nome', 'Idade', 'Telefone', 'Bairro', 'Doença Crônica', 'Doenças', 
+                           'Medicamento Contínuo', 'Medicamentos', 'Doença Mental', 'Doenças Mentais',
+                           'Deficiência', 'Tipo Deficiência'])
+        else:
+            # Cabeçalhos completos (primeiros campos principais)
+            writer.writerow(['Nome', 'Endereço', 'Número', 'Bairro', 'CEP', 'Cidade', 'Estado', 
+                           'Telefone', 'Gênero', 'Idade', 'CPF', 'RG', 'Renda Familiar'])
+        
+        # Dados
+        for row in dados:
+            if tipo == 'completo':
+                # Pegar apenas os primeiros campos principais para CSV
+                row_data = [
+                    row[1] if hasattr(row, '__getitem__') else getattr(row, 'nome_completo', ''),
+                    row[2] if hasattr(row, '__getitem__') else getattr(row, 'endereco', ''),
+                    row[3] if hasattr(row, '__getitem__') else getattr(row, 'numero', ''),
+                    row[4] if hasattr(row, '__getitem__') else getattr(row, 'bairro', ''),
+                    row[5] if hasattr(row, '__getitem__') else getattr(row, 'cep', ''),
+                    row[6] if hasattr(row, '__getitem__') else getattr(row, 'cidade', ''),
+                    row[7] if hasattr(row, '__getitem__') else getattr(row, 'estado', ''),
+                    row[8] if hasattr(row, '__getitem__') else getattr(row, 'telefone', ''),
+                    row[10] if hasattr(row, '__getitem__') else getattr(row, 'genero', ''),
+                    row[11] if hasattr(row, '__getitem__') else getattr(row, 'idade', ''),
+                    row[15] if hasattr(row, '__getitem__') else getattr(row, 'cpf', ''),
+                    row[16] if hasattr(row, '__getitem__') else getattr(row, 'rg', ''),
+                    row[42] if hasattr(row, '__getitem__') else getattr(row, 'renda_familiar', '')
+                ]
+            else:
+                row_data = list(row)
+            writer.writerow(row_data)
+        
+        output.seek(0)
+        return send_file(
+            io.BytesIO(output.getvalue().encode('utf-8')),
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=f'{filename}.csv'
+        )
+    
+    # Para PDF, retornar mensagem simples por enquanto
+    flash('Exportação PDF em desenvolvimento. Use CSV por enquanto.')
+    return redirect(url_for('relatorios'))
+
 @app.route('/arquivos_saude/<int:cadastro_id>')
 def arquivos_saude(cadastro_id):
     if 'usuario' not in session:
