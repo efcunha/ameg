@@ -608,13 +608,13 @@ def relatorio_renda():
         cursor = conn.cursor()
         logger.info("✅ Conexão estabelecida para relatório de renda")
         
-        # Faixas de renda - corrigido para PostgreSQL
+        # Faixas de renda - simplificado
         query1 = '''SELECT 
             CASE 
-                WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric <= 1000 THEN 'Até R$ 1.000'
-                WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric BETWEEN 1001 AND 2000 THEN 'R$ 1.001 - R$ 2.000'
-                WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric BETWEEN 2001 AND 3000 THEN 'R$ 2.001 - R$ 3.000'
-                WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric > 3000 THEN 'Acima de R$ 3.000'
+                WHEN renda_familiar IS NOT NULL AND renda_familiar <= 1000 THEN 'Até R$ 1.000'
+                WHEN renda_familiar IS NOT NULL AND renda_familiar BETWEEN 1001 AND 2000 THEN 'R$ 1.001 - R$ 2.000'
+                WHEN renda_familiar IS NOT NULL AND renda_familiar BETWEEN 2001 AND 3000 THEN 'R$ 2.001 - R$ 3.000'
+                WHEN renda_familiar IS NOT NULL AND renda_familiar > 3000 THEN 'Acima de R$ 3.000'
                 ELSE 'Não informado'
             END as faixa_renda,
             COUNT(*) 
@@ -625,12 +625,12 @@ def relatorio_renda():
         faixas_renda = cursor.fetchall()
         logger.info(f"✅ Faixas de renda encontradas: {len(faixas_renda)}")
         
-        # Renda por bairro - corrigido para PostgreSQL
+        # Renda por bairro - simplificado
         query2 = '''SELECT bairro, 
-                     AVG(CASE WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' THEN renda_familiar::numeric ELSE NULL END) as renda_media, 
+                     AVG(renda_familiar) as renda_media, 
                      COUNT(*) as total
                      FROM cadastros 
-                     WHERE bairro IS NOT NULL
+                     WHERE bairro IS NOT NULL AND bairro != ''
                      GROUP BY bairro 
                      ORDER BY renda_media DESC NULLS LAST'''
         logger.info(f"🔍 Executando query renda por bairro: {query2}")
@@ -773,10 +773,10 @@ def exportar():
         filename = 'relatorio_por_bairro'
     elif tipo == 'renda':
         cursor.execute('''SELECT bairro, 
-                         AVG(CASE WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' THEN renda_familiar::numeric ELSE NULL END) as renda_media, 
+                         AVG(renda_familiar) as renda_media, 
                          COUNT(*) as total
                          FROM cadastros 
-                         WHERE bairro IS NOT NULL
+                         WHERE bairro IS NOT NULL AND bairro != ''
                          GROUP BY bairro 
                          ORDER BY renda_media DESC NULLS LAST''')
         dados = cursor.fetchall()
