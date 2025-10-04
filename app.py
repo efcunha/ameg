@@ -764,53 +764,13 @@ def atualizar_cadastro(cadastro_id):
         valores = [request.form.get(campo, '') for campo in campos]
         valores.append(cadastro_id)
         
+        # Construir query UPDATE dinamicamente baseada na lista de campos
+        placeholder = '%s' if db_type == 'postgresql' else '?'
+        set_clauses = [f"{campo} = {placeholder}" for campo in campos]
         sql_update = f"""
         UPDATE cadastros SET 
-        nome_completo = {'%s' if db_type == 'postgresql' else '?'},
-    endereco = {'%s' if db_type == 'postgresql' else '?'},
-    numero = {'%s' if db_type == 'postgresql' else '?'},
-    bairro = {'%s' if db_type == 'postgresql' else '?'},
-    cep = {'%s' if db_type == 'postgresql' else '?'},
-    cidade = {'%s' if db_type == 'postgresql' else '?'},
-    estado = {'%s' if db_type == 'postgresql' else '?'},
-    telefone = {'%s' if db_type == 'postgresql' else '?'},
-    ponto_referencia = {'%s' if db_type == 'postgresql' else '?'},
-    genero = {'%s' if db_type == 'postgresql' else '?'},
-    idade = {'%s' if db_type == 'postgresql' else '?'},
-    data_nascimento = {'%s' if db_type == 'postgresql' else '?'},
-    titulo_eleitor = {'%s' if db_type == 'postgresql' else '?'},
-    cidade_titulo = {'%s' if db_type == 'postgresql' else '?'},
-    cpf = {'%s' if db_type == 'postgresql' else '?'},
-    rg = {'%s' if db_type == 'postgresql' else '?'},
-    nis = {'%s' if db_type == 'postgresql' else '?'},
-    estado_civil = {'%s' if db_type == 'postgresql' else '?'},
-    escolaridade = {'%s' if db_type == 'postgresql' else '?'},
-    profissao = {'%s' if db_type == 'postgresql' else '?'},
-    nome_companheiro = {'%s' if db_type == 'postgresql' else '?'},
-    cpf_companheiro = {'%s' if db_type == 'postgresql' else '?'},
-    rg_companheiro = {'%s' if db_type == 'postgresql' else '?'},
-    idade_companheiro = {'%s' if db_type == 'postgresql' else '?'},
-    escolaridade_companheiro = {'%s' if db_type == 'postgresql' else '?'},
-    profissao_companheiro = {'%s' if db_type == 'postgresql' else '?'},
-    qtd_filhos = {'%s' if db_type == 'postgresql' else '?'},
-    nomes_idades_filhos = {'%s' if db_type == 'postgresql' else '?'},
-    renda_familiar = {'%s' if db_type == 'postgresql' else '?'},
-    beneficio_governo = {'%s' if db_type == 'postgresql' else '?'},
-    qual_beneficio = {'%s' if db_type == 'postgresql' else '?'},
-    casa_propria = {'%s' if db_type == 'postgresql' else '?'},
-        tipo_casa = {'%s' if db_type == 'postgresql' else '?'},
-        qtd_comodos = {'%s' if db_type == 'postgresql' else '?'},
-        energia_eletrica = {'%s' if db_type == 'postgresql' else '?'},
-        agua_encanada = {'%s' if db_type == 'postgresql' else '?'},
-        rede_esgoto = {'%s' if db_type == 'postgresql' else '?'},
-        coleta_lixo = {'%s' if db_type == 'postgresql' else '?'},
-        doencas_familia = {'%s' if db_type == 'postgresql' else '?'},
-        medicamentos_uso = {'%s' if db_type == 'postgresql' else '?'},
-        deficiencia_familia = {'%s' if db_type == 'postgresql' else '?'},
-        tipo_deficiencia = {'%s' if db_type == 'postgresql' else '?'},
-        acompanhamento_medico = {'%s' if db_type == 'postgresql' else '?'},
-        local_atendimento = {'%s' if db_type == 'postgresql' else '?'}
-        WHERE id = {'%s' if db_type == 'postgresql' else '?'}
+        {', '.join(set_clauses)}
+        WHERE id = {placeholder}
         """
         
         cursor.execute(sql_update, valores)
