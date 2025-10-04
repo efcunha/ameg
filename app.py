@@ -704,28 +704,27 @@ def exportar():
         elif tipo == 'renda':
             writer.writerow(['Bairro', 'Renda Média', 'Total de Cadastros'])
         else:
-            # Cabeçalhos completos (primeiros campos principais)
-            writer.writerow(['Nome', 'Endereço', 'Número', 'Bairro', 'CEP', 'Cidade', 'Estado', 
-                           'Telefone', 'Gênero', 'Idade', 'CPF', 'RG', 'Renda Familiar'])
+            # Cabeçalhos completos 
+            writer.writerow(['Nome', 'Telefone', 'Endereço', 'Número', 'Bairro', 'CEP', 'Gênero', 'Idade', 'CPF', 'RG', 'Estado Civil', 'Escolaridade', 'Renda Familiar'])
         
         # Dados
         for row in dados:
             if tipo == 'completo':
-                # Pegar apenas os primeiros campos principais para CSV
+                # Usar índices corretos baseados na estrutura da tabela
                 row_data = [
-                    row[1] if hasattr(row, '__getitem__') else getattr(row, 'nome_completo', ''),
-                    row[2] if hasattr(row, '__getitem__') else getattr(row, 'endereco', ''),
-                    row[3] if hasattr(row, '__getitem__') else getattr(row, 'numero', ''),
-                    row[4] if hasattr(row, '__getitem__') else getattr(row, 'bairro', ''),
-                    row[5] if hasattr(row, '__getitem__') else getattr(row, 'cep', ''),
-                    row[6] if hasattr(row, '__getitem__') else getattr(row, 'cidade', ''),
-                    row[7] if hasattr(row, '__getitem__') else getattr(row, 'estado', ''),
-                    row[8] if hasattr(row, '__getitem__') else getattr(row, 'telefone', ''),
-                    row[10] if hasattr(row, '__getitem__') else getattr(row, 'genero', ''),
-                    row[11] if hasattr(row, '__getitem__') else getattr(row, 'idade', ''),
-                    row[15] if hasattr(row, '__getitem__') else getattr(row, 'cpf', ''),
-                    row[16] if hasattr(row, '__getitem__') else getattr(row, 'rg', ''),
-                    row[42] if hasattr(row, '__getitem__') else getattr(row, 'renda_familiar', '')
+                    row[2] if hasattr(row, '__getitem__') else getattr(row, 'nome_completo', ''),  # nome_completo
+                    row[7] if hasattr(row, '__getitem__') else getattr(row, 'telefone', ''),      # telefone
+                    row[3] if hasattr(row, '__getitem__') else getattr(row, 'endereco', ''),      # endereco
+                    row[4] if hasattr(row, '__getitem__') else getattr(row, 'numero', ''),        # numero
+                    row[5] if hasattr(row, '__getitem__') else getattr(row, 'bairro', ''),        # bairro
+                    row[6] if hasattr(row, '__getitem__') else getattr(row, 'cep', ''),           # cep
+                    row[9] if hasattr(row, '__getitem__') else getattr(row, 'genero', ''),        # genero
+                    row[10] if hasattr(row, '__getitem__') else getattr(row, 'idade', ''),        # idade
+                    row[14] if hasattr(row, '__getitem__') else getattr(row, 'cpf', ''),          # cpf
+                    row[15] if hasattr(row, '__getitem__') else getattr(row, 'rg', ''),           # rg
+                    row[17] if hasattr(row, '__getitem__') else getattr(row, 'estado_civil', ''), # estado_civil
+                    row[18] if hasattr(row, '__getitem__') else getattr(row, 'escolaridade', ''), # escolaridade
+                    row[41] if hasattr(row, '__getitem__') else getattr(row, 'renda_familiar', '') # renda_familiar
                 ]
             elif tipo in ['estatistico', 'bairro', 'renda']:
                 row_data = [
