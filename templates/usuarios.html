@@ -6,69 +6,332 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/mobile.css">
     <style>
-        body { font-family: Arial; margin: 0; padding: 20px; background: #f4f4f4; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
-        .header { text-align: center; margin-bottom: 30px; color: #2c3e50; }
-        .nav { margin-bottom: 20px; }
-        .nav a { margin-right: 15px; color: #3498db; text-decoration: none; }
-        .nav a:hover { text-decoration: underline; }
-        .btn { background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 5px; text-decoration: none; display: inline-block; }
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .nav a:hover { background: #2980b9; }
+        .nav a.active { background: #27ae60; }
+        .container { padding: 20px; }
+        
+        .page-header {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-title {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stats-bar {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+        
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
         .btn:hover { background: #2980b9; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f8f9fa; }
-        .alert { padding: 10px; margin: 10px 0; background: #d4edda; color: #155724; border-radius: 5px; }
+        .btn-success { background: #27ae60; }
+        .btn-success:hover { background: #229954; }
+        .btn-danger { background: #e74c3c; }
+        .btn-danger:hover { background: #c0392b; }
+        
+        .users-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .users-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .users-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .user-item {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .user-item:hover {
+            background: #f8f9fa;
+        }
+        .user-item:last-child {
+            border-bottom: none;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .user-details {
+            flex: 1;
+        }
+        .user-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        .user-role {
+            font-size: 13px;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .user-id {
+            font-size: 12px;
+            color: #868e96;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .role-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .role-admin {
+            background: #e8f5e8;
+            color: #27ae60;
+        }
+        .role-user {
+            background: #e3f2fd;
+            color: #3498db;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #27ae60;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .empty-title {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h1>👥 AMEG - Gerenciar Usuários</h1>
+        <span>Bem-vindo, {{ session.usuario }}!</span>
+        <a href="/logout" style="color: white; text-decoration: none; float: right;">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/cadastrar">Novo Cadastro</a>
+        <a href="/relatorios">Relatórios</a>
+        <a href="/arquivos_cadastros">📁 Arquivos</a>
+        <a href="/usuarios" class="active">👥 Usuários</a>
+    </div>
+
     <div class="container">
-        <div class="header">
-            <h2>Gerenciar Usuários</h2>
+        <div class="page-header">
+            <h2 class="page-title">
+                👥 Gerenciamento de Usuários
+            </h2>
+            <a href="/criar_usuario" class="btn btn-success">
+                ➕ Novo Usuário
+            </a>
         </div>
-        
-        <div class="nav">
-            <a href="/dashboard">← Dashboard</a>
-            <a href="/logout">Sair</a>
+
+        {% if usuarios %}
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number">{{ usuarios|length }}</div>
+                <div class="stat-label">Total Usuários</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ usuarios|selectattr('1', 'equalto', 'admin')|list|length }}</div>
+                <div class="stat-label">Administradores</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ usuarios|length - usuarios|selectattr('1', 'equalto', 'admin')|list|length }}</div>
+                <div class="stat-label">Usuários Comuns</div>
+            </div>
         </div>
-        
+        {% endif %}
+
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for message in messages %}
-                    <div class="alert">{{ message }}</div>
+                    <div class="alert alert-success">
+                        ✅ {{ message }}
+                    </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        
-        <a href="/criar_usuario" class="btn">+ Novo Usuário</a>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Usuário</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
+
+        <div class="users-container">
+            <div class="users-header">
+                <h3 class="users-title">Lista de Usuários</h3>
+                <span style="font-size: 14px; opacity: 0.9;">
+                    {{ usuarios|length if usuarios else 0 }} usuário(s) cadastrado(s)
+                </span>
+            </div>
+
+            {% if usuarios %}
                 {% for user in usuarios %}
-                <tr>
-                    <td>{{ user[0] }}</td>
-                    <td>{{ user[1] }}</td>
-                    <td>
+                <div class="user-item">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            {{ user[1][0]|upper }}
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name">{{ user[1] }}</div>
+                            <div class="user-role">
+                                <span class="role-badge {{ 'role-admin' if user[1] == 'admin' else 'role-user' }}">
+                                    {{ 'Administrador' if user[1] == 'admin' else 'Usuário' }}
+                                </span>
+                                <span class="user-id">ID: {{ user[0] }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="user-actions">
                         {% if user[1] != 'admin' %}
                         <a href="/excluir_usuario/{{ user[0] }}" 
-                           onclick="return confirm('Tem certeza que deseja excluir o usuário {{ user[1] }}?')"
-                           style="background: #e74c3c; color: white; padding: 5px 10px; border-radius: 3px; text-decoration: none; font-size: 12px;">
+                           onclick="return confirm('⚠️ Tem certeza que deseja excluir o usuário {{ user[1] }}?\n\nEsta ação não pode ser desfeita!')"
+                           class="btn btn-danger"
+                           style="font-size: 12px; padding: 8px 12px;">
                            🗑️ Excluir
                         </a>
                         {% else %}
-                        <span style="color: #7f8c8d; font-size: 12px;">Admin protegido</span>
+                        <span style="color: #7f8c8d; font-size: 12px; font-style: italic;">
+                            🛡️ Usuário protegido
+                        </span>
                         {% endif %}
-                    </td>
-                </tr>
+                    </div>
+                </div>
                 {% endfor %}
-            </tbody>
-        </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">👥</div>
+                <div class="empty-title">Nenhum usuário encontrado</div>
+                <p>Não há usuários cadastrados no sistema.</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
+
+    <script>
+        // Adicionar confirmação melhorada para exclusão
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButtons = document.querySelectorAll('a[href*="/excluir_usuario/"]');
+            
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const userName = this.getAttribute('href').match(/\/excluir_usuario\/\d+/);
+                    const userNameText = this.closest('.user-item').querySelector('.user-name').textContent;
+                    
+                    // Adicionar feedback visual
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '⏳ Processando...';
+                    this.style.pointerEvents = 'none';
+                    
+                    // Restaurar se cancelar
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                        this.style.pointerEvents = 'auto';
+                    }, 3000);
+                });
+            });
+        });
+    </script>
 </body>
 </html>
