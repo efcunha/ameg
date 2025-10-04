@@ -582,6 +582,29 @@ def exportar():
                          ORDER BY nome_completo''', ('Sim', 'Sim', 'Sim', 'Sim'))
         dados = cursor.fetchall()
         filename = 'relatorio_saude'
+    elif tipo == 'estatistico':
+        cursor.execute('SELECT bairro, COUNT(*) FROM cadastros GROUP BY bairro ORDER BY COUNT(*) DESC')
+        dados = cursor.fetchall()
+        filename = 'relatorio_estatistico'
+    elif tipo == 'bairro':
+        cursor.execute('''SELECT bairro, COUNT(*) as total, 
+                         AVG(CASE WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' THEN renda_familiar::numeric ELSE NULL END) as renda_media
+                         FROM cadastros 
+                         WHERE bairro IS NOT NULL 
+                         GROUP BY bairro 
+                         ORDER BY total DESC''')
+        dados = cursor.fetchall()
+        filename = 'relatorio_por_bairro'
+    elif tipo == 'renda':
+        cursor.execute('''SELECT bairro, 
+                         AVG(CASE WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' THEN renda_familiar::numeric ELSE NULL END) as renda_media, 
+                         COUNT(*) as total
+                         FROM cadastros 
+                         WHERE bairro IS NOT NULL
+                         GROUP BY bairro 
+                         ORDER BY renda_media DESC NULLS LAST''')
+        dados = cursor.fetchall()
+        filename = 'relatorio_renda'
     else:
         cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
         dados = cursor.fetchall()
@@ -601,6 +624,12 @@ def exportar():
             writer.writerow(['Nome', 'Idade', 'Telefone', 'Bairro', 'Doença Crônica', 'Doenças', 
                            'Medicamento Contínuo', 'Medicamentos', 'Doença Mental', 'Doenças Mentais',
                            'Deficiência', 'Tipo Deficiência'])
+        elif tipo == 'estatistico':
+            writer.writerow(['Bairro', 'Total de Cadastros'])
+        elif tipo == 'bairro':
+            writer.writerow(['Bairro', 'Total de Cadastros', 'Renda Média'])
+        elif tipo == 'renda':
+            writer.writerow(['Bairro', 'Renda Média', 'Total de Cadastros'])
         else:
             # Cabeçalhos completos (primeiros campos principais)
             writer.writerow(['Nome', 'Endereço', 'Número', 'Bairro', 'CEP', 'Cidade', 'Estado', 
@@ -625,6 +654,12 @@ def exportar():
                     row[16] if hasattr(row, '__getitem__') else getattr(row, 'rg', ''),
                     row[42] if hasattr(row, '__getitem__') else getattr(row, 'renda_familiar', '')
                 ]
+            elif tipo in ['estatistico', 'bairro', 'renda']:
+                row_data = [
+                    str(row[0] or 'Não informado'),
+                    f'{row[1]:.2f}' if row[1] and len(row) > 2 else str(row[1] or ''),
+                    str(row[2]) if len(row) > 2 else ''
+                ]
             else:
                 row_data = list(row)
             writer.writerow(row_data)
@@ -637,8 +672,90 @@ def exportar():
             download_name=f'{filename}.csv'
         )
     
-    # Para PDF, retornar mensagem simples por enquanto
-    flash('Exportação PDF em desenvolvimento. Use CSV por enquanto.')
+    # Para PDF, usar ReportLab
+    elif formato == 'pdf':
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib import colors
+        from reportlab.lib.units import inch
+        
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Título
+        if tipo == 'completo':
+            title = Paragraph("AMEG - Relatório Completo de Cadastros", styles['Title'])
+        elif tipo == 'simplificado':
+            title = Paragraph("AMEG - Relatório Simplificado", styles['Title'])
+        elif tipo == 'saude':
+            title = Paragraph("AMEG - Relatório de Saúde", styles['Title'])
+        else:
+            title = Paragraph("AMEG - Relatório Geral", styles['Title'])
+        
+        elements.append(title)
+        elements.append(Spacer(1, 12))
+        
+        # Dados da tabela
+        if tipo == 'simplificado':
+            table_data = [['Nome', 'Telefone', 'Bairro', 'Renda']]
+            for row in dados:
+                table_data.append([
+                    str(row[0] or ''),
+                    str(row[1] or ''),
+                    str(row[2] or ''),
+                    f"R$ {row[3] or '0'}" if row[3] else 'Não informado'
+                ])
+        elif tipo == 'saude':
+            table_data = [['Nome', 'Idade', 'Telefone', 'Bairro', 'Doença Crônica', 'Medicamento']]
+            for row in dados:
+                table_data.append([
+                    str(row[0] or ''),
+                    str(row[1] or ''),
+                    str(row[2] or ''),
+                    str(row[3] or ''),
+                    str(row[4] or ''),
+                    str(row[6] or '')
+                ])
+        else:  # completo
+            table_data = [['Nome', 'Telefone', 'Bairro', 'Idade', 'Renda']]
+            for row in dados:
+                table_data.append([
+                    str(row[1] if hasattr(row, '__getitem__') else getattr(row, 'nome_completo', '')),
+                    str(row[8] if hasattr(row, '__getitem__') else getattr(row, 'telefone', '')),
+                    str(row[4] if hasattr(row, '__getitem__') else getattr(row, 'bairro', '')),
+                    str(row[11] if hasattr(row, '__getitem__') else getattr(row, 'idade', '')),
+                    f"R$ {row[42] or '0'}" if (hasattr(row, '__getitem__') and row[42]) else 'Não informado'
+                ])
+        
+        # Criar tabela
+        table = Table(table_data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        elements.append(table)
+        doc.build(elements)
+        
+        buffer.seek(0)
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'{filename}.pdf'
+        )
+    
+    # Fallback - não deveria chegar aqui
+    flash('Formato de exportação não suportado.')
     return redirect(url_for('relatorios'))
 
 @app.route('/arquivos_saude/<int:cadastro_id>')
