@@ -1,126 +1,311 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <title>AMEG - Arquivos de Cadastros</title>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arquivos de Cadastros - AMEG</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="/static/css/mobile.css">
     <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .nav a:hover { background: #2980b9; }
+        .nav a.active { background: #27ae60; }
+        .container { padding: 20px; }
+        
         .search-container {
-            margin: 20px 0;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .search-input {
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 300px;
+            transition: border-color 0.3s;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        .btn:hover { background: #2980b9; }
+        .btn-sort { background: #9b59b6; }
+        .btn-sort:hover { background: #8e44ad; }
+        
+        .cadastro-item {
+            background: white;
+            margin: 15px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .cadastro-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        
+        .cadastro-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cadastro-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin: 0;
+        }
+        .cadastro-info {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .cadastro-actions {
             display: flex;
             gap: 10px;
             align-items: center;
         }
-        .search-input {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            width: 300px;
-        }
-        .cadastro-item {
-            border: 1px solid #ddd;
-            margin: 10px 0;
-            padding: 15px;
-            border-radius: 5px;
-            background: #f9f9f9;
-        }
-        .cadastro-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .cadastro-name {
+        
+        .btn-export {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
             font-weight: bold;
-            font-size: 16px;
+            transition: background 0.3s;
+        }
+        .btn-export:hover { background: #229954; }
+        
+        .arquivos-section {
+            padding: 20px;
+        }
+        .arquivos-title {
             color: #2c3e50;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .arquivos-list {
-            margin-top: 10px;
-            padding: 10px;
-            background: white;
-            border-radius: 3px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
         }
         .arquivo-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px 0;
-            border-bottom: 1px solid #eee;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
         }
-        .btn-export {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
+        .arquivo-item:last-child { border-bottom: none; }
+        .arquivo-info {
+            flex: 1;
         }
-        .no-files {
-            color: #666;
+        .arquivo-nome {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+        .arquivo-desc {
+            font-size: 13px;
+            color: #6c757d;
             font-style: italic;
+        }
+        .arquivo-data {
+            font-size: 12px;
+            color: #868e96;
+            text-align: right;
+        }
+        
+        .no-files {
+            text-align: center;
+            padding: 30px;
+            color: #6c757d;
+            font-style: italic;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stats-bar {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .empty-title {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .empty-desc {
+            color: #6c757d;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h1>📁 AMEG - Arquivos de Cadastros</h1>
+        <span>Bem-vindo, {{ session.usuario }}!</span>
+        <a href="/logout" style="color: white; text-decoration: none; float: right;">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/cadastrar">Novo Cadastro</a>
+        <a href="/relatorios">Relatórios</a>
+        <a href="/arquivos_cadastros" class="active">📁 Arquivos</a>
+        {% if session.usuario == 'admin' %}
+        <a href="/usuarios">Usuários</a>
+        {% endif %}
+    </div>
+
     <div class="container">
-        <div class="header">
-            <h1>📁 Arquivos de Cadastros</h1>
-            <a href="{{ url_for('dashboard') }}" class="btn">← Voltar ao Dashboard</a>
+
+        {% if cadastros %}
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number" id="totalCadastros">{{ cadastros|length }}</div>
+                <div class="stat-label">Total Cadastros</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="comArquivos">{{ cadastros|selectattr('arquivos_count', 'gt', 0)|list|length }}</div>
+                <div class="stat-label">Com Arquivos</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="totalArquivos">{{ cadastros|sum(attribute='arquivos_count') }}</div>
+                <div class="stat-label">Total Arquivos</div>
+            </div>
         </div>
+        {% endif %}
 
         <div class="search-container">
-            <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar por nome..." onkeyup="filterCadastros()">
-            <button onclick="sortCadastros()" class="btn">🔤 Ordenar A-Z</button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-weight: bold; color: #2c3e50;">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar por nome..." onkeyup="filterCadastros()">
+            </div>
+            <button onclick="sortCadastros()" class="btn btn-sort">🔤 Ordenar A-Z</button>
         </div>
 
         <div id="cadastrosList">
             {% for cadastro in cadastros %}
             <div class="cadastro-item" data-name="{{ cadastro.nome_completo|lower }}">
                 <div class="cadastro-header">
-                    <div class="cadastro-name">{{ cadastro.nome_completo }}</div>
                     <div>
-                        <span style="color: #666; font-size: 12px;">CPF: {{ cadastro.cpf or 'N/A' }}</span>
+                        <div class="cadastro-name">{{ cadastro.nome_completo }}</div>
+                        <div class="cadastro-info">
+                            CPF: {{ cadastro.cpf or 'Não informado' }} • 
+                            {% if cadastro.arquivos_count > 0 %}
+                                <span style="color: #27ae60; font-weight: bold;">{{ cadastro.arquivos_count }} arquivo(s)</span>
+                            {% else %}
+                                <span style="color: #e74c3c;">Sem arquivos</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="cadastro-actions">
                         {% if cadastro.arquivos_count > 0 %}
                         <button onclick="exportarArquivosPDF({{ cadastro.id }})" class="btn-export">
-                            📄 Exportar PDF ({{ cadastro.arquivos_count }} arquivos)
+                            📄 Exportar PDF
                         </button>
                         {% endif %}
                     </div>
                 </div>
                 
-                {% if cadastro.arquivos_saude %}
-                <div class="arquivos-list">
-                    <strong>📋 Arquivos de Saúde:</strong>
-                    {% for arquivo in cadastro.arquivos_saude %}
-                    <div class="arquivo-item">
-                        <div>
-                            <span style="font-weight: bold;">{{ arquivo.tipo_arquivo|title }}:</span>
-                            {{ arquivo.nome_arquivo }}
-                            {% if arquivo.descricao %}
-                            <br><small style="color: #666;">{{ arquivo.descricao }}</small>
-                            {% endif %}
-                        </div>
-                        <div style="font-size: 12px; color: #666;">
-                            {{ arquivo.data_upload.strftime('%d/%m/%Y') }}
-                        </div>
+                <div class="arquivos-section">
+                    {% if cadastro.arquivos_saude %}
+                    <div class="arquivos-title">
+                        📋 Arquivos de Saúde Anexados
                     </div>
-                    {% endfor %}
+                    <div class="arquivos-list">
+                        {% for arquivo in cadastro.arquivos_saude %}
+                        <div class="arquivo-item">
+                            <div class="arquivo-info">
+                                <div class="arquivo-nome">
+                                    {% if arquivo.tipo_arquivo == 'laudo' %}🏥{% elif arquivo.tipo_arquivo == 'receita' %}💊{% else %}📷{% endif %}
+                                    {{ arquivo.tipo_arquivo|title }}: {{ arquivo.nome_arquivo }}
+                                </div>
+                                {% if arquivo.descricao %}
+                                <div class="arquivo-desc">{{ arquivo.descricao }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="arquivo-data">
+                                {{ arquivo.data_upload.strftime('%d/%m/%Y') }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="no-files">
+                        📂 Nenhum arquivo de saúde anexado
+                    </div>
+                    {% endif %}
                 </div>
-                {% else %}
-                <div class="no-files">Nenhum arquivo de saúde anexado</div>
-                {% endif %}
             </div>
             {% endfor %}
         </div>
 
         {% if not cadastros %}
-        <div style="text-align: center; padding: 50px; color: #666;">
-            <h3>Nenhum cadastro encontrado</h3>
-            <p>Não há cadastros no sistema ainda.</p>
+        <div class="empty-state">
+            <div class="empty-icon">📂</div>
+            <div class="empty-title">Nenhum cadastro encontrado</div>
+            <div class="empty-desc">Não há cadastros no sistema ainda.</div>
         </div>
         {% endif %}
     </div>
@@ -132,6 +317,22 @@
         function logError(funcName, error) {
             console.error(`ERRO em ${funcName}:`, error);
             console.error('Stack trace:', error.stack);
+        }
+        
+        function updateStats() {
+            try {
+                const cadastros = document.querySelectorAll('.cadastro-item');
+                const visibleCadastros = document.querySelectorAll('.cadastro-item[style*="block"], .cadastro-item:not([style*="none"])');
+                
+                // Atualizar contador se existe
+                const totalElement = document.getElementById('totalCadastros');
+                if (totalElement && visibleCadastros.length !== cadastros.length) {
+                    totalElement.textContent = visibleCadastros.length;
+                    totalElement.parentElement.querySelector('.stat-label').textContent = 'Filtrados';
+                }
+            } catch (error) {
+                logError('updateStats', error);
+            }
         }
         
         function filterCadastros() {
@@ -159,6 +360,7 @@
                 });
                 
                 console.log(`Filtro aplicado: ${visibleCount}/${cadastros.length} cadastros visíveis`);
+                updateStats();
             } catch (error) {
                 logError('filterCadastros', error);
             }
@@ -195,6 +397,17 @@
                 });
                 
                 console.log('Ordenação concluída');
+                
+                // Adicionar feedback visual
+                const btn = event.target;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Ordenado!';
+                btn.style.background = '#27ae60';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '#9b59b6';
+                }, 1500);
+                
             } catch (error) {
                 logError('sortCadastros', error);
             }
@@ -210,6 +423,12 @@
                     return;
                 }
                 
+                // Feedback visual no botão
+                const btn = event.target;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '⏳ Gerando...';
+                btn.disabled = true;
+                
                 const url = `/exportar_arquivos_pdf/${cadastroId}`;
                 console.log('URL de exportação:', url);
                 
@@ -217,9 +436,20 @@
                 window.open(url, '_blank');
                 console.log('Janela aberta com sucesso');
                 
+                // Restaurar botão após delay
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 2000);
+                
             } catch (error) {
                 logError('exportarArquivosPDF', error);
                 alert('Erro ao exportar PDF: ' + error.message);
+                
+                // Restaurar botão em caso de erro
+                const btn = event.target;
+                btn.innerHTML = '📄 Exportar PDF';
+                btn.disabled = false;
             }
         }
 
@@ -236,6 +466,19 @@
                     console.error('Elemento searchInput não encontrado');
                 } else {
                     console.log('searchInput encontrado');
+                    // Adicionar placeholder animado
+                    let placeholderIndex = 0;
+                    const placeholders = [
+                        'Pesquisar por nome...',
+                        'Digite o nome do cadastrado...',
+                        'Buscar cadastro...'
+                    ];
+                    setInterval(() => {
+                        if (searchInput.value === '') {
+                            searchInput.placeholder = placeholders[placeholderIndex];
+                            placeholderIndex = (placeholderIndex + 1) % placeholders.length;
+                        }
+                    }, 3000);
                 }
                 
                 if (!cadastrosList) {
