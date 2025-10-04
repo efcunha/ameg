@@ -49,7 +49,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Endereço *</label>
-                        <input type="text" name="endereco" required>
+                        <input type="text" name="endereco" required readonly>
                     </div>
                     <div class="form-group">
                         <label>Número *</label>
@@ -60,7 +60,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Bairro *</label>
-                        <input type="text" name="bairro" required>
+                        <input type="text" name="bairro" required readonly>
                     </div>
                     <div class="form-group">
                         <label>CEP * <small>(preenche endereço automaticamente)</small></label>
@@ -71,11 +71,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Cidade *</label>
-                        <input type="text" name="cidade" required>
+                        <input type="text" name="cidade" required readonly>
                     </div>
                     <div class="form-group">
                         <label>Estado *</label>
-                        <input type="text" name="estado" required maxlength="2" placeholder="PB">
+                        <input type="text" name="estado" required maxlength="2" placeholder="PB" readonly>
                     </div>
                 </div>
                 
@@ -625,6 +625,13 @@
                         .then(response => response.json())
                         .then(data => {
                             if (!data.erro) {
+                                // Habilitar campos de endereço
+                                document.querySelector('input[name="endereco"]').readOnly = false;
+                                document.querySelector('input[name="bairro"]').readOnly = false;
+                                document.querySelector('input[name="cidade"]').readOnly = false;
+                                document.querySelector('input[name="estado"]').readOnly = false;
+                                
+                                // Preencher campos
                                 document.querySelector('input[name="endereco"]').value = data.logradouro || '';
                                 document.querySelector('input[name="bairro"]').value = data.bairro || '';
                                 document.querySelector('input[name="cidade"]').value = data.localidade || '';
