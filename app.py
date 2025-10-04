@@ -221,24 +221,37 @@ def cadastrar():
             logger.debug("Conexão com banco estabelecida para cadastro")
             
             # Preparar dados para INSERT - tratar valores vazios para INTEGER
-            def safe_int(value):
-                return None if not value or value == '' else value
+            def safe_int_or_null(value):
+                if value == '' or value is None:
+                    return None
+                try:
+                    return int(value)
+                except (ValueError, TypeError):
+                    return None
+            
+            def safe_decimal_or_null(value):
+                if value == '' or value is None:
+                    return None
+                try:
+                    return float(value)
+                except (ValueError, TypeError):
+                    return None
             
             dados_insert = (
                 request.form.get('nome_completo'), request.form.get('endereco'), request.form.get('numero'),
                 request.form.get('bairro'), request.form.get('cep'), request.form.get('cidade'), request.form.get('estado'), request.form.get('telefone'),
-                request.form.get('ponto_referencia'), request.form.get('genero'), safe_int(request.form.get('idade')),
+                request.form.get('ponto_referencia'), request.form.get('genero'), safe_int_or_null(request.form.get('idade')),
                 request.form.get('data_nascimento'), request.form.get('titulo_eleitor'), request.form.get('cidade_titulo'),
                 request.form.get('cpf'), request.form.get('rg'), request.form.get('nis'),
                 request.form.get('estado_civil'), request.form.get('escolaridade'), request.form.get('profissao'),
                 request.form.get('nome_companheiro'), request.form.get('cpf_companheiro'), request.form.get('rg_companheiro'),
-                safe_int(request.form.get('idade_companheiro')), request.form.get('escolaridade_companheiro'), request.form.get('profissao_companheiro'),
+                safe_int_or_null(request.form.get('idade_companheiro')), request.form.get('escolaridade_companheiro'), request.form.get('profissao_companheiro'),
                 request.form.get('data_nascimento_companheiro'), request.form.get('titulo_companheiro'), request.form.get('cidade_titulo_companheiro'),
-                request.form.get('nis_companheiro'), request.form.get('tipo_trabalho'), safe_int(request.form.get('pessoas_trabalham')),
-                safe_int(request.form.get('aposentados_pensionistas')), safe_int(request.form.get('num_pessoas_familia')), safe_int(request.form.get('num_familias')),
-                safe_int(request.form.get('adultos')), safe_int(request.form.get('criancas')), safe_int(request.form.get('adolescentes')),
-                safe_int(request.form.get('idosos')), safe_int(request.form.get('gestantes')), safe_int(request.form.get('nutrizes')),
-                request.form.get('renda_familiar'), request.form.get('renda_per_capita'), request.form.get('bolsa_familia'),
+                request.form.get('nis_companheiro'), request.form.get('tipo_trabalho'), safe_int_or_null(request.form.get('pessoas_trabalham')),
+                safe_int_or_null(request.form.get('aposentados_pensionistas')), safe_int_or_null(request.form.get('num_pessoas_familia')), safe_int_or_null(request.form.get('num_familias')),
+                safe_int_or_null(request.form.get('adultos')), safe_int_or_null(request.form.get('criancas')), safe_int_or_null(request.form.get('adolescentes')),
+                safe_int_or_null(request.form.get('idosos')), safe_int_or_null(request.form.get('gestantes')), safe_int_or_null(request.form.get('nutrizes')),
+                safe_decimal_or_null(request.form.get('renda_familiar')), safe_decimal_or_null(request.form.get('renda_per_capita')), safe_decimal_or_null(request.form.get('bolsa_familia')),
                 request.form.get('casa_tipo'), request.form.get('casa_material'), request.form.get('energia'),
                 request.form.get('lixo'), request.form.get('agua'), request.form.get('esgoto'),
                 request.form.get('observacoes'), request.form.get('tem_doenca_cronica'), request.form.get('doencas_cronicas'),
@@ -248,12 +261,12 @@ def cadastrar():
                 # Novos campos de trabalho
                 request.form.get('com_que_trabalha'), request.form.get('onde_trabalha'), request.form.get('localizacao_trabalho'), request.form.get('horario_trabalho'),
                 request.form.get('tempo_atividade'), request.form.get('atua_ponto_fixo'), request.form.get('qual_ponto_fixo'),
-                safe_int(request.form.get('dias_semana_trabalha')), request.form.get('trabalho_continuo_temporada'),
+                safe_int_or_null(request.form.get('dias_semana_trabalha')), request.form.get('trabalho_continuo_temporada'),
                 request.form.get('sofreu_acidente_trabalho'), request.form.get('qual_acidente'),
                 request.form.get('trabalho_incomoda_calor'), request.form.get('trabalho_incomoda_barulho'),
                 request.form.get('trabalho_incomoda_seguranca'), request.form.get('trabalho_incomoda_banheiros'),
                 request.form.get('trabalho_incomoda_outro'), request.form.get('trabalho_incomoda_outro_desc'),
-                request.form.get('acesso_banheiro_agua'), safe_int(request.form.get('trabalha_sozinho_ajudantes')),
+                request.form.get('acesso_banheiro_agua'), safe_int_or_null(request.form.get('trabalha_sozinho_ajudantes')),
                 request.form.get('possui_autorizacao_municipal'), request.form.get('problemas_fiscalizacao_policia'),
                 request.form.get('estrutura_barraca'), request.form.get('estrutura_carrinho'),
                 request.form.get('estrutura_mesa'), request.form.get('estrutura_outro'), request.form.get('estrutura_outro_desc'),
@@ -262,7 +275,7 @@ def cadastrar():
                 request.form.get('fonte_renda_trabalho_ambulante'), request.form.get('fonte_renda_aposentadoria'),
                 request.form.get('fonte_renda_outro_trabalho'), request.form.get('fonte_renda_beneficio_social'),
                 request.form.get('fonte_renda_outro'), request.form.get('fonte_renda_outro_desc'),
-                safe_int(request.form.get('pessoas_dependem_renda'))
+                safe_int_or_null(request.form.get('pessoas_dependem_renda'))
             )
             
             logger.debug(f"📊 Preparando INSERT com {len(dados_insert)} valores")
