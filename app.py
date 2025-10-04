@@ -196,6 +196,238 @@ def dashboard():
     
     return render_template('dashboard.html', total=total, ultimos=ultimos)
 
+@app.route('/arquivos_cadastros')
+def arquivos_cadastros():
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+    
+    logger.info("=== INICIANDO arquivos_cadastros ===")
+    
+    if 'usuario' not in session:
+        logger.warning("Usuário não autenticado, redirecionando para login")
+        return redirect(url_for('login'))
+    
+    logger.info(f"Usuário autenticado: {session.get('usuario')}")
+    
+    try:
+        logger.info("Tentando conectar ao banco de dados")
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        logger.info("Conexão com banco estabelecida com sucesso")
+        
+        # Buscar cadastros com informações de arquivos
+        query_cadastros = '''
+            SELECT c.id, c.nome_completo, c.cpf,
+                   COUNT(a.id) as arquivos_count
+            FROM cadastros c
+            LEFT JOIN arquivos_saude a ON c.id = a.cadastro_id
+            GROUP BY c.id, c.nome_completo, c.cpf
+            ORDER BY c.nome_completo
+        '''
+        logger.info(f"Executando query principal: {query_cadastros}")
+        cursor.execute(query_cadastros)
+        cadastros_data = cursor.fetchall()
+        logger.info(f"Query executada com sucesso. {len(cadastros_data)} cadastros encontrados")
+        
+        cadastros = []
+        for i, cadastro_data in enumerate(cadastros_data):
+            logger.info(f"Processando cadastro {i+1}/{len(cadastros_data)}: ID={cadastro_data[0]}, Nome={cadastro_data[1]}")
+            
+            # Buscar arquivos de saúde para cada cadastro
+            query_arquivos = '''
+                SELECT tipo_arquivo, nome_arquivo, descricao, data_upload
+                FROM arquivos_saude 
+                WHERE cadastro_id = %s
+                ORDER BY data_upload DESC
+            '''
+            logger.info(f"Buscando arquivos para cadastro ID {cadastro_data[0]}")
+            cursor.execute(query_arquivos, (cadastro_data[0],))
+            arquivos = cursor.fetchall()
+            logger.info(f"Encontrados {len(arquivos)} arquivos para cadastro ID {cadastro_data[0]}")
+            
+            cadastro_obj = {
+                'id': cadastro_data[0],
+                'nome_completo': cadastro_data[1],
+                'cpf': cadastro_data[2],
+                'arquivos_count': cadastro_data[3],
+                'arquivos_saude': arquivos
+            }
+            cadastros.append(cadastro_obj)
+            logger.debug(f"Cadastro processado: {cadastro_obj}")
+        
+        cursor.close()
+        conn.close()
+        logger.info("Conexão com banco fechada")
+        
+        logger.info(f"Renderizando template com {len(cadastros)} cadastros")
+        return render_template('arquivos_cadastros.html', cadastros=cadastros)
+        
+    except Exception as e:
+        logger.error(f"ERRO em arquivos_cadastros: {str(e)}")
+        logger.error(f"Tipo do erro: {type(e).__name__}")
+        import traceback
+        logger.error(f"Traceback completo: {traceback.format_exc()}")
+        
+        try:
+            cursor.close()
+            conn.close()
+            logger.info("Conexão fechada após erro")
+        except:
+            logger.error("Erro ao fechar conexão")
+        
+        flash(f'Erro ao carregar arquivos: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
+
+@app.route('/exportar_arquivos_pdf/<int:cadastro_id>')
+def exportar_arquivos_pdf(cadastro_id):
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"=== INICIANDO exportar_arquivos_pdf para cadastro_id={cadastro_id} ===")
+    
+    if 'usuario' not in session:
+        logger.warning("Usuário não autenticado, redirecionando para login")
+        return redirect(url_for('login'))
+    
+    logger.info(f"Usuário autenticado: {session.get('usuario')}")
+    
+    try:
+        logger.info("Conectando ao banco de dados")
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        logger.info("Conexão estabelecida")
+        
+        # Buscar dados do cadastro
+        query_cadastro = 'SELECT * FROM cadastros WHERE id = %s'
+        logger.info(f"Buscando cadastro: {query_cadastro} com ID={cadastro_id}")
+        cursor.execute(query_cadastro, (cadastro_id,))
+        cadastro = cursor.fetchone()
+        
+        if not cadastro:
+            logger.warning(f"Cadastro ID {cadastro_id} não encontrado")
+            cursor.close()
+            conn.close()
+            return "Cadastro não encontrado", 404
+        
+        logger.info(f"Cadastro encontrado: {cadastro[1]} (ID: {cadastro[0]})")
+        
+        # Buscar arquivos de saúde
+        query_arquivos = '''
+            SELECT tipo_arquivo, nome_arquivo, descricao, data_upload, caminho_arquivo
+            FROM arquivos_saude 
+            WHERE cadastro_id = %s
+            ORDER BY tipo_arquivo, data_upload
+        '''
+        logger.info(f"Buscando arquivos: {query_arquivos}")
+        cursor.execute(query_arquivos, (cadastro_id,))
+        arquivos = cursor.fetchall()
+        logger.info(f"Encontrados {len(arquivos)} arquivos")
+        
+        for i, arquivo in enumerate(arquivos):
+            logger.debug(f"Arquivo {i+1}: tipo={arquivo[0]}, nome={arquivo[1]}, desc={arquivo[2]}")
+        
+        cursor.close()
+        conn.close()
+        logger.info("Conexão fechada")
+        
+        # Gerar PDF
+        logger.info("Iniciando geração do PDF")
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib import colors
+        from reportlab.lib.units import inch
+        from io import BytesIO
+        
+        logger.info("Imports do ReportLab realizados com sucesso")
+        
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch)
+        styles = getSampleStyleSheet()
+        story = []
+        logger.info("Documento PDF inicializado")
+        
+        # Título
+        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=16, spaceAfter=20)
+        story.append(Paragraph(f"Relatório de Arquivos de Saúde", title_style))
+        logger.info("Título adicionado")
+        
+        # Dados do cadastro
+        nome = cadastro[1] or 'N/A'
+        cpf = cadastro[13] or 'N/A'
+        telefone = cadastro[6] or 'N/A'
+        
+        story.append(Paragraph(f"<b>Nome:</b> {nome}", styles['Normal']))
+        story.append(Paragraph(f"<b>CPF:</b> {cpf}", styles['Normal']))
+        story.append(Paragraph(f"<b>Telefone:</b> {telefone}", styles['Normal']))
+        story.append(Spacer(1, 20))
+        logger.info("Dados do cadastro adicionados")
+        
+        # Lista de arquivos
+        if arquivos:
+            logger.info("Processando lista de arquivos")
+            story.append(Paragraph("<b>Arquivos de Saúde Anexados:</b>", styles['Heading2']))
+            story.append(Spacer(1, 10))
+            
+            # Agrupar por tipo
+            tipos = {}
+            for arquivo in arquivos:
+                tipo = arquivo[0]
+                if tipo not in tipos:
+                    tipos[tipo] = []
+                tipos[tipo].append(arquivo)
+            
+            logger.info(f"Arquivos agrupados em {len(tipos)} tipos: {list(tipos.keys())}")
+            
+            for tipo, lista_arquivos in tipos.items():
+                logger.info(f"Processando tipo '{tipo}' com {len(lista_arquivos)} arquivos")
+                story.append(Paragraph(f"<b>{tipo.title()}:</b>", styles['Heading3']))
+                
+                for arquivo in lista_arquivos:
+                    story.append(Paragraph(f"• {arquivo[1]}", styles['Normal']))
+                    if arquivo[2]:  # descrição
+                        story.append(Paragraph(f"  <i>{arquivo[2]}</i>", styles['Normal']))
+                    story.append(Paragraph(f"  Data: {arquivo[3].strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
+                    story.append(Spacer(1, 5))
+                
+                story.append(Spacer(1, 10))
+        else:
+            logger.info("Nenhum arquivo encontrado")
+            story.append(Paragraph("Nenhum arquivo de saúde anexado.", styles['Normal']))
+        
+        logger.info("Construindo documento PDF")
+        doc.build(story)
+        buffer.seek(0)
+        logger.info("PDF gerado com sucesso")
+        
+        filename = f'arquivos_saude_{nome.replace(" ", "_")}.pdf'
+        logger.info(f"Enviando arquivo: {filename}")
+        
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        logger.error(f"ERRO CRÍTICO em exportar_arquivos_pdf: {str(e)}")
+        logger.error(f"Tipo do erro: {type(e).__name__}")
+        import traceback
+        logger.error(f"Traceback completo: {traceback.format_exc()}")
+        
+        try:
+            cursor.close()
+            conn.close()
+            logger.info("Conexão fechada após erro")
+        except:
+            logger.error("Erro ao fechar conexão após erro principal")
+        
+        flash(f'Erro ao gerar PDF: {str(e)}', 'error')
+        return redirect(url_for('arquivos_cadastros'))
+
 @app.route('/cadastrar', methods=['GET', 'POST'])
 def cadastrar():
     if 'usuario' not in session:

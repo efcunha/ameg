@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arquivos de Cadastros - AMEG</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .search-container {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .search-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 300px;
+        }
+        .cadastro-item {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .cadastro-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .cadastro-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        .arquivos-list {
+            margin-top: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 3px;
+        }
+        .arquivo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .btn-export {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .no-files {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📁 Arquivos de Cadastros</h1>
+            <a href="{{ url_for('dashboard') }}" class="btn">← Voltar ao Dashboard</a>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar por nome..." onkeyup="filterCadastros()">
+            <button onclick="sortCadastros()" class="btn">🔤 Ordenar A-Z</button>
+        </div>
+
+        <div id="cadastrosList">
+            {% for cadastro in cadastros %}
+            <div class="cadastro-item" data-name="{{ cadastro.nome_completo|lower }}">
+                <div class="cadastro-header">
+                    <div class="cadastro-name">{{ cadastro.nome_completo }}</div>
+                    <div>
+                        <span style="color: #666; font-size: 12px;">CPF: {{ cadastro.cpf or 'N/A' }}</span>
+                        {% if cadastro.arquivos_count > 0 %}
+                        <button onclick="exportarArquivosPDF({{ cadastro.id }})" class="btn-export">
+                            📄 Exportar PDF ({{ cadastro.arquivos_count }} arquivos)
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if cadastro.arquivos_saude %}
+                <div class="arquivos-list">
+                    <strong>📋 Arquivos de Saúde:</strong>
+                    {% for arquivo in cadastro.arquivos_saude %}
+                    <div class="arquivo-item">
+                        <div>
+                            <span style="font-weight: bold;">{{ arquivo.tipo_arquivo|title }}:</span>
+                            {{ arquivo.nome_arquivo }}
+                            {% if arquivo.descricao %}
+                            <br><small style="color: #666;">{{ arquivo.descricao }}</small>
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 12px; color: #666;">
+                            {{ arquivo.data_upload.strftime('%d/%m/%Y') }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="no-files">Nenhum arquivo de saúde anexado</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not cadastros %}
+        <div style="text-align: center; padding: 50px; color: #666;">
+            <h3>Nenhum cadastro encontrado</h3>
+            <p>Não há cadastros no sistema ainda.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Configurar logs detalhados
+        console.log('=== INICIANDO arquivos_cadastros.html ===');
+        
+        function logError(funcName, error) {
+            console.error(`ERRO em ${funcName}:`, error);
+            console.error('Stack trace:', error.stack);
+        }
+        
+        function filterCadastros() {
+            try {
+                console.log('Iniciando filterCadastros');
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+                console.log('Termo de busca:', searchTerm);
+                
+                const cadastros = document.querySelectorAll('.cadastro-item');
+                console.log(`Encontrados ${cadastros.length} cadastros para filtrar`);
+                
+                let visibleCount = 0;
+                cadastros.forEach((cadastro, index) => {
+                    const name = cadastro.getAttribute('data-name');
+                    const isVisible = name.includes(searchTerm);
+                    
+                    if (isVisible) {
+                        cadastro.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        cadastro.style.display = 'none';
+                    }
+                    
+                    console.log(`Cadastro ${index + 1}: ${name} - ${isVisible ? 'visível' : 'oculto'}`);
+                });
+                
+                console.log(`Filtro aplicado: ${visibleCount}/${cadastros.length} cadastros visíveis`);
+            } catch (error) {
+                logError('filterCadastros', error);
+            }
+        }
+
+        function sortCadastros() {
+            try {
+                console.log('Iniciando sortCadastros');
+                const container = document.getElementById('cadastrosList');
+                
+                if (!container) {
+                    console.error('Container cadastrosList não encontrado');
+                    return;
+                }
+                
+                const cadastros = Array.from(container.querySelectorAll('.cadastro-item'));
+                console.log(`Ordenando ${cadastros.length} cadastros`);
+                
+                cadastros.sort((a, b) => {
+                    const nameA = a.getAttribute('data-name');
+                    const nameB = b.getAttribute('data-name');
+                    const result = nameA.localeCompare(nameB);
+                    console.log(`Comparando: "${nameA}" vs "${nameB}" = ${result}`);
+                    return result;
+                });
+                
+                console.log('Removendo elementos do DOM');
+                cadastros.forEach(cadastro => cadastro.remove());
+                
+                console.log('Adicionando elementos ordenados');
+                cadastros.forEach((cadastro, index) => {
+                    container.appendChild(cadastro);
+                    console.log(`Adicionado ${index + 1}: ${cadastro.getAttribute('data-name')}`);
+                });
+                
+                console.log('Ordenação concluída');
+            } catch (error) {
+                logError('sortCadastros', error);
+            }
+        }
+
+        function exportarArquivosPDF(cadastroId) {
+            try {
+                console.log(`Iniciando exportação PDF para cadastro ID: ${cadastroId}`);
+                
+                if (!cadastroId || isNaN(cadastroId)) {
+                    console.error('ID do cadastro inválido:', cadastroId);
+                    alert('Erro: ID do cadastro inválido');
+                    return;
+                }
+                
+                const url = `/exportar_arquivos_pdf/${cadastroId}`;
+                console.log('URL de exportação:', url);
+                
+                console.log('Abrindo janela para download');
+                window.open(url, '_blank');
+                console.log('Janela aberta com sucesso');
+                
+            } catch (error) {
+                logError('exportarArquivosPDF', error);
+                alert('Erro ao exportar PDF: ' + error.message);
+            }
+        }
+
+        // Configurar eventos e inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                console.log('DOM carregado, iniciando configuração');
+                
+                // Verificar elementos essenciais
+                const searchInput = document.getElementById('searchInput');
+                const cadastrosList = document.getElementById('cadastrosList');
+                
+                if (!searchInput) {
+                    console.error('Elemento searchInput não encontrado');
+                } else {
+                    console.log('searchInput encontrado');
+                }
+                
+                if (!cadastrosList) {
+                    console.error('Elemento cadastrosList não encontrado');
+                } else {
+                    console.log('cadastrosList encontrado');
+                }
+                
+                // Contar cadastros
+                const cadastros = document.querySelectorAll('.cadastro-item');
+                console.log(`Total de cadastros na página: ${cadastros.length}`);
+                
+                // Ordenar automaticamente
+                console.log('Executando ordenação automática');
+                sortCadastros();
+                
+                console.log('Configuração concluída com sucesso');
+                
+            } catch (error) {
+                logError('DOMContentLoaded', error);
+            }
+        });
+
+        // Capturar erros globais
+        window.addEventListener('error', function(event) {
+            console.error('ERRO GLOBAL capturado:', {
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                error: event.error
+            });
+        });
+
+        // Capturar erros de Promise rejeitadas
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('PROMISE REJEITADA capturada:', event.reason);
+        });
+        
+        console.log('Script carregado completamente');
+    </script>
+</body>
+</html>
