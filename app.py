@@ -764,9 +764,9 @@ def exportar():
         filename = 'relatorio_estatistico'
     elif tipo == 'bairro':
         cursor.execute('''SELECT bairro, COUNT(*) as total, 
-                         AVG(CASE WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' THEN renda_familiar::numeric ELSE NULL END) as renda_media
+                         AVG(renda_familiar) as renda_media
                          FROM cadastros 
-                         WHERE bairro IS NOT NULL 
+                         WHERE bairro IS NOT NULL AND bairro != ''
                          GROUP BY bairro 
                          ORDER BY total DESC''')
         dados = cursor.fetchall()
