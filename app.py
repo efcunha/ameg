@@ -461,7 +461,7 @@ def relatorio_por_bairro():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''SELECT bairro, COUNT(*) as total, 
-                     AVG(CAST(renda_familiar as DECIMAL)) as renda_media
+                     AVG(CASE WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' THEN renda_familiar::numeric ELSE NULL END) as renda_media
                      FROM cadastros 
                      WHERE bairro IS NOT NULL 
                      GROUP BY bairro 
@@ -480,26 +480,28 @@ def relatorio_renda():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Faixas de renda
+    # Faixas de renda - corrigido para PostgreSQL
     cursor.execute('''SELECT 
         CASE 
-            WHEN CAST(renda_familiar as DECIMAL) <= 1000 THEN 'Até R$ 1.000'
-            WHEN CAST(renda_familiar as DECIMAL) BETWEEN 1001 AND 2000 THEN 'R$ 1.001 - R$ 2.000'
-            WHEN CAST(renda_familiar as DECIMAL) BETWEEN 2001 AND 3000 THEN 'R$ 2.001 - R$ 3.000'
-            ELSE 'Acima de R$ 3.000'
+            WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric <= 1000 THEN 'Até R$ 1.000'
+            WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric BETWEEN 1001 AND 2000 THEN 'R$ 1.001 - R$ 2.000'
+            WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric BETWEEN 2001 AND 3000 THEN 'R$ 2.001 - R$ 3.000'
+            WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' AND renda_familiar::numeric > 3000 THEN 'Acima de R$ 3.000'
+            ELSE 'Não informado'
         END as faixa_renda,
         COUNT(*) 
         FROM cadastros 
-        WHERE renda_familiar IS NOT NULL AND renda_familiar != ''
         GROUP BY faixa_renda''')
     faixas_renda = cursor.fetchall()
     
-    # Renda por bairro
-    cursor.execute('''SELECT bairro, AVG(CAST(renda_familiar as DECIMAL)) as renda_media, COUNT(*) as total
+    # Renda por bairro - corrigido para PostgreSQL
+    cursor.execute('''SELECT bairro, 
+                     AVG(CASE WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' THEN renda_familiar::numeric ELSE NULL END) as renda_media, 
+                     COUNT(*) as total
                      FROM cadastros 
-                     WHERE renda_familiar IS NOT NULL AND renda_familiar != '' AND bairro IS NOT NULL
+                     WHERE bairro IS NOT NULL
                      GROUP BY bairro 
-                     ORDER BY renda_media DESC''')
+                     ORDER BY renda_media DESC NULLS LAST''')
     renda_bairro = cursor.fetchall()
     
     cursor.close()
@@ -515,29 +517,29 @@ def relatorio_saude():
     conn = get_db_connection()
     c = cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
     
-    c.execute('SELECT COUNT(*) FROM cadastros WHERE tem_doenca_cronica = "Sim"')
+    c.execute('SELECT COUNT(*) FROM cadastros WHERE tem_doenca_cronica = %s', ('Sim',))
     com_doenca_cronica = c.fetchone()[0]
     
-    c.execute('SELECT COUNT(*) FROM cadastros WHERE usa_medicamento_continuo = "Sim"')
+    c.execute('SELECT COUNT(*) FROM cadastros WHERE usa_medicamento_continuo = %s', ('Sim',))
     usa_medicamento = c.fetchone()[0]
     
-    c.execute('SELECT COUNT(*) FROM cadastros WHERE tem_doenca_mental = "Sim"')
+    c.execute('SELECT COUNT(*) FROM cadastros WHERE tem_doenca_mental = %s', ('Sim',))
     com_doenca_mental = c.fetchone()[0]
     
-    c.execute('SELECT COUNT(*) FROM cadastros WHERE tem_deficiencia = "Sim"')
+    c.execute('SELECT COUNT(*) FROM cadastros WHERE tem_deficiencia = %s', ('Sim',))
     com_deficiencia = c.fetchone()[0]
     
-    c.execute('SELECT COUNT(*) FROM cadastros WHERE precisa_cuidados_especiais = "Sim"')
+    c.execute('SELECT COUNT(*) FROM cadastros WHERE precisa_cuidados_especiais = %s', ('Sim',))
     precisa_cuidados = c.fetchone()[0]
     
     c.execute("""SELECT id, nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
                 usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
                 tem_deficiencia, tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais
                 FROM cadastros 
-                WHERE tem_doenca_cronica = "Sim" OR usa_medicamento_continuo = "Sim" 
-                OR tem_doenca_mental = "Sim" OR tem_deficiencia = "Sim" 
-                OR precisa_cuidados_especiais = "Sim"
-                ORDER BY nome_completo""")
+                WHERE tem_doenca_cronica = %s OR usa_medicamento_continuo = %s 
+                OR tem_doenca_mental = %s OR tem_deficiencia = %s 
+                OR precisa_cuidados_especiais = %s
+                ORDER BY nome_completo""", ('Sim', 'Sim', 'Sim', 'Sim', 'Sim'))
     cadastros_saude = c.fetchall()
     
     conn.close()
@@ -575,9 +577,9 @@ def exportar():
         cursor.execute('''SELECT nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
                          usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
                          tem_deficiencia, tipo_deficiencia FROM cadastros 
-                         WHERE tem_doenca_cronica = "Sim" OR usa_medicamento_continuo = "Sim" 
-                         OR tem_doenca_mental = "Sim" OR tem_deficiencia = "Sim"
-                         ORDER BY nome_completo''')
+                         WHERE tem_doenca_cronica = %s OR usa_medicamento_continuo = %s 
+                         OR tem_doenca_mental = %s OR tem_deficiencia = %s
+                         ORDER BY nome_completo''', ('Sim', 'Sim', 'Sim', 'Sim'))
         dados = cursor.fetchall()
         filename = 'relatorio_saude'
     else:
