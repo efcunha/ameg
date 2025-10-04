@@ -554,10 +554,22 @@ def relatorio_por_bairro():
         cursor = conn.cursor()
         logger.info("✅ Conexão estabelecida para relatório por bairro")
         
+        # Query mais simples primeiro para testar
+        cursor.execute('SELECT COUNT(*) FROM cadastros')
+        total_cadastros = cursor.fetchone()[0]
+        logger.info(f"📊 Total de cadastros na base: {total_cadastros}")
+        
+        if total_cadastros == 0:
+            logger.warning("⚠️ Nenhum cadastro encontrado na base de dados")
+            cursor.close()
+            conn.close()
+            return render_template('relatorio_por_bairro.html', bairros=[], erro="Nenhum cadastro encontrado")
+        
+        # Query principal - simplificada para testar
         query = '''SELECT bairro, COUNT(*) as total, 
-                   AVG(CASE WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' THEN renda_familiar::numeric ELSE NULL END) as renda_media
+                   AVG(renda_familiar) as renda_media
                    FROM cadastros 
-                   WHERE bairro IS NOT NULL 
+                   WHERE bairro IS NOT NULL AND bairro != ''
                    GROUP BY bairro 
                    ORDER BY total DESC'''
         logger.info(f"🔍 Executando query: {query}")
@@ -568,6 +580,8 @@ def relatorio_por_bairro():
         
         if bairros:
             logger.info(f"🔍 Primeiro bairro: {bairros[0]}")
+        else:
+            logger.warning("⚠️ Nenhum bairro encontrado com dados válidos")
         
         cursor.close()
         conn.close()
@@ -578,6 +592,7 @@ def relatorio_por_bairro():
         logger.error(f"❌ ERRO em relatorio_por_bairro: {str(e)}")
         import traceback
         logger.error(f"❌ Traceback: {traceback.format_exc()}")
+        return render_template('relatorio_por_bairro.html', bairros=[], erro=f"Erro: {str(e)}")
         flash('Erro ao carregar relatório por bairro.')
         return redirect(url_for('relatorios'))
 

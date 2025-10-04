@@ -38,6 +38,18 @@
             <a href="/exportar?tipo=bairro&formato=pdf" class="btn">📄 Exportar PDF</a>
         </div>
         
+        {% if erro %}
+        <div style="background: #e74c3c; color: white; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <strong>⚠️ Erro:</strong> {{ erro }}
+        </div>
+        {% endif %}
+        
+        {% if bairros|length == 0 and not erro %}
+        <div style="background: #f39c12; color: white; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <strong>ℹ️ Informação:</strong> Nenhum bairro encontrado com dados válidos.
+        </div>
+        {% endif %}
+        
         <div class="table-container">
             <table>
                 <thead>
