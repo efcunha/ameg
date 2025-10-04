@@ -710,8 +710,20 @@ def excluir_arquivo(arquivo_id):
         flash('Erro ao excluir arquivo.')
         return redirect(url_for('dashboard'))
 
+@app.before_request
+def log_request_info():
+    if request.endpoint and 'atualizar_cadastro' in request.endpoint:
+        logger.info(f"🌐 REQUEST: {request.method} {request.url}")
+        logger.info(f"🌐 ENDPOINT: {request.endpoint}")
+        logger.info(f"🌐 FORM DATA: {dict(request.form) if request.form else 'None'}")
+
 @app.route('/atualizar_cadastro/<int:cadastro_id>', methods=['POST'])
 def atualizar_cadastro(cadastro_id):
+    logger.info(f"🔥 ROTA ATUALIZAR_CADASTRO ACESSADA - ID: {cadastro_id}")
+    logger.info(f"🔥 METHOD: {request.method}")
+    logger.info(f"🔥 URL: {request.url}")
+    logger.info(f"🔥 USER-AGENT: {request.headers.get('User-Agent', 'N/A')}")
+    
     if 'usuario' not in session:
         logger.debug("Usuário não logado tentando acessar /atualizar_cadastro")
         return redirect(url_for('login'))
