@@ -246,7 +246,7 @@ def cadastrar():
                 request.form.get('doencas_mentais'), request.form.get('tem_deficiencia'), request.form.get('tipo_deficiencia'),
                 request.form.get('precisa_cuidados_especiais'), request.form.get('cuidados_especiais'),
                 # Novos campos de trabalho
-                request.form.get('com_que_trabalha'), request.form.get('onde_trabalha'), request.form.get('horario_trabalho'),
+                request.form.get('com_que_trabalha'), request.form.get('onde_trabalha'), request.form.get('localizacao_trabalho'), request.form.get('horario_trabalho'),
                 request.form.get('tempo_atividade'), request.form.get('atua_ponto_fixo'), request.form.get('qual_ponto_fixo'),
                 safe_int(request.form.get('dias_semana_trabalha')), request.form.get('trabalho_continuo_temporada'),
                 request.form.get('sofreu_acidente_trabalho'), request.form.get('qual_acidente'),
@@ -282,7 +282,7 @@ def cadastrar():
             esgoto, observacoes, tem_doenca_cronica, doencas_cronicas, usa_medicamento_continuo,
             medicamentos_continuos, tem_doenca_mental, doencas_mentais, tem_deficiencia,
             tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais,
-            com_que_trabalha, onde_trabalha, horario_trabalho, tempo_atividade, atua_ponto_fixo,
+            com_que_trabalha, onde_trabalha, localizacao_trabalho, horario_trabalho, tempo_atividade, atua_ponto_fixo,
             qual_ponto_fixo, dias_semana_trabalha, trabalho_continuo_temporada, sofreu_acidente_trabalho,
             qual_acidente, trabalho_incomoda_calor, trabalho_incomoda_barulho, trabalho_incomoda_seguranca,
             trabalho_incomoda_banheiros, trabalho_incomoda_outro, trabalho_incomoda_outro_desc,
@@ -292,7 +292,7 @@ def cadastrar():
             usa_veiculo_proprio, qual_veiculo, fonte_renda_trabalho_ambulante, fonte_renda_aposentadoria,
             fonte_renda_outro_trabalho, fonte_renda_beneficio_social, fonte_renda_outro,
             fonte_renda_outro_desc, pessoas_dependem_renda
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             dados_insert)
             
             logger.info("✅ INSERT executado com sucesso!")
@@ -748,7 +748,7 @@ def atualizar_cadastro(cadastro_id):
             'tem_doenca_mental', 'doencas_mentais', 'tem_deficiencia', 'tipo_deficiencia',
             'precisa_cuidados_especiais', 'cuidados_especiais',
             # Novos campos de trabalho
-            'com_que_trabalha', 'onde_trabalha', 'horario_trabalho', 'tempo_atividade',
+            'com_que_trabalha', 'onde_trabalha', 'localizacao_trabalho', 'horario_trabalho', 'tempo_atividade',
             'atua_ponto_fixo', 'qual_ponto_fixo', 'dias_semana_trabalha', 'trabalho_continuo_temporada',
             'sofreu_acidente_trabalho', 'qual_acidente', 'trabalho_incomoda_calor',
             'trabalho_incomoda_barulho', 'trabalho_incomoda_seguranca', 'trabalho_incomoda_banheiros',

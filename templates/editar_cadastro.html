@@ -745,6 +745,19 @@
                         <input type="text" name="onde_trabalha" value="{{ cadastro.onde_trabalha if cadastro else '' }}">
                     </div>
                     <div class="form-group">
+                        <label>Localização de trabalho</label>
+                        <select name="localizacao_trabalho">
+                            <option value="">Selecione</option>
+                            <option value="Orla cedo" {{ 'selected' if cadastro and cadastro.localizacao_trabalho == 'Orla cedo' else '' }}>Orla cedo</option>
+                            <option value="Orla noite" {{ 'selected' if cadastro and cadastro.localizacao_trabalho == 'Orla noite' else '' }}>Orla noite</option>
+                            <option value="Bessa" {{ 'selected' if cadastro and cadastro.localizacao_trabalho == 'Bessa' else '' }}>Bessa</option>
+                            <option value="Centro" {{ 'selected' if cadastro and cadastro.localizacao_trabalho == 'Centro' else '' }}>Centro</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
                         <label>Qual é o seu horário de trabalho?</label>
                         <input type="text" name="horario_trabalho" value="{{ cadastro.horario_trabalho if cadastro else '' }}" placeholder="08:00 a 17:00">
                     </div>
@@ -977,6 +990,7 @@
         'cidade_titulo_companheiro': 100,
         'nis_companheiro': 20,
         'tipo_trabalho': 100,
+        'localizacao_trabalho': 50,
         'casa_tipo': 50,
         'casa_material': 50
     };
