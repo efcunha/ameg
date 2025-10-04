@@ -550,7 +550,10 @@
                     value = value.replace(/(\d{3})(\d)/, '$1.$2');
                     value = value.replace(/(\d{3})(\d)/, '$1.$2');
                     value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-                    input.value = value;
+                    // Só atualizar se o valor mudou para evitar loop
+                    if (input.value !== value) {
+                        input.value = value;
+                    }
                 }
                 
                 function validarCPF(cpf) {
@@ -588,7 +591,10 @@
                         value = value.replace(/(\d{2})(\d)/, '($1) $2');
                         value = value.replace(/(\d{4})(\d)/, '$1-$2');
                     }
-                    input.value = value;
+                    // Só atualizar se o valor mudou para evitar loop
+                    if (input.value !== value) {
+                        input.value = value;
+                    }
                 }
                 
                 // Formatação de CEP
@@ -596,31 +602,48 @@
                     let value = input.value.replace(/\D/g, '');
                     value = value.replace(/(\d{2})(\d)/, '$1.$2');
                     value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-                    input.value = value;
+                    // Só atualizar se o valor mudou para evitar loop
+                    if (input.value !== value) {
+                        input.value = value;
+                    }
                 }
                 
                 // Buscar endereço pelo CEP
                 function buscarCEP(cep) {
                     const cepLimpo = cep.replace(/\D/g, '');
-                    if (cepLimpo.length === 8) {
-                        fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (!data.erro) {
-                                    document.querySelector('input[name="endereco"]').value = data.logradouro || '';
-                                    document.querySelector('input[name="bairro"]').value = data.bairro || '';
-                                    document.querySelector('input[name="cidade"]').value = data.localidade || '';
-                                    document.querySelector('input[name="estado"]').value = data.uf || '';
-                                    // Foca no campo número após preencher
-                                    document.querySelector('input[name="numero"]').focus();
-                                } else {
-                                    alert('CEP não encontrado!');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Erro ao buscar CEP:', error);
-                            });
+                    
+                    // Validar formato do CEP
+                    if (cepLimpo.length !== 8) {
+                        return; // Não buscar se CEP não tem 8 dígitos
                     }
+                    
+                    // Evitar múltiplas requisições para o mesmo CEP inválido
+                    if (window.lastInvalidCep === cepLimpo) {
+                        return;
+                    }
+                    
+                    fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.erro) {
+                                document.querySelector('input[name="endereco"]').value = data.logradouro || '';
+                                document.querySelector('input[name="bairro"]').value = data.bairro || '';
+                                document.querySelector('input[name="cidade"]').value = data.localidade || '';
+                                document.querySelector('input[name="estado"]').value = data.uf || '';
+                                // Foca no campo número após preencher
+                                document.querySelector('input[name="numero"]').focus();
+                                // Limpar CEP inválido anterior
+                                window.lastInvalidCep = null;
+                            } else {
+                                // Marcar CEP como inválido para evitar loop
+                                window.lastInvalidCep = cepLimpo;
+                                alert('CEP não encontrado! Verifique o formato.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro ao buscar CEP:', error);
+                            window.lastInvalidCep = cepLimpo;
+                        });
                 }
                 
                 // Aplicar formatação aos campos CPF
@@ -652,7 +675,12 @@
                             formatCEP(this);
                         });
                         cepInput.addEventListener('blur', function() {
-                            buscarCEP(this.value);
+                            const cepLimpo = this.value.replace(/\D/g, '');
+                            // Só buscar se CEP tem 8 dígitos e não foi buscado antes
+                            if (cepLimpo.length === 8 && window.lastSearchedCep !== cepLimpo) {
+                                window.lastSearchedCep = cepLimpo;
+                                buscarCEP(this.value);
+                            }
                         });
                         cepInput.maxLength = 10;
                         cepInput.placeholder = 'XX.XXX-XX';
@@ -1215,7 +1243,13 @@
             dataNascInput.addEventListener('change', function() {
                 if (this.value) {
                     const calculatedAge = calculateAge(this.value);
+                    // Remover temporariamente o listener para evitar loop
+                    idadeInput.removeEventListener('input', validateAge);
                     idadeInput.value = calculatedAge;
+                    // Reativar o listener após um pequeno delay
+                    setTimeout(() => {
+                        idadeInput.addEventListener('input', validateAge);
+                    }, 100);
                 }
                 validateAge();
             });
