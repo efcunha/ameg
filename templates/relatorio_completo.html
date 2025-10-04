@@ -64,13 +64,10 @@
                         <th>Telefone</th>
                         <th>Endereço</th>
                         <th>Bairro</th>
-                        <th>Cidade</th>
-                        <th>Estado</th>
                         <th>CEP</th>
                         <th>Idade</th>
                         <th>CPF</th>
                         <th>Renda Familiar</th>
-                        <th>Cadastro</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -81,13 +78,10 @@
                         <td>{{ cadastro.telefone or cadastro[7] }}</td>
                         <td>{{ (cadastro.endereco or cadastro[3]) + ', ' + (cadastro.numero or cadastro[4] or '') }}</td>
                         <td>{{ cadastro.bairro or cadastro[5] }}</td>
-                        <td>{{ cadastro.cidade or cadastro[-2] }}</td>
-                        <td>{{ cadastro.estado or cadastro[-1] }}</td>
                         <td>{{ cadastro.cep or cadastro[6] }}</td>
                         <td>{{ cadastro.idade or cadastro[10] }}</td>
                         <td>{{ cadastro.cpf or cadastro[14] }}</td>
                         <td>{{ 'R$ ' + (cadastro.renda_familiar or cadastro[41] or '0') if (cadastro.renda_familiar or cadastro[41]) else 'Não informado' }}</td>
-                        <td>{{ (cadastro.data_cadastro or '')[:10] }}</td>
                         <td>
                             <a href="/editar_cadastro/{{ cadastro.id or cadastro[0] }}" class="btn">✏️ Editar</a>
                         </td>
