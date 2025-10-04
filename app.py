@@ -772,6 +772,21 @@ def exportar():
         dados = cursor.fetchall()
         filename = 'relatorio_por_bairro'
     elif tipo == 'renda':
+        # Buscar faixas de renda
+        cursor.execute('''SELECT 
+            CASE 
+                WHEN renda_familiar IS NOT NULL AND renda_familiar <= 1000 THEN 'Até R$ 1.000'
+                WHEN renda_familiar IS NOT NULL AND renda_familiar BETWEEN 1001 AND 2000 THEN 'R$ 1.001 - R$ 2.000'
+                WHEN renda_familiar IS NOT NULL AND renda_familiar BETWEEN 2001 AND 3000 THEN 'R$ 2.001 - R$ 3.000'
+                WHEN renda_familiar IS NOT NULL AND renda_familiar > 3000 THEN 'Acima de R$ 3.000'
+                ELSE 'Não informado'
+            END as faixa_renda,
+            COUNT(*) 
+            FROM cadastros 
+            GROUP BY faixa_renda''')
+        faixas_renda = cursor.fetchall()
+        
+        # Buscar renda por bairro
         cursor.execute('''SELECT bairro, 
                          AVG(renda_familiar) as renda_media, 
                          COUNT(*) as total
@@ -779,7 +794,13 @@ def exportar():
                          WHERE bairro IS NOT NULL AND bairro != ''
                          GROUP BY bairro 
                          ORDER BY renda_media DESC NULLS LAST''')
-        dados = cursor.fetchall()
+        renda_bairro = cursor.fetchall()
+        
+        # Combinar dados para exportação
+        dados = {
+            'faixas_renda': faixas_renda,
+            'renda_bairro': renda_bairro
+        }
         filename = 'relatorio_renda'
     else:
         cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
@@ -822,7 +843,17 @@ def exportar():
         elif tipo == 'bairro':
             writer.writerow(['Bairro', 'Total de Cadastros', 'Renda Média'])
         elif tipo == 'renda':
+            writer.writerow(['=== ANÁLISE DE RENDA FAMILIAR ==='])
+            writer.writerow([''])
+            writer.writerow(['=== POR FAIXA DE RENDA ==='])
+            writer.writerow(['Faixa de Renda', 'Total de Cadastros'])
+            for row in dados['faixas_renda']:
+                writer.writerow([row[0] or 'Não informado', row[1]])
+            writer.writerow([''])
+            writer.writerow(['=== RENDA POR BAIRRO ==='])
             writer.writerow(['Bairro', 'Renda Média', 'Total de Cadastros'])
+            for row in dados['renda_bairro']:
+                writer.writerow([row[0] or 'Não informado', f"R$ {row[1]:.2f}" if row[1] else 'Não informado', row[2]])
         else:
             # Cabeçalhos completos 
             writer.writerow(['Nome', 'Telefone', 'Endereço', 'Número', 'Bairro', 'CEP', 'Gênero', 'Idade', 'CPF', 'RG', 'Estado Civil', 'Escolaridade', 'Renda Familiar'])
@@ -893,7 +924,7 @@ def exportar():
         elif tipo == 'bairro':
             title = Paragraph("AMEG - Relatório por Bairro", styles['Title'])
         elif tipo == 'renda':
-            title = Paragraph("AMEG - Relatório de Renda por Bairro", styles['Title'])
+            title = Paragraph("AMEG - Análise de Renda Familiar", styles['Title'])
         else:
             title = Paragraph("AMEG - Relatório Geral", styles['Title'])
         
@@ -1124,13 +1155,53 @@ def exportar():
                     f"R$ {row[2]:.2f}" if row[2] else 'Não informado'
                 ])
         elif tipo == 'renda':
+            # Por Faixa de Renda
+            faixa_para = Paragraph("<b>💰 Por Faixa de Renda</b>", styles['Heading3'])
+            elements.append(faixa_para)
+            elements.append(Spacer(1, 6))
+            
+            table_data = [['Faixa de Renda', 'Total de Cadastros']]
+            for row in dados['faixas_renda']:
+                table_data.append([
+                    str(row[0] or 'Não informado'),
+                    str(row[1] or '0')
+                ])
+            
+            table = Table(table_data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(table)
+            elements.append(Spacer(1, 20))
+            
+            # Por Bairro
+            bairro_para = Paragraph("<b>📍 Renda por Bairro</b>", styles['Heading3'])
+            elements.append(bairro_para)
+            elements.append(Spacer(1, 6))
+            
             table_data = [['Bairro', 'Renda Média', 'Total de Cadastros']]
-            for row in dados:
+            for row in dados['renda_bairro']:
                 table_data.append([
                     str(row[0] or 'Não informado'),
                     f"R$ {row[1]:.2f}" if row[1] else 'Não informado',
                     str(row[2] or '0')
                 ])
+            
+            table = Table(table_data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(table)
         else:  # completo
             if cadastro_id:
                 # PDF detalhado para um cadastro específico com TODOS os campos
@@ -1312,8 +1383,8 @@ def exportar():
                         f"R$ {row[40] or '0'}" if (hasattr(row, '__getitem__') and row[40]) else 'Não informado'
                     ])
         
-        # Criar tabela (exceto para estatístico e cadastro individual que já criaram seus próprios elementos)
-        if tipo != 'estatistico' and not cadastro_id:
+        # Criar tabela (exceto para estatístico, renda e cadastro individual que já criaram seus próprios elementos)
+        if tipo not in ['estatistico', 'renda'] and not cadastro_id:
             table = Table(table_data)
             table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
