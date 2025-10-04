@@ -903,9 +903,6 @@ def exportar():
         elif tipo == 'estatistico':
             # Criar múltiplas tabelas para o relatório estatístico completo
             from reportlab.platypus import Paragraph, Spacer
-            from reportlab.graphics.shapes import Drawing
-            from reportlab.graphics.charts.piecharts import Pie
-            from reportlab.lib import colors as rl_colors
             
             # Total
             total_para = Paragraph(f"<b>Total de Cadastros: {dados['total']}</b>", styles['Heading2'])
@@ -917,22 +914,6 @@ def exportar():
             elements.append(bairro_para)
             elements.append(Spacer(1, 6))
             
-            # Criar gráfico de pizza para bairros
-            drawing = Drawing(400, 200)
-            pie = Pie()
-            pie.x = 200
-            pie.y = 50
-            pie.width = 100
-            pie.height = 100
-            pie.data = [row[1] for row in dados['por_bairro']]
-            pie.labels = [row[0] or 'Não informado' for row in dados['por_bairro']]
-            pie.slices.strokeWidth = 0.5
-            colors_list = [rl_colors.blue, rl_colors.red, rl_colors.green, rl_colors.orange, rl_colors.purple, rl_colors.brown, rl_colors.pink, rl_colors.gray]
-            for i, slice in enumerate(pie.slices):
-                slice.fillColor = colors_list[i % len(colors_list)]
-            drawing.add(pie)
-            
-            # Tabela ao lado do gráfico
             table_data = [['Bairro', 'Total']]
             for row in dados['por_bairro']:
                 table_data.append([str(row[0] or 'Não informado'), str(row[1])])
@@ -946,12 +927,7 @@ def exportar():
                 ('FONTSIZE', (0, 0), (-1, 0), 8),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
-            
-            # Adicionar tabela e gráfico lado a lado
-            from reportlab.platypus import Table as ReportTable
-            combined_data = [[table, drawing]]
-            combined_table = ReportTable(combined_data)
-            elements.append(combined_table)
+            elements.append(table)
             elements.append(Spacer(1, 20))
             
             # Por Gênero
@@ -959,26 +935,12 @@ def exportar():
             elements.append(genero_para)
             elements.append(Spacer(1, 6))
             
-            # Gráfico de pizza para gênero
-            drawing2 = Drawing(400, 200)
-            pie2 = Pie()
-            pie2.x = 200
-            pie2.y = 50
-            pie2.width = 100
-            pie2.height = 100
-            pie2.data = [row[1] for row in dados['por_genero']]
-            pie2.labels = [row[0] or 'Não informado' for row in dados['por_genero']]
-            pie2.slices.strokeWidth = 0.5
-            for i, slice in enumerate(pie2.slices):
-                slice.fillColor = colors_list[i % len(colors_list)]
-            drawing2.add(pie2)
-            
-            table_data2 = [['Gênero', 'Total']]
+            table_data = [['Gênero', 'Total']]
             for row in dados['por_genero']:
-                table_data2.append([str(row[0] or 'Não informado'), str(row[1])])
+                table_data.append([str(row[0] or 'Não informado'), str(row[1])])
             
-            table2 = Table(table_data2)
-            table2.setStyle(TableStyle([
+            table = Table(table_data)
+            table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -986,10 +948,7 @@ def exportar():
                 ('FONTSIZE', (0, 0), (-1, 0), 8),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
-            
-            combined_data2 = [[table2, drawing2]]
-            combined_table2 = ReportTable(combined_data2)
-            elements.append(combined_table2)
+            elements.append(table)
             elements.append(Spacer(1, 20))
             
             # Por Idade
@@ -997,26 +956,12 @@ def exportar():
             elements.append(idade_para)
             elements.append(Spacer(1, 6))
             
-            # Gráfico de pizza para idade
-            drawing3 = Drawing(400, 200)
-            pie3 = Pie()
-            pie3.x = 200
-            pie3.y = 50
-            pie3.width = 100
-            pie3.height = 100
-            pie3.data = [row[1] for row in dados['por_idade']]
-            pie3.labels = [row[0] or 'Não informado' for row in dados['por_idade']]
-            pie3.slices.strokeWidth = 0.5
-            for i, slice in enumerate(pie3.slices):
-                slice.fillColor = colors_list[i % len(colors_list)]
-            drawing3.add(pie3)
-            
-            table_data3 = [['Faixa Etária', 'Total']]
+            table_data = [['Faixa Etária', 'Total']]
             for row in dados['por_idade']:
-                table_data3.append([str(row[0] or 'Não informado'), str(row[1])])
+                table_data.append([str(row[0] or 'Não informado'), str(row[1])])
             
-            table3 = Table(table_data3)
-            table3.setStyle(TableStyle([
+            table = Table(table_data)
+            table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -1024,10 +969,7 @@ def exportar():
                 ('FONTSIZE', (0, 0), (-1, 0), 8),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
-            
-            combined_data3 = [[table3, drawing3]]
-            combined_table3 = ReportTable(combined_data3)
-            elements.append(combined_table3)
+            elements.append(table)
         elif tipo == 'bairro':
             table_data = [['Bairro', 'Total de Cadastros', 'Renda Média']]
             for row in dados:
