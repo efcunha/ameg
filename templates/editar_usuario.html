@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AMEG - Editar Usuário</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/mobile.css">
+    <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .nav a:hover { background: #2980b9; }
+        .nav a.active { background: #27ae60; }
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
+        
+        .form-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .form-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .form-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .form-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        .form-body {
+            padding: 30px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-label {
+            display: block;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        
+        .permission-info {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 10px;
+        }
+        .permission-info h4 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        .permission-list {
+            font-size: 13px;
+            color: #6c757d;
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .password-info {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 10px;
+        }
+        .password-info p {
+            margin: 0;
+            font-size: 13px;
+            color: #856404;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .user-info {
+            background: #e8f5e8;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 25px;
+        }
+        .user-info h3 {
+            margin: 0 0 5px 0;
+            color: #27ae60;
+            font-size: 16px;
+        }
+        .user-info p {
+            margin: 0;
+            color: #155724;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>✏️ AMEG - Editar Usuário</h1>
+        <span>Bem-vindo, {{ session.usuario }}!</span>
+        <a href="/logout" style="color: white; text-decoration: none; float: right;">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/cadastrar">Novo Cadastro</a>
+        <a href="/relatorios">Relatórios</a>
+        <a href="/arquivos_cadastros">📁 Arquivos</a>
+        <a href="/usuarios" class="active">👥 Usuários</a>
+    </div>
+
+    <div class="container">
+        <div class="form-container">
+            <div class="form-header">
+                <h2 class="form-title">✏️ Editar Usuário</h2>
+                <p class="form-subtitle">Altere as permissões e senha do usuário</p>
+            </div>
+
+            <div class="form-body">
+                <div class="user-info">
+                    <h3>👤 {{ usuario[1] }}</h3>
+                    <p>ID: {{ usuario[0] }} • Tipo atual: {{ 'Administrador' if usuario[2] == 'admin' else 'Usuário Comum' }}</p>
+                </div>
+
+                <form method="POST">
+                    <div class="form-group">
+                        <label class="form-label">🔐 Tipo de Usuário</label>
+                        <select name="tipo" class="form-select" onchange="showPermissionInfo(this.value)">
+                            <option value="usuario" {{ 'selected' if usuario[2] != 'admin' else '' }}>👤 Usuário Comum</option>
+                            <option value="admin" {{ 'selected' if usuario[2] == 'admin' else '' }}>👑 Administrador</option>
+                        </select>
+                        
+                        <div id="permission-info" class="permission-info">
+                            <h4>Permissões do Tipo Selecionado:</h4>
+                            <ul id="permission-list" class="permission-list">
+                                <!-- Preenchido via JavaScript -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">🔑 Nova Senha (opcional)</label>
+                        <input type="password" name="nova_senha" class="form-input" placeholder="Digite uma nova senha ou deixe em branco para manter a atual">
+                        
+                        <div class="password-info">
+                            <p><strong>⚠️ Importante:</strong> Deixe em branco se não quiser alterar a senha atual.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">💾 Salvar Alterações</button>
+                        <a href="/usuarios" class="btn btn-secondary">❌ Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPermissionInfo(tipo) {
+            const permissionList = document.getElementById('permission-list');
+            
+            if (tipo === 'admin') {
+                permissionList.innerHTML = `
+                    <li>✅ Criar, editar e excluir cadastros</li>
+                    <li>✅ Visualizar todos os relatórios</li>
+                    <li>✅ Gerenciar usuários do sistema</li>
+                    <li>✅ Exportar dados em PDF/CSV</li>
+                    <li>✅ Acessar arquivos de saúde</li>
+                    <li>✅ Acesso total ao sistema</li>
+                `;
+            } else {
+                permissionList.innerHTML = `
+                    <li>✅ Criar e editar cadastros</li>
+                    <li>✅ Visualizar relatórios básicos</li>
+                    <li>❌ Não pode gerenciar usuários</li>
+                    <li>❌ Acesso limitado a funcionalidades administrativas</li>
+                `;
+            }
+        }
+
+        // Mostrar permissões iniciais
+        document.addEventListener('DOMContentLoaded', function() {
+            const tipoSelect = document.querySelector('select[name="tipo"]');
+            showPermissionInfo(tipoSelect.value);
+        });
+
+        // Confirmação antes de salvar
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const tipo = document.querySelector('select[name="tipo"]').value;
+            const senha = document.querySelector('input[name="nova_senha"]').value;
+            
+            let message = `Confirmar alterações para o usuário {{ usuario[1] }}?\n\n`;
+            message += `Novo tipo: ${tipo === 'admin' ? 'Administrador' : 'Usuário Comum'}\n`;
+            
+            if (senha.trim()) {
+                message += `Nova senha: Será alterada\n`;
+            } else {
+                message += `Senha: Mantida atual\n`;
+            }
+            
+            if (!confirm(message)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

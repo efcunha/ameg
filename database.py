@@ -39,10 +39,25 @@ def init_db_tables():
             CREATE TABLE IF NOT EXISTS usuarios (
                 id SERIAL PRIMARY KEY,
                 usuario VARCHAR(50) UNIQUE NOT NULL,
-                senha VARCHAR(255) NOT NULL
+                senha VARCHAR(255) NOT NULL,
+                tipo VARCHAR(20) DEFAULT 'usuario'
             )
         ''')
         logger.debug("✅ Tabela usuarios criada/verificada")
+        
+        # Adicionar coluna tipo se não existir (para compatibilidade)
+        try:
+            cursor.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS tipo VARCHAR(20) DEFAULT 'usuario'")
+            logger.debug("✅ Coluna tipo adicionada/verificada")
+        except Exception as e:
+            logger.debug(f"Coluna tipo já existe ou erro: {e}")
+        
+        # Atualizar admin existente para tipo 'admin'
+        try:
+            cursor.execute("UPDATE usuarios SET tipo = 'admin' WHERE usuario = 'admin'")
+            logger.debug("✅ Tipo do admin atualizado")
+        except Exception as e:
+            logger.debug(f"Erro ao atualizar tipo do admin: {e}")
         
         # Tabela cadastros - TODOS os campos do formulário
         logger.debug("Criando tabela cadastros...")

@@ -237,11 +237,11 @@
                 <div class="stat-label">Total Usuários</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number">{{ usuarios|selectattr('1', 'equalto', 'admin')|list|length }}</div>
+                <div class="stat-number">{{ usuarios|selectattr('2', 'equalto', 'admin')|list|length }}</div>
                 <div class="stat-label">Administradores</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number">{{ usuarios|length - usuarios|selectattr('1', 'equalto', 'admin')|list|length }}</div>
+                <div class="stat-number">{{ usuarios|length - usuarios|selectattr('2', 'equalto', 'admin')|list|length }}</div>
                 <div class="stat-label">Usuários Comuns</div>
             </div>
         </div>
@@ -275,8 +275,8 @@
                         <div class="user-details">
                             <div class="user-name">{{ user[1] }}</div>
                             <div class="user-role">
-                                <span class="role-badge {{ 'role-admin' if user[1] == 'admin' else 'role-user' }}">
-                                    {{ 'Administrador' if user[1] == 'admin' else 'Usuário' }}
+                                <span class="role-badge {{ 'role-admin' if user[2] == 'admin' else 'role-user' }}">
+                                    {{ 'Administrador' if user[2] == 'admin' else 'Usuário' }}
                                 </span>
                                 <span class="user-id">ID: {{ user[0] }}</span>
                             </div>
@@ -285,14 +285,41 @@
                     
                     <div class="user-actions">
                         {% if user[1] != 'admin' %}
-                        <a href="/excluir_usuario/{{ user[0] }}" 
-                           onclick="return confirm('⚠️ Tem certeza que deseja excluir o usuário {{ user[1] }}?\n\nEsta ação não pode ser desfeita!')"
-                           class="btn btn-danger"
-                           style="font-size: 12px; padding: 8px 12px;">
-                           🗑️ Excluir
-                        </a>
+                            <a href="/editar_usuario/{{ user[0] }}" 
+                               class="btn"
+                               style="font-size: 12px; padding: 8px 12px; background: #17a2b8;">
+                               ✏️ Editar
+                            </a>
+                            
+                            {% if user[2] == 'admin' %}
+                            <a href="/rebaixar_usuario/{{ user[0] }}" 
+                               onclick="return confirm('⚠️ Tem certeza que deseja rebaixar {{ user[1] }} para usuário comum?\n\nEle perderá acesso administrativo!')"
+                               class="btn"
+                               style="font-size: 12px; padding: 8px 12px; background: #f39c12;">
+                               👤 Rebaixar
+                            </a>
+                            {% else %}
+                            <a href="/promover_usuario/{{ user[0] }}" 
+                               onclick="return confirm('👑 Tem certeza que deseja promover {{ user[1] }} a administrador?\n\nEle terá acesso total ao sistema!')"
+                               class="btn btn-success"
+                               style="font-size: 12px; padding: 8px 12px;">
+                               👑 Promover
+                            </a>
+                            {% endif %}
+                            
+                            <a href="/excluir_usuario/{{ user[0] }}" 
+                               onclick="return confirm('⚠️ Tem certeza que deseja excluir o usuário {{ user[1] }}?\n\nEsta ação não pode ser desfeita!')"
+                               class="btn btn-danger"
+                               style="font-size: 12px; padding: 8px 12px;">
+                               🗑️ Excluir
+                            </a>
                         {% else %}
-                        <span style="color: #7f8c8d; font-size: 12px; font-style: italic;">
+                        <a href="/editar_usuario/{{ user[0] }}" 
+                           class="btn"
+                           style="font-size: 12px; padding: 8px 12px; background: #17a2b8;">
+                           ✏️ Editar
+                        </a>
+                        <span style="color: #7f8c8d; font-size: 12px; font-style: italic; margin-left: 10px;">
                             🛡️ Usuário protegido
                         </span>
                         {% endif %}

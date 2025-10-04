@@ -18,6 +18,30 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 logger.info("🚀 Iniciando aplicação AMEG")
 logger.info(f"RAILWAY_ENVIRONMENT: {os.environ.get('RAILWAY_ENVIRONMENT')}")
+
+# Função helper para verificar se usuário é admin
+def is_admin_user(username):
+    """Verifica se o usuário tem privilégios de administrador"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (username,))
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if result:
+            tipo = result[0] if isinstance(result, tuple) else result.get('tipo', 'usuario')
+            return tipo == 'admin'
+        return username == 'admin'  # Fallback para compatibilidade
+    except Exception as e:
+        logger.error(f"Erro ao verificar admin: {e}")
+        return username == 'admin'  # Fallback para compatibilidade
+
+# Disponibilizar função para templates
+@app.context_processor
+def inject_user_functions():
+    return dict(is_admin_user=is_admin_user)
 logger.info(f"DATABASE_URL presente: {'DATABASE_URL' in os.environ}")
 logger.debug(f"SECRET_KEY configurada: {bool(app.secret_key)}")
 
@@ -1709,7 +1733,7 @@ def upload_arquivo(cadastro_id):
 def usuarios():
     if 'usuario' not in session:
         return redirect(url_for('login'))
-    if session['usuario'] != 'admin':
+    if not is_admin_user(session['usuario']):
         flash('Acesso negado! Apenas administradores podem gerenciar usuários.')
         return redirect(url_for('dashboard'))
     
@@ -1719,7 +1743,7 @@ def usuarios():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute('SELECT id, usuario FROM usuarios ORDER BY usuario')
+        cursor.execute('SELECT id, usuario, COALESCE(tipo, \'usuario\') as tipo FROM usuarios ORDER BY usuario')
         usuarios_lista = cursor.fetchall()
         
         logger.debug(f"Encontrados {len(usuarios_lista)} usuários")
@@ -1795,7 +1819,7 @@ def salvar_usuario():
 def excluir_usuario(usuario_id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
-    if session['usuario'] != 'admin':
+    if not is_admin_user(session['usuario']):
         flash('Acesso negado! Apenas administradores podem excluir usuários.')
         return redirect(url_for('dashboard'))
     
@@ -1846,6 +1870,202 @@ def excluir_usuario(usuario_id):
         flash(f'Erro ao excluir usuário: {str(e)}')
     
     return redirect(url_for('usuarios'))
+
+@app.route('/promover_usuario/<int:usuario_id>')
+def promover_usuario(usuario_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    if not is_admin_user(session['usuario']):
+        flash('Acesso negado! Apenas administradores podem promover usuários.')
+        return redirect(url_for('dashboard'))
+    
+    logger.info(f"👑 Tentando promover usuário ID: {usuario_id}")
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Verificar se usuário existe
+        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
+        user_data = cursor.fetchone()
+        
+        if not user_data:
+            logger.warning(f"⚠️ Usuário ID {usuario_id} não encontrado")
+            flash('Usuário não encontrado!')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios'))
+        
+        username = user_data[0]
+        tipo_atual = user_data[1] if len(user_data) > 1 else 'usuario'
+        
+        if tipo_atual == 'admin':
+            logger.warning(f"⚠️ Usuário {username} já é administrador")
+            flash(f'Usuário "{username}" já é administrador!')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios'))
+        
+        # Promover usuário a admin
+        cursor.execute('UPDATE usuarios SET tipo = %s WHERE id = %s', ('admin', usuario_id))
+        usuarios_atualizados = cursor.rowcount
+        
+        if usuarios_atualizados > 0:
+            conn.commit()
+            logger.info(f"✅ Usuário {username} (ID: {usuario_id}) promovido a administrador")
+            flash(f'Usuário "{username}" promovido a administrador com sucesso!')
+        else:
+            logger.warning(f"⚠️ Nenhum usuário foi atualizado (ID: {usuario_id})")
+            flash('Erro: Usuário não foi promovido.')
+        
+        cursor.close()
+        conn.close()
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao promover usuário ID {usuario_id}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        flash(f'Erro ao promover usuário: {str(e)}')
+    
+    return redirect(url_for('usuarios'))
+
+@app.route('/rebaixar_usuario/<int:usuario_id>')
+def rebaixar_usuario(usuario_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    if not is_admin_user(session['usuario']):
+        flash('Acesso negado! Apenas administradores podem rebaixar usuários.')
+        return redirect(url_for('dashboard'))
+    
+    logger.info(f"👤 Tentando rebaixar usuário ID: {usuario_id}")
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Verificar se usuário existe
+        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
+        user_data = cursor.fetchone()
+        
+        if not user_data:
+            logger.warning(f"⚠️ Usuário ID {usuario_id} não encontrado")
+            flash('Usuário não encontrado!')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios'))
+        
+        username = user_data[0]
+        tipo_atual = user_data[1] if len(user_data) > 1 else 'usuario'
+        
+        if username == 'admin':
+            logger.warning("⚠️ Tentativa de rebaixar usuário admin principal bloqueada")
+            flash('Não é possível rebaixar o usuário admin principal!')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios'))
+        
+        if tipo_atual == 'usuario':
+            logger.warning(f"⚠️ Usuário {username} já é usuário comum")
+            flash(f'Usuário "{username}" já é usuário comum!')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios'))
+        
+        # Rebaixar usuário para comum
+        cursor.execute('UPDATE usuarios SET tipo = %s WHERE id = %s', ('usuario', usuario_id))
+        usuarios_atualizados = cursor.rowcount
+        
+        if usuarios_atualizados > 0:
+            conn.commit()
+            logger.info(f"✅ Usuário {username} (ID: {usuario_id}) rebaixado a usuário comum")
+            flash(f'Usuário "{username}" rebaixado a usuário comum!')
+        else:
+            logger.warning(f"⚠️ Nenhum usuário foi atualizado (ID: {usuario_id})")
+            flash('Erro: Usuário não foi rebaixado.')
+        
+        cursor.close()
+        conn.close()
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao rebaixar usuário ID {usuario_id}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        flash(f'Erro ao rebaixar usuário: {str(e)}')
+    
+    return redirect(url_for('usuarios'))
+
+@app.route('/editar_usuario/<int:usuario_id>', methods=['GET', 'POST'])
+def editar_usuario(usuario_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    if not is_admin_user(session['usuario']):
+        flash('Acesso negado! Apenas administradores podem editar usuários.')
+        return redirect(url_for('dashboard'))
+    
+    logger.info(f"✏️ Editando usuário ID: {usuario_id}")
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        if request.method == 'GET':
+            # Buscar dados do usuário
+            cursor.execute('SELECT id, usuario, COALESCE(tipo, \'usuario\') as tipo FROM usuarios WHERE id = %s', (usuario_id,))
+            user_data = cursor.fetchone()
+            
+            if not user_data:
+                flash('Usuário não encontrado!')
+                cursor.close()
+                conn.close()
+                return redirect(url_for('usuarios'))
+            
+            cursor.close()
+            conn.close()
+            return render_template('editar_usuario.html', usuario=user_data)
+        
+        elif request.method == 'POST':
+            # Processar edição
+            novo_tipo = request.form.get('tipo', 'usuario')
+            nova_senha = request.form.get('nova_senha', '').strip()
+            
+            # Buscar dados atuais
+            cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
+            user_data = cursor.fetchone()
+            
+            if not user_data:
+                flash('Usuário não encontrado!')
+                cursor.close()
+                conn.close()
+                return redirect(url_for('usuarios'))
+            
+            username = user_data[0]
+            
+            # Proteger admin principal
+            if username == 'admin' and novo_tipo != 'admin':
+                flash('Não é possível alterar o tipo do usuário admin principal!')
+                cursor.close()
+                conn.close()
+                return redirect(url_for('usuarios'))
+            
+            # Atualizar tipo
+            cursor.execute('UPDATE usuarios SET tipo = %s WHERE id = %s', (novo_tipo, usuario_id))
+            logger.info(f"✅ Tipo do usuário {username} atualizado para {novo_tipo}")
+            
+            # Atualizar senha se fornecida
+            if nova_senha:
+                senha_hash = generate_password_hash(nova_senha)
+                cursor.execute('UPDATE usuarios SET senha = %s WHERE id = %s', (senha_hash, usuario_id))
+                logger.info(f"✅ Senha do usuário {username} atualizada")
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            flash(f'Usuário "{username}" atualizado com sucesso!')
+            return redirect(url_for('usuarios'))
+            
+    except Exception as e:
+        logger.error(f"❌ Erro ao editar usuário ID {usuario_id}: {e}")
+        flash(f'Erro ao editar usuário: {str(e)}')
+        return redirect(url_for('usuarios'))
 
 @app.route('/editar_cadastro/<int:cadastro_id>')
 def editar_cadastro(cadastro_id):
