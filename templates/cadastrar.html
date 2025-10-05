@@ -1179,7 +1179,7 @@
             const checkbox = document.querySelector(`[name="${validation.checkbox}"]`);
             const field = document.querySelector(`[name="${validation.field}"]`);
             
-            if (checkbox && field && checkbox.value === 'Sim' && !field.value.trim()) {
+            if (checkbox && field && checkbox.checked && !field.value.trim()) {
                 showFieldError(field, `${validation.label} é obrigatório quando marcado como "Sim"`);
                 hasErrors = true;
             } else if (field) {
@@ -1202,7 +1202,7 @@
             const checkbox = document.querySelector(`[name="${validation.checkbox}"]`);
             const field = document.querySelector(`[name="${validation.field}"]`);
             
-            if (checkbox && field && checkbox.value === 'Sim' && !field.value.trim()) {
+            if (checkbox && field && checkbox.checked && !field.value.trim()) {
                 showFieldError(field, `${validation.label} é obrigatório quando marcado como "Sim"`);
                 hasErrors = true;
             } else if (field) {
