@@ -339,13 +339,14 @@ def arquivos_cadastros():
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         logger.info("Conexão com banco estabelecida com sucesso")
         
-        # Buscar cadastros com informações de arquivos
+        # Buscar apenas cadastros que têm arquivos anexados
         query_cadastros = '''
             SELECT c.id, c.nome_completo, c.cpf,
                    COUNT(a.id) as arquivos_count
             FROM cadastros c
-            LEFT JOIN arquivos_saude a ON c.id = a.cadastro_id
+            INNER JOIN arquivos_saude a ON c.id = a.cadastro_id
             GROUP BY c.id, c.nome_completo, c.cpf
+            HAVING COUNT(a.id) > 0
             ORDER BY c.nome_completo
         '''
         logger.info(f"Executando query principal: {query_cadastros}")
