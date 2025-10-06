@@ -1249,45 +1249,100 @@ def exportar():
                 ])
         elif tipo == 'saude':
             logger.info("🏥 Processando dados de saúde")
-            table_data = [['Nome', 'Idade', 'Telefone', 'Bairro', 'Doenças Crônicas', 'Medicamentos', 'Doenças Mentais', 'Deficiências', 'Cuidados Especiais']]
-            logger.info(f"🔍 Processando {len(dados)} registros para PDF de saúde")
+            
+            # Criar múltiplas tabelas para melhor visualização
             for i, row in enumerate(dados):
                 logger.info(f"📋 Registro {i+1}: {dict(row) if hasattr(row, 'keys') else row}")
                 
-                # Formatação melhorada dos dados
+                # Tabela 1: Dados Pessoais
+                pessoais_title = Paragraph(f"<b>👤 {row['nome_completo'] or 'Não informado'}</b>", styles['Heading3'])
+                elements.append(pessoais_title)
+                elements.append(Spacer(1, 6))
+                
+                pessoais_data = [
+                    ['Idade', f"{row['idade']} anos" if row['idade'] else 'Não informado'],
+                    ['Telefone', str(row['telefone'] or 'Não informado')],
+                    ['Bairro', str(row['bairro'] or 'Não informado')]
+                ]
+                
+                pessoais_table = Table(pessoais_data, colWidths=[2*inch, 4*inch])
+                pessoais_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (0, -1), colors.lightblue),
+                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                    ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 10),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+                    ('TOPPADDING', (0, 0), (-1, -1), 6),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6)
+                ]))
+                elements.append(pessoais_table)
+                elements.append(Spacer(1, 12))
+                
+                # Tabela 2: Condições de Saúde
+                saude_title = Paragraph("<b>🏥 Condições de Saúde</b>", styles['Heading3'])
+                elements.append(saude_title)
+                elements.append(Spacer(1, 6))
+                
+                # Doenças Crônicas
                 doencas_cronicas = 'Não possui'
                 if row['tem_doenca_cronica'] == 'Sim':
-                    doencas_cronicas = str(row['doencas_cronicas'] or 'Não especificado')[:50] + ('...' if len(str(row['doencas_cronicas'] or '')) > 50 else '')
+                    doencas_cronicas = str(row['doencas_cronicas'] or 'Não especificado')
                 
-                medicamentos = 'Não usa'
+                # Medicamentos
+                medicamentos = 'Não usa medicamentos contínuos'
                 if row['usa_medicamento_continuo'] == 'Sim':
-                    medicamentos = str(row['medicamentos_continuos'] or 'Não especificado')[:50] + ('...' if len(str(row['medicamentos_continuos'] or '')) > 50 else '')
+                    medicamentos = str(row['medicamentos_continuos'] or 'Não especificado')
                 
+                # Doenças Mentais
                 doencas_mentais = 'Não possui'
                 if row['tem_doenca_mental'] == 'Sim':
-                    doencas_mentais = str(row['doencas_mentais'] or 'Não especificado')[:50] + ('...' if len(str(row['doencas_mentais'] or '')) > 50 else '')
+                    doencas_mentais = str(row['doencas_mentais'] or 'Não especificado')
                 
+                # Deficiências
                 deficiencias = 'Não possui'
                 if row['tem_deficiencia'] == 'Sim':
-                    deficiencias = str(row['tipo_deficiencia'] or 'Não especificado')[:50] + ('...' if len(str(row['tipo_deficiencia'] or '')) > 50 else '')
+                    deficiencias = str(row['tipo_deficiencia'] or 'Não especificado')
                 
-                cuidados = 'Não precisa'
+                # Cuidados Especiais
+                cuidados = 'Não precisa de cuidados especiais'
                 if row['precisa_cuidados_especiais'] == 'Sim':
-                    cuidados = str(row['cuidados_especiais'] or 'Não especificado')[:50] + ('...' if len(str(row['cuidados_especiais'] or '')) > 50 else '')
+                    cuidados = str(row['cuidados_especiais'] or 'Não especificado')
                 
-                row_data = [
-                    str(row['nome_completo'] or 'Não informado')[:30] + ('...' if len(str(row['nome_completo'] or '')) > 30 else ''),
-                    f"{row['idade']} anos" if row['idade'] else 'N/I',
-                    str(row['telefone'] or 'Não informado'),
-                    str(row['bairro'] or 'Não informado')[:20] + ('...' if len(str(row['bairro'] or '')) > 20 else ''),
-                    doencas_cronicas,
-                    medicamentos,
-                    doencas_mentais,
-                    deficiencias,
-                    cuidados
+                saude_data = [
+                    ['Doenças Crônicas', doencas_cronicas],
+                    ['Medicamentos Contínuos', medicamentos],
+                    ['Condições Mentais', doencas_mentais],
+                    ['Deficiências', deficiencias],
+                    ['Cuidados Especiais', cuidados]
                 ]
-                logger.info(f"📝 Linha da tabela {i+1}: {row_data}")
-                table_data.append(row_data)
+                
+                saude_table = Table(saude_data, colWidths=[2.5*inch, 4.5*inch])
+                saude_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (0, -1), colors.lightcoral),
+                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                    ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+                    ('TOPPADDING', (0, 0), (-1, -1), 8),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                    ('WORDWRAP', (1, 0), (1, -1), True)
+                ]))
+                elements.append(saude_table)
+                
+                # Adicionar espaço entre registros se houver mais de um
+                if i < len(dados) - 1:
+                    elements.append(Spacer(1, 20))
+                    elements.append(Paragraph("<hr/>", styles['Normal']))
+                    elements.append(Spacer(1, 20))
+            
+            # Não criar tabela adicional, pois já criamos as tabelas acima
+            table_data = None
         elif tipo == 'estatistico':
             # Criar múltiplas tabelas para o relatório estatístico completo
             from reportlab.platypus import Paragraph, Spacer
@@ -1719,9 +1774,9 @@ def exportar():
                         f"R$ {row[40] or '0'}" if (hasattr(row, '__getitem__') and row[40]) else 'Não informado'
                     ])
         
-        # Criar tabela (exceto para estatístico, renda e cadastro completo individual)
-        logger.info(f"🔧 Verificando se deve criar tabela: tipo={tipo}, cadastro_id={cadastro_id}")
-        if tipo not in ['estatistico', 'renda'] and not (tipo == 'completo' and cadastro_id):
+        # Criar tabela (exceto para estatístico, renda, cadastro completo individual e saúde que já criou suas tabelas)
+        logger.info(f"🔧 Verificando se deve criar tabela: tipo={tipo}, cadastro_id={cadastro_id}, table_data={table_data is not None}")
+        if table_data is not None and tipo not in ['estatistico', 'renda'] and not (tipo == 'completo' and cadastro_id):
             logger.info(f"📊 Criando tabela com {len(table_data)} linhas")
             logger.info(f"📋 Cabeçalho da tabela: {table_data[0] if table_data else 'Vazio'}")
             table = Table(table_data)
