@@ -238,7 +238,7 @@ def arquivos_cadastros():
     try:
         logger.info("Tentando conectar ao banco de dados")
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         logger.info("Conexão com banco estabelecida com sucesso")
         
         # Buscar cadastros com informações de arquivos
@@ -257,7 +257,7 @@ def arquivos_cadastros():
         
         cadastros = []
         for i, cadastro_data in enumerate(cadastros_data):
-            logger.info(f"Processando cadastro {i+1}/{len(cadastros_data)}: ID={cadastro_data[0]}, Nome={cadastro_data[1]}")
+            logger.info(f"Processando cadastro {i+1}/{len(cadastros_data)}: ID={cadastro_data['id']}, Nome={cadastro_data['nome_completo']}")
             
             # Buscar arquivos de saúde para cada cadastro
             query_arquivos = '''
@@ -266,16 +266,16 @@ def arquivos_cadastros():
                 WHERE cadastro_id = %s
                 ORDER BY data_upload DESC
             '''
-            logger.info(f"Buscando arquivos para cadastro ID {cadastro_data[0]}")
-            cursor.execute(query_arquivos, (cadastro_data[0],))
+            logger.info(f"Buscando arquivos para cadastro ID {cadastro_data['id']}")
+            cursor.execute(query_arquivos, (cadastro_data['id'],))
             arquivos = cursor.fetchall()
-            logger.info(f"Encontrados {len(arquivos)} arquivos para cadastro ID {cadastro_data[0]}")
+            logger.info(f"Encontrados {len(arquivos)} arquivos para cadastro ID {cadastro_data['id']}")
             
             cadastro_obj = {
-                'id': cadastro_data[0],
-                'nome_completo': cadastro_data[1],
-                'cpf': cadastro_data[2],
-                'arquivos_count': cadastro_data[3],
+                'id': cadastro_data['id'],
+                'nome_completo': cadastro_data['nome_completo'],
+                'cpf': cadastro_data['cpf'],
+                'arquivos_count': cadastro_data['arquivos_count'],
                 'arquivos_saude': arquivos
             }
             cadastros.append(cadastro_obj)
