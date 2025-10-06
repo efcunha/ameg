@@ -2088,6 +2088,11 @@ def excluir_usuario(usuario_id):
         flash('Acesso negado! Apenas administradores podem excluir usuários.')
         return redirect(url_for('dashboard'))
     
+    # Proteção especial para admin ID 1
+    if usuario_id == 1:
+        flash('Erro! O usuário admin principal (ID 1) não pode ser excluído.')
+        return redirect(url_for('usuarios'))
+    
     logger.info(f"🗑️ Tentando excluir usuário ID: {usuario_id}")
     
     try:
@@ -2143,6 +2148,11 @@ def promover_usuario(usuario_id):
     if not is_admin_user(session['usuario']):
         flash('Acesso negado! Apenas administradores podem promover usuários.')
         return redirect(url_for('dashboard'))
+    
+    # Proteção especial para admin ID 1
+    if usuario_id == 1:
+        flash('O usuário admin principal (ID 1) já possui privilégios máximos.')
+        return redirect(url_for('usuarios'))
     
     logger.info(f"👑 Tentando promover usuário ID: {usuario_id}")
     
@@ -2200,6 +2210,11 @@ def rebaixar_usuario(usuario_id):
     if not is_admin_user(session['usuario']):
         flash('Acesso negado! Apenas administradores podem rebaixar usuários.')
         return redirect(url_for('dashboard'))
+    
+    # Proteção especial para admin ID 1
+    if usuario_id == 1:
+        flash('Erro! O usuário admin principal (ID 1) não pode ser rebaixado.')
+        return redirect(url_for('usuarios'))
     
     logger.info(f"👤 Tentando rebaixar usuário ID: {usuario_id}")
     
@@ -2264,6 +2279,20 @@ def editar_usuario(usuario_id):
     if not is_admin_user(session['usuario']):
         flash('Acesso negado! Apenas administradores podem editar usuários.')
         return redirect(url_for('dashboard'))
+    
+    # Proteção especial para admin ID 1
+    if usuario_id == 1:
+        # Buscar dados do usuário admin para verificar
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT usuario FROM usuarios WHERE id = 1')
+        admin_data = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if admin_data and session['usuario'] != admin_data[0]:
+            flash('Acesso negado! Apenas o próprio usuário admin pode alterar sua senha.')
+            return redirect(url_for('usuarios'))
     
     logger.info(f"✏️ Editando usuário ID: {usuario_id}")
     
