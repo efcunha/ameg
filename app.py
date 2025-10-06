@@ -1769,9 +1769,8 @@ def exportar():
                     ('WORDWRAP', (0, 0), (-1, -1), True)
                 ]))
             else:
-                table = Table(table_data)
-            else:
                 logger.info("🎨 Aplicando estilo padrão para tabela")
+                table = Table(table_data)
                 table.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
