@@ -262,6 +262,21 @@ def init_db_tables():
         else:
             logger.debug("✅ Campos de trabalho já existem na tabela")
         
+        # Verificar e adicionar campo foto_base64 se não existir
+        logger.debug("Verificando se campo foto_base64 existe...")
+        cursor.execute("""
+            SELECT column_name FROM information_schema.columns 
+            WHERE table_name = 'cadastros' AND column_name = 'foto_base64'
+        """)
+        foto_existe = cursor.fetchone()
+        
+        if not foto_existe:
+            logger.info("🔧 Adicionando campo foto_base64 à tabela...")
+            cursor.execute("ALTER TABLE cadastros ADD COLUMN IF NOT EXISTS foto_base64 TEXT")
+            logger.info("✅ Campo foto_base64 adicionado!")
+        else:
+            logger.debug("✅ Campo foto_base64 já existe na tabela")
+        
         # Tabela arquivos_saude
         logger.debug("Criando tabela arquivos_saude...")
         cursor.execute('''

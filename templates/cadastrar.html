@@ -41,6 +41,28 @@
             <form method="POST" enctype="multipart/form-data">
                 <h3>1. DADOS DO TITULAR</h3>
                 
+                <!-- Campo de Foto 3x4 -->
+                <div class="form-group">
+                    <label>Foto 3x4 do Titular</label>
+                    <div class="photo-capture">
+                        <div class="photo-preview">
+                            <canvas id="photoCanvas" width="240" height="320" style="border: 2px dashed #ddd; display: none;"></canvas>
+                            <div id="photoPlaceholder" style="width: 240px; height: 320px; border: 2px dashed #ddd; display: flex; align-items: center; justify-content: center; background: #f9f9f9; color: #666;">
+                                Clique para capturar foto
+                            </div>
+                        </div>
+                        <div class="photo-controls" style="margin-top: 10px;">
+                            <button type="button" id="startCamera" class="btn" style="background: #3498db; margin-right: 10px;">📷 Abrir Câmera</button>
+                            <button type="button" id="capturePhoto" class="btn" style="background: #27ae60; display: none;">📸 Capturar</button>
+                            <button type="button" id="retakePhoto" class="btn" style="background: #e74c3c; display: none;">🔄 Nova Foto</button>
+                            <input type="file" id="uploadPhoto" accept="image/*" style="display: none;">
+                            <button type="button" id="uploadBtn" class="btn" style="background: #f39c12;">📁 Upload</button>
+                        </div>
+                        <video id="cameraVideo" width="240" height="320" autoplay style="display: none; border: 1px solid #ddd;"></video>
+                        <input type="hidden" name="foto_base64" id="fotoBase64">
+                    </div>
+                </div>
+                
                 <div class="form-group">
                     <label>Nome Completo *</label>
                     <input type="text" name="nome_completo" required>
@@ -1361,6 +1383,99 @@
                 return false;
             }
         });
+    });
+    
+    // Controle de Captura de Foto
+    let stream = null;
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('photoCanvas');
+    const ctx = canvas.getContext('2d');
+    const placeholder = document.getElementById('photoPlaceholder');
+    const startBtn = document.getElementById('startCamera');
+    const captureBtn = document.getElementById('capturePhoto');
+    const retakeBtn = document.getElementById('retakePhoto');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadInput = document.getElementById('uploadPhoto');
+    const fotoBase64Input = document.getElementById('fotoBase64');
+
+    // Abrir câmera
+    startBtn.addEventListener('click', async () => {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: 240, 
+                    height: 320,
+                    facingMode: 'user' 
+                } 
+            });
+            video.srcObject = stream;
+            video.style.display = 'block';
+            placeholder.style.display = 'none';
+            canvas.style.display = 'none';
+            startBtn.style.display = 'none';
+            captureBtn.style.display = 'inline-block';
+        } catch (err) {
+            alert('Erro ao acessar a câmera: ' + err.message);
+        }
+    });
+
+    // Capturar foto
+    captureBtn.addEventListener('click', () => {
+        ctx.drawImage(video, 0, 0, 240, 320);
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        fotoBase64Input.value = imageData;
+        
+        video.style.display = 'none';
+        canvas.style.display = 'block';
+        captureBtn.style.display = 'none';
+        retakeBtn.style.display = 'inline-block';
+        
+        // Parar stream
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    });
+
+    // Nova foto
+    retakeBtn.addEventListener('click', () => {
+        canvas.style.display = 'none';
+        placeholder.style.display = 'flex';
+        retakeBtn.style.display = 'none';
+        startBtn.style.display = 'inline-block';
+        fotoBase64Input.value = '';
+    });
+
+    // Upload de arquivo
+    uploadBtn.addEventListener('click', () => {
+        uploadInput.click();
+    });
+
+    uploadInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    // Redimensionar para 240x320 (3x4)
+                    ctx.drawImage(img, 0, 0, 240, 320);
+                    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                    fotoBase64Input.value = imageData;
+                    
+                    placeholder.style.display = 'none';
+                    canvas.style.display = 'block';
+                    startBtn.style.display = 'none';
+                    retakeBtn.style.display = 'inline-block';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Placeholder clicável
+    placeholder.addEventListener('click', () => {
+        startBtn.click();
     });
     </script>
 </body>

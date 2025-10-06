@@ -531,7 +531,8 @@ def cadastrar():
                 request.form.get('fonte_renda_trabalho_ambulante'), request.form.get('fonte_renda_aposentadoria'),
                 request.form.get('fonte_renda_outro_trabalho'), request.form.get('fonte_renda_beneficio_social'),
                 request.form.get('fonte_renda_outro'), request.form.get('fonte_renda_outro_desc'),
-                safe_int_or_null(request.form.get('pessoas_dependem_renda'))
+                safe_int_or_null(request.form.get('pessoas_dependem_renda')),
+                request.form.get('foto_base64')  # Campo da foto
             )
             
             logger.debug(f"📊 Preparando INSERT com {len(dados_insert)} valores")
@@ -560,8 +561,8 @@ def cadastrar():
             estrutura_outro, estrutura_outro_desc, necessita_energia_eletrica, utiliza_gas_cozinha,
             usa_veiculo_proprio, qual_veiculo, fonte_renda_trabalho_ambulante, fonte_renda_aposentadoria,
             fonte_renda_outro_trabalho, fonte_renda_beneficio_social, fonte_renda_outro,
-            fonte_renda_outro_desc, pessoas_dependem_renda
-        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            fonte_renda_outro_desc, pessoas_dependem_renda, foto_base64
+        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
             dados_insert)
             conn.commit()
             
@@ -2423,7 +2424,7 @@ def atualizar_cadastro(cadastro_id):
             'estrutura_outro_desc', 'necessita_energia_eletrica', 'utiliza_gas_cozinha',
             'usa_veiculo_proprio', 'qual_veiculo', 'fonte_renda_trabalho_ambulante',
             'fonte_renda_aposentadoria', 'fonte_renda_outro_trabalho', 'fonte_renda_beneficio_social',
-            'fonte_renda_outro', 'fonte_renda_outro_desc', 'pessoas_dependem_renda'
+            'fonte_renda_outro', 'fonte_renda_outro_desc', 'pessoas_dependem_renda', 'foto_base64'
         ]
         
         logger.debug(f"Total de campos para atualização: {len(campos)}")
