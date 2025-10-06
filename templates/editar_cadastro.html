@@ -81,7 +81,7 @@
                 </div>
             </div>
             
-            <form method="POST" action="/atualizar_cadastro/{{ cadastro.id }}" enctype="multipart/form-data">
+            <form method="POST" action="/atualizar_cadastro/{{ cadastro.id }}" enctype="multipart/form-data" id="editarForm" onsubmit="return validarFormulario(event)">
                 <input type="hidden" name="foto_base64" id="fotoBase64" value="{{ cadastro.foto_base64 or '' }}">
                 <h3 style="text-align: center;">1. DADOS DO TITULAR</h3>
                 
@@ -599,10 +599,14 @@
                     if (checkbox.checked) {
                         target.disabled = false;
                         target.required = true;
+                        target.style.borderColor = '#e74c3c';
+                        target.style.backgroundColor = '#fff5f5';
                     } else {
                         target.disabled = true;
                         target.required = false;
                         target.value = '';
+                        target.style.borderColor = '';
+                        target.style.backgroundColor = '';
                     }
                     
                     // Se não for o campo medicamento, verificar disponibilidade do medicamento
@@ -1793,6 +1797,32 @@
     placeholder.addEventListener('click', () => {
         startBtn.click();
     });
+    
+    // Validação do formulário
+    function validarFormulario(event) {
+        const camposObrigatorios = document.querySelectorAll('input[required]');
+        let camposVazios = [];
+        
+        camposObrigatorios.forEach(campo => {
+            if (campo.type === 'text' && campo.value.trim() === '') {
+                camposVazios.push(campo);
+            }
+        });
+        
+        if (camposVazios.length > 0) {
+            event.preventDefault();
+            
+            // Destacar primeiro campo vazio
+            camposVazios[0].focus();
+            camposVazios[0].style.borderColor = '#e74c3c';
+            camposVazios[0].style.backgroundColor = '#fff5f5';
+            
+            alert(`Por favor, preencha todas as especificações obrigatórias. ${camposVazios.length} campo(s) em branco.`);
+            return false;
+        }
+        
+        return true;
+    }
     </script>
 </body>
 </html>
