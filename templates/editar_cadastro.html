@@ -477,47 +477,376 @@
                 
                 <h3>DADOS DA SAÚDE DA FAMÍLIA</h3>
                 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Tem doença crônica?</label>
-                        <select name="tem_doenca_cronica" onchange="toggleField(this, 'doencas_cronicas')">
-                            <option value="">Selecione</option>
-                            <option value="Sim" {{ 'selected' if cadastro and cadastro.tem_doenca_cronica == 'Sim' else '' }}>Sim</option>
-                            <option value="Não" {{ 'selected' if cadastro and cadastro.tem_doenca_cronica == 'Não' else '' }}>Não</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Quais doenças crônicas?</label>
-                        <input type="text" name="doencas_cronicas" id="doencas_cronicas" value="{{ cadastro.doencas_cronicas if cadastro else '' }}" placeholder="Ex: Diabetes, Hipertensão">
-                    </div>
+                <div id="dados-saude-container">
+                    {% if dados_saude_pessoas and dados_saude_pessoas|length > 0 %}
+                        {% for pessoa in dados_saude_pessoas %}
+                        <div class="pessoa-saude" data-pessoa="{{ loop.index }}">
+                            <div class="pessoa-header">
+                                <h4>Pessoa {{ loop.index }}</h4>
+                                <button type="button" class="btn-remove-pessoa" onclick="removePessoa({{ loop.index }})" {% if loop.index == 1 and dados_saude_pessoas|length == 1 %}style="display:none;"{% endif %}>❌</button>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Nome da pessoa:</label>
+                                    <input type="text" name="saude_nome_{{ loop.index }}" value="{{ pessoa.nome_pessoa }}" placeholder="Nome completo" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Tem doença crônica?</label>
+                                    <select name="saude_doenca_cronica_{{ loop.index }}" onchange="toggleSaudeField(this, 'saude_doencas_cronicas_{{ loop.index }}')">
+                                        <option value="">Selecione</option>
+                                        <option value="Sim" {{ 'selected' if pessoa.tem_doenca_cronica == 'Sim' else '' }}>Sim</option>
+                                        <option value="Não" {{ 'selected' if pessoa.tem_doenca_cronica == 'Não' else '' }}>Não</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Especificar doenças crônicas:</label>
+                                    <input type="text" name="saude_doencas_cronicas_{{ loop.index }}" id="saude_doencas_cronicas_{{ loop.index }}" value="{{ pessoa.doencas_cronicas or '' }}" {{ 'disabled' if pessoa.tem_doenca_cronica != 'Sim' else '' }} placeholder="Ex: Diabetes, Hipertensão">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Usa medicamento contínuo?</label>
+                                    <select name="saude_medicamento_continuo_{{ loop.index }}" onchange="toggleSaudeField(this, 'saude_medicamentos_{{ loop.index }}')">
+                                        <option value="">Selecione</option>
+                                        <option value="Sim" {{ 'selected' if pessoa.usa_medicamento_continuo == 'Sim' else '' }}>Sim</option>
+                                        <option value="Não" {{ 'selected' if pessoa.usa_medicamento_continuo == 'Não' else '' }}>Não</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Especificar medicamentos:</label>
+                                    <input type="text" name="saude_medicamentos_{{ loop.index }}" id="saude_medicamentos_{{ loop.index }}" value="{{ pessoa.medicamentos or '' }}" {{ 'disabled' if pessoa.usa_medicamento_continuo != 'Sim' else '' }} placeholder="Ex: Insulina, Captopril">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Tem doença mental?</label>
+                                    <select name="saude_doenca_mental_{{ loop.index }}" onchange="toggleSaudeField(this, 'saude_doencas_mentais_{{ loop.index }}')">
+                                        <option value="">Selecione</option>
+                                        <option value="Sim" {{ 'selected' if pessoa.tem_doenca_mental == 'Sim' else '' }}>Sim</option>
+                                        <option value="Não" {{ 'selected' if pessoa.tem_doenca_mental == 'Não' else '' }}>Não</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Especificar doenças mentais:</label>
+                                    <input type="text" name="saude_doencas_mentais_{{ loop.index }}" id="saude_doencas_mentais_{{ loop.index }}" value="{{ pessoa.doencas_mentais or '' }}" {{ 'disabled' if pessoa.tem_doenca_mental != 'Sim' else '' }} placeholder="Ex: Depressão, Ansiedade">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Tem deficiência?</label>
+                                    <select name="saude_deficiencia_{{ loop.index }}" onchange="toggleSaudeField(this, 'saude_deficiencias_{{ loop.index }}')">
+                                        <option value="">Selecione</option>
+                                        <option value="Sim" {{ 'selected' if pessoa.tem_deficiencia == 'Sim' else '' }}>Sim</option>
+                                        <option value="Não" {{ 'selected' if pessoa.tem_deficiencia == 'Não' else '' }}>Não</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Especificar deficiências:</label>
+                                    <input type="text" name="saude_deficiencias_{{ loop.index }}" id="saude_deficiencias_{{ loop.index }}" value="{{ pessoa.deficiencias or '' }}" {{ 'disabled' if pessoa.tem_deficiencia != 'Sim' else '' }} placeholder="Ex: Visual, Auditiva, Física">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Precisa de cuidados especiais?</label>
+                                    <select name="saude_cuidados_especiais_{{ loop.index }}" onchange="toggleSaudeField(this, 'saude_cuidados_desc_{{ loop.index }}')">
+                                        <option value="">Selecione</option>
+                                        <option value="Sim" {{ 'selected' if pessoa.precisa_cuidados_especiais == 'Sim' else '' }}>Sim</option>
+                                        <option value="Não" {{ 'selected' if pessoa.precisa_cuidados_especiais == 'Não' else '' }}>Não</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Especificar cuidados especiais:</label>
+                                    <input type="text" name="saude_cuidados_desc_{{ loop.index }}" id="saude_cuidados_desc_{{ loop.index }}" value="{{ pessoa.cuidados_especiais or '' }}" {{ 'disabled' if pessoa.precisa_cuidados_especiais != 'Sim' else '' }} placeholder="Descreva os cuidados necessários">
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="pessoa-saude" data-pessoa="1">
+                            <div class="pessoa-header">
+                                <h4>Pessoa 1</h4>
+                                <button type="button" class="btn-remove-pessoa" onclick="removePessoa(1)" style="display:none;">❌</button>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Nome da pessoa:</label>
+                                    <input type="text" name="saude_nome_1" placeholder="Nome completo" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Tem doença crônica?</label>
+                                    <select name="saude_doenca_cronica_1" onchange="toggleSaudeField(this, 'saude_doencas_cronicas_1')">
+                                        <option value="">Selecione</option>
+                                        <option value="Sim">Sim</option>
+                                        <option value="Não">Não</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Especificar doenças crônicas:</label>
+                                    <input type="text" name="saude_doencas_cronicas_1" id="saude_doencas_cronicas_1" disabled placeholder="Ex: Diabetes, Hipertensão">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Usa medicamento contínuo?</label>
+                                    <select name="saude_medicamento_continuo_1" onchange="toggleSaudeField(this, 'saude_medicamentos_1')">
+                                        <option value="">Selecione</option>
+                                        <option value="Sim">Sim</option>
+                                        <option value="Não">Não</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Especificar medicamentos:</label>
+                                    <input type="text" name="saude_medicamentos_1" id="saude_medicamentos_1" disabled placeholder="Ex: Insulina, Captopril">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Tem doença mental?</label>
+                                    <select name="saude_doenca_mental_1" onchange="toggleSaudeField(this, 'saude_doencas_mentais_1')">
+                                        <option value="">Selecione</option>
+                                        <option value="Sim">Sim</option>
+                                        <option value="Não">Não</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Especificar doenças mentais:</label>
+                                    <input type="text" name="saude_doencas_mentais_1" id="saude_doencas_mentais_1" disabled placeholder="Ex: Depressão, Ansiedade">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Tem deficiência?</label>
+                                    <select name="saude_deficiencia_1" onchange="toggleSaudeField(this, 'saude_deficiencias_1')">
+                                        <option value="">Selecione</option>
+                                        <option value="Sim">Sim</option>
+                                        <option value="Não">Não</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Especificar deficiências:</label>
+                                    <input type="text" name="saude_deficiencias_1" id="saude_deficiencias_1" disabled placeholder="Ex: Visual, Auditiva, Física">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Precisa de cuidados especiais?</label>
+                                    <select name="saude_cuidados_especiais_1" onchange="toggleSaudeField(this, 'saude_cuidados_desc_1')">
+                                        <option value="">Selecione</option>
+                                        <option value="Sim">Sim</option>
+                                        <option value="Não">Não</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Especificar cuidados especiais:</label>
+                                    <input type="text" name="saude_cuidados_desc_1" id="saude_cuidados_desc_1" disabled placeholder="Descreva os cuidados necessários">
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
                 
                 <div class="form-row">
-                    <div class="form-group">
-                        <label>Usa medicamento contínuo?</label>
-                        <select name="usa_medicamento_continuo" onchange="toggleField(this, 'medicamentos_continuos')">
-                            <option value="">Selecione</option>
-                            <option value="Sim" {{ 'selected' if cadastro and cadastro.usa_medicamento_continuo == 'Sim' else '' }}>Sim</option>
-                            <option value="Não" {{ 'selected' if cadastro and cadastro.usa_medicamento_continuo == 'Não' else '' }}>Não</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Quais medicamentos?</label>
-                        <input type="text" name="medicamentos_continuos" id="medicamentos_continuos" value="{{ cadastro.medicamentos_continuos if cadastro else '' }}" placeholder="Ex: Insulina, Captopril">
-                    </div>
+                    <button type="button" class="btn-add-pessoa" onclick="addPessoa()">➕ Adicionar outra pessoa</button>
                 </div>
                 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Tem doença mental?</label>
-                        <select name="tem_doenca_mental" onchange="toggleField(this, 'doencas_mentais')">
-                            <option value="">Selecione</option>
-                            <option value="Sim" {{ 'selected' if cadastro and cadastro.tem_doenca_mental == 'Sim' else '' }}>Sim</option>
-                            <option value="Não" {{ 'selected' if cadastro and cadastro.tem_doenca_mental == 'Não' else '' }}>Não</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Quais doenças mentais?</label>
+                <script>
+                let contadorPessoas = {{ dados_saude_pessoas|length if dados_saude_pessoas else 1 }};
+                
+                function toggleSaudeField(select, targetId) {
+                    const target = document.getElementById(targetId);
+                    if (select.value === 'Sim') {
+                        target.disabled = false;
+                        target.required = true;
+                    } else {
+                        target.disabled = true;
+                        target.required = false;
+                        target.value = '';
+                    }
+                }
+                
+                function addPessoa() {
+                    contadorPessoas++;
+                    const container = document.getElementById('dados-saude-container');
+                    
+                    const novaPessoa = document.createElement('div');
+                    novaPessoa.className = 'pessoa-saude';
+                    novaPessoa.setAttribute('data-pessoa', contadorPessoas);
+                    
+                    novaPessoa.innerHTML = `
+                        <div class="pessoa-header">
+                            <h4>Pessoa ${contadorPessoas}</h4>
+                            <button type="button" class="btn-remove-pessoa" onclick="removePessoa(${contadorPessoas})">❌</button>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nome da pessoa:</label>
+                                <input type="text" name="saude_nome_${contadorPessoas}" placeholder="Nome completo" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tem doença crônica?</label>
+                                <select name="saude_doenca_cronica_${contadorPessoas}" onchange="toggleSaudeField(this, 'saude_doencas_cronicas_${contadorPessoas}')">
+                                    <option value="">Selecione</option>
+                                    <option value="Sim">Sim</option>
+                                    <option value="Não">Não</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Especificar doenças crônicas:</label>
+                                <input type="text" name="saude_doencas_cronicas_${contadorPessoas}" id="saude_doencas_cronicas_${contadorPessoas}" disabled placeholder="Ex: Diabetes, Hipertensão">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Usa medicamento contínuo?</label>
+                                <select name="saude_medicamento_continuo_${contadorPessoas}" onchange="toggleSaudeField(this, 'saude_medicamentos_${contadorPessoas}')">
+                                    <option value="">Selecione</option>
+                                    <option value="Sim">Sim</option>
+                                    <option value="Não">Não</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Especificar medicamentos:</label>
+                                <input type="text" name="saude_medicamentos_${contadorPessoas}" id="saude_medicamentos_${contadorPessoas}" disabled placeholder="Ex: Insulina, Captopril">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tem doença mental?</label>
+                                <select name="saude_doenca_mental_${contadorPessoas}" onchange="toggleSaudeField(this, 'saude_doencas_mentais_${contadorPessoas}')">
+                                    <option value="">Selecione</option>
+                                    <option value="Sim">Sim</option>
+                                    <option value="Não">Não</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Especificar doenças mentais:</label>
+                                <input type="text" name="saude_doencas_mentais_${contadorPessoas}" id="saude_doencas_mentais_${contadorPessoas}" disabled placeholder="Ex: Depressão, Ansiedade">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tem deficiência?</label>
+                                <select name="saude_deficiencia_${contadorPessoas}" onchange="toggleSaudeField(this, 'saude_deficiencias_${contadorPessoas}')">
+                                    <option value="">Selecione</option>
+                                    <option value="Sim">Sim</option>
+                                    <option value="Não">Não</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Especificar deficiências:</label>
+                                <input type="text" name="saude_deficiencias_${contadorPessoas}" id="saude_deficiencias_${contadorPessoas}" disabled placeholder="Ex: Visual, Auditiva, Física">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Precisa de cuidados especiais?</label>
+                                <select name="saude_cuidados_especiais_${contadorPessoas}" onchange="toggleSaudeField(this, 'saude_cuidados_desc_${contadorPessoas}')">
+                                    <option value="">Selecione</option>
+                                    <option value="Sim">Sim</option>
+                                    <option value="Não">Não</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Especificar cuidados especiais:</label>
+                                <input type="text" name="saude_cuidados_desc_${contadorPessoas}" id="saude_cuidados_desc_${contadorPessoas}" disabled placeholder="Descreva os cuidados necessários">
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(novaPessoa);
+                    
+                    // Mostrar botão de remover da primeira pessoa se houver mais de uma
+                    if (contadorPessoas > 1) {
+                        const firstRemoveBtn = document.querySelector('[data-pessoa="1"] .btn-remove-pessoa');
+                        if (firstRemoveBtn) firstRemoveBtn.style.display = 'inline-block';
+                    }
+                }
+                
+                function removePessoa(numero) {
+                    const pessoa = document.querySelector(`[data-pessoa="${numero}"]`);
+                    if (pessoa) {
+                        pessoa.remove();
+                        
+                        // Esconder botão de remover da primeira pessoa se só sobrar ela
+                        const pessoas = document.querySelectorAll('.pessoa-saude');
+                        if (pessoas.length === 1) {
+                            const firstRemoveBtn = document.querySelector('[data-pessoa="1"] .btn-remove-pessoa');
+                            if (firstRemoveBtn) firstRemoveBtn.style.display = 'none';
+                        }
+                    }
+                }
+                </script>
+                
+                <style>
+                .pessoa-saude {
+                    border: 2px solid #e0e0e0;
+                    border-radius: 10px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                    background-color: #f9f9f9;
+                }
+                
+                .pessoa-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                    border-bottom: 1px solid #ddd;
+                    padding-bottom: 10px;
+                }
+                
+                .pessoa-header h4 {
+                    margin: 0;
+                    color: #2c3e50;
+                }
+                
+                .btn-add-pessoa, .btn-remove-pessoa {
+                    background: #3498db;
+                    color: white;
+                    border: none;
+                    padding: 10px 15px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 14px;
+                }
+                
+                .btn-add-pessoa:hover, .btn-remove-pessoa:hover {
+                    background: #2980b9;
+                }
+                
+                .btn-remove-pessoa {
+                    background: #e74c3c;
+                    padding: 5px 10px;
+                }
+                
+                .btn-remove-pessoa:hover {
+                    background: #c0392b;
+                }
+                </style>
                         <input type="text" name="doencas_mentais" id="doencas_mentais" value="{{ cadastro.doencas_mentais if cadastro else '' }}" placeholder="Ex: Depressão, Ansiedade">
                     </div>
                 </div>

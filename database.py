@@ -387,6 +387,11 @@ def init_db_tables():
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_arquivos_cadastro ON arquivos_saude(cadastro_id)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_arquivos_data ON arquivos_saude(data_upload)')
         
+        # Índices para tabela dados_saude_pessoa
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_saude_pessoa_cadastro ON dados_saude_pessoa(cadastro_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_saude_pessoa_nome ON dados_saude_pessoa(nome_pessoa)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_saude_pessoa_data ON dados_saude_pessoa(data_cadastro)')
+        
         logger.debug("✅ Índices de otimização criados")
         
         
