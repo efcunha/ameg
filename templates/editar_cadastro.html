@@ -594,6 +594,8 @@
                 
                 function toggleEspecificacao(checkbox, targetId) {
                     const target = document.getElementById(targetId);
+                    const pessoaNum = checkbox.id.split('_').pop();
+                    
                     if (checkbox.checked) {
                         target.disabled = false;
                         target.required = true;
@@ -601,6 +603,37 @@
                         target.disabled = true;
                         target.required = false;
                         target.value = '';
+                    }
+                    
+                    // Se não for o campo medicamento, verificar disponibilidade do medicamento
+                    if (!checkbox.id.includes('medicamento')) {
+                        toggleMedicamentoDisponibilidade(pessoaNum);
+                    }
+                }
+                
+                // Função para controlar habilitação do campo medicamento
+                function toggleMedicamentoDisponibilidade(pessoaNum) {
+                    const doencaCronica = document.getElementById(`doenca_cronica_${pessoaNum}`);
+                    const doencaMental = document.getElementById(`doenca_mental_${pessoaNum}`);
+                    const deficiencia = document.getElementById(`deficiencia_${pessoaNum}`);
+                    const cuidados = document.getElementById(`cuidados_${pessoaNum}`);
+                    const medicamento = document.getElementById(`medicamento_${pessoaNum}`);
+                    const specMedicamento = document.getElementById(`spec_medicamento_${pessoaNum}`);
+                    
+                    // Verificar se alguma das outras condições está marcada
+                    const algumaMarcada = doencaCronica.checked || doencaMental.checked || deficiencia.checked || cuidados.checked;
+                    
+                    if (algumaMarcada) {
+                        // Habilitar medicamento
+                        medicamento.disabled = false;
+                        medicamento.parentElement.style.opacity = '1';
+                    } else {
+                        // Desabilitar medicamento e limpar
+                        medicamento.disabled = true;
+                        medicamento.checked = false;
+                        medicamento.parentElement.style.opacity = '0.5';
+                        specMedicamento.disabled = true;
+                        specMedicamento.value = '';
                     }
                 }
                 

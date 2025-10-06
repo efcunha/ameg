@@ -502,8 +502,8 @@
                                     </div>
                                     
                                     <div class="checkbox-item">
-                                        <input type="checkbox" id="medicamento_1" name="saude_condicoes_1[]" value="medicamento" onchange="toggleEspecificacao(this, 'spec_medicamento_1')">
-                                        <label for="medicamento_1">Usa medicamento contínuo?</label>
+                                        <input type="checkbox" id="medicamento_1" name="saude_condicoes_1[]" value="medicamento" onchange="toggleEspecificacao(this, 'spec_medicamento_1')" disabled style="opacity: 0.5;">
+                                        <label for="medicamento_1" style="opacity: 0.5;">Usa medicamento contínuo?</label>
                                         <input type="text" id="spec_medicamento_1" name="saude_medicamentos_1" placeholder="Especificar medicamentos" disabled>
                                     </div>
                                     
@@ -539,6 +539,8 @@
                 
                 function toggleEspecificacao(checkbox, targetId) {
                     const target = document.getElementById(targetId);
+                    const pessoaNum = checkbox.id.split('_').pop();
+                    
                     if (checkbox.checked) {
                         target.disabled = false;
                         target.required = true;
@@ -546,6 +548,37 @@
                         target.disabled = true;
                         target.required = false;
                         target.value = '';
+                    }
+                    
+                    // Se não for o campo medicamento, verificar disponibilidade do medicamento
+                    if (!checkbox.id.includes('medicamento')) {
+                        toggleMedicamentoDisponibilidade(pessoaNum);
+                    }
+                }
+                
+                // Função para controlar habilitação do campo medicamento
+                function toggleMedicamentoDisponibilidade(pessoaNum) {
+                    const doencaCronica = document.getElementById(`doenca_cronica_${pessoaNum}`);
+                    const doencaMental = document.getElementById(`doenca_mental_${pessoaNum}`);
+                    const deficiencia = document.getElementById(`deficiencia_${pessoaNum}`);
+                    const cuidados = document.getElementById(`cuidados_${pessoaNum}`);
+                    const medicamento = document.getElementById(`medicamento_${pessoaNum}`);
+                    const specMedicamento = document.getElementById(`spec_medicamento_${pessoaNum}`);
+                    
+                    // Verificar se alguma das outras condições está marcada
+                    const algumaMarcada = doencaCronica.checked || doencaMental.checked || deficiencia.checked || cuidados.checked;
+                    
+                    if (algumaMarcada) {
+                        // Habilitar medicamento
+                        medicamento.disabled = false;
+                        medicamento.parentElement.style.opacity = '1';
+                    } else {
+                        // Desabilitar medicamento e limpar
+                        medicamento.disabled = true;
+                        medicamento.checked = false;
+                        medicamento.parentElement.style.opacity = '0.5';
+                        specMedicamento.disabled = true;
+                        specMedicamento.value = '';
                     }
                 }
                 
@@ -581,8 +614,8 @@
                                     </div>
                                     
                                     <div class="checkbox-item">
-                                        <input type="checkbox" id="medicamento_${contadorPessoas}" name="saude_condicoes_${contadorPessoas}[]" value="medicamento" onchange="toggleEspecificacao(this, 'spec_medicamento_${contadorPessoas}')">
-                                        <label for="medicamento_${contadorPessoas}">Usa medicamento contínuo?</label>
+                                        <input type="checkbox" id="medicamento_${contadorPessoas}" name="saude_condicoes_${contadorPessoas}[]" value="medicamento" onchange="toggleEspecificacao(this, 'spec_medicamento_${contadorPessoas}')" disabled style="opacity: 0.5;">
+                                        <label for="medicamento_${contadorPessoas}" style="opacity: 0.5;">Usa medicamento contínuo?</label>
                                         <input type="text" id="spec_medicamento_${contadorPessoas}" name="saude_medicamentos_${contadorPessoas}" placeholder="Especificar medicamentos" disabled>
                                     </div>
                                     
