@@ -994,14 +994,22 @@ def exportar():
         dados = cursor.fetchall()
         filename = 'relatorio_simplificado'
     elif tipo == 'saude':
-        cursor.execute('''SELECT nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
-                         usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
-                         tem_deficiencia, tipo_deficiencia FROM cadastros 
-                         WHERE tem_doenca_cronica = %s OR usa_medicamento_continuo = %s 
-                         OR tem_doenca_mental = %s OR tem_deficiencia = %s
-                         ORDER BY nome_completo''', ('Sim', 'Sim', 'Sim', 'Sim'))
-        dados = cursor.fetchall()
-        filename = 'relatorio_saude'
+        if cadastro_id:
+            cursor.execute('''SELECT nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
+                             usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
+                             tem_deficiencia, tipo_deficiencia FROM cadastros 
+                             WHERE id = %s''', (cadastro_id,))
+            dados = cursor.fetchall()
+            filename = f'relatorio_saude_{cadastro_id}'
+        else:
+            cursor.execute('''SELECT nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
+                             usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
+                             tem_deficiencia, tipo_deficiencia FROM cadastros 
+                             WHERE tem_doenca_cronica = %s OR usa_medicamento_continuo = %s 
+                             OR tem_doenca_mental = %s OR tem_deficiencia = %s
+                             ORDER BY nome_completo''', ('Sim', 'Sim', 'Sim', 'Sim'))
+            dados = cursor.fetchall()
+            filename = 'relatorio_saude'
     elif tipo == 'estatistico':
         # Buscar todas as estatísticas como no relatório web
         cursor.execute('SELECT COUNT(*) FROM cadastros')
@@ -1191,7 +1199,10 @@ def exportar():
         elif tipo == 'simplificado':
             title = Paragraph("AMEG - Relatório Simplificado", styles['Title'])
         elif tipo == 'saude':
-            title = Paragraph("AMEG - Relatório de Saúde", styles['Title'])
+            if cadastro_id:
+                title = Paragraph("AMEG - Relatório de Saúde Individual", styles['Title'])
+            else:
+                title = Paragraph("AMEG - Relatório de Saúde", styles['Title'])
         elif tipo == 'estatistico':
             title = Paragraph("AMEG - Relatório Estatístico", styles['Title'])
         elif tipo == 'bairro':
