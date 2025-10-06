@@ -2266,7 +2266,7 @@ def atualizar_cadastro(cadastro_id):
         sql_update = f"""
         UPDATE cadastros SET 
         {', '.join(set_clauses)}
-        WHERE id = {placeholder}
+        WHERE id = %s
         """
         
         logger.debug(f"Query UPDATE construída com {len(set_clauses)} campos")
