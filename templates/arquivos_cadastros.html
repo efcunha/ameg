@@ -129,6 +129,27 @@
         .arquivo-info {
             flex: 1;
         }
+        .arquivo-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+        }
+        .btn-download {
+            background: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-download:hover {
+            background: #0056b3;
+            color: white;
+            text-decoration: none;
+        }
         .arquivo-nome {
             font-weight: 600;
             color: #2c3e50;
@@ -285,8 +306,15 @@
                                 <div class="arquivo-desc">{{ arquivo.descricao }}</div>
                                 {% endif %}
                             </div>
-                            <div class="arquivo-data">
-                                {{ arquivo.data_upload.strftime('%d/%m/%Y') }}
+                            <div class="arquivo-actions">
+                                <div class="arquivo-data">
+                                    {{ arquivo.data_upload.strftime('%d/%m/%Y %H:%M') }}
+                                </div>
+                                <a href="{{ url_for('download_arquivo', arquivo_id=arquivo.id) }}" 
+                                   class="btn-download" 
+                                   title="Baixar arquivo">
+                                    📥 Download
+                                </a>
                             </div>
                         </div>
                         {% endfor %}

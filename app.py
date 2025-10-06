@@ -261,7 +261,7 @@ def arquivos_cadastros():
             
             # Buscar arquivos de saúde para cada cadastro
             query_arquivos = '''
-                SELECT tipo_arquivo, nome_arquivo, descricao, data_upload
+                SELECT id, tipo_arquivo, nome_arquivo, descricao, data_upload
                 FROM arquivos_saude 
                 WHERE cadastro_id = %s
                 ORDER BY data_upload DESC
@@ -1691,17 +1691,32 @@ def download_arquivo(arquivo_id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    conn = get_db_connection()
-    c = cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
-    c.execute('SELECT nome_arquivo, caminho_arquivo FROM arquivos_saude WHERE id = %s', (arquivo_id,))
-    arquivo = c.fetchone()
-    conn.close()
-    
-    if not arquivo or not os.path.exists(arquivo[1]):
-        flash('Arquivo não encontrado!')
-        return redirect(url_for('relatorio_saude'))
-    
-    return send_file(arquivo[1], as_attachment=True, download_name=arquivo[0])
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute('SELECT nome_arquivo, arquivo_dados, tipo_arquivo FROM arquivos_saude WHERE id = %s', (arquivo_id,))
+        arquivo = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if not arquivo or not arquivo['arquivo_dados']:
+            flash('Arquivo não encontrado!')
+            return redirect(url_for('arquivos_cadastros'))
+        
+        # Criar um objeto BytesIO com os dados do arquivo
+        file_data = io.BytesIO(arquivo['arquivo_dados'])
+        
+        return send_file(
+            file_data,
+            as_attachment=True,
+            download_name=arquivo['nome_arquivo'],
+            mimetype='application/octet-stream'
+        )
+        
+    except Exception as e:
+        logger.error(f"Erro ao baixar arquivo {arquivo_id}: {e}")
+        flash('Erro ao baixar arquivo!')
+        return redirect(url_for('arquivos_cadastros'))
 
 @app.route('/upload_arquivo/<int:cadastro_id>', methods=['POST'])
 def upload_arquivo(cadastro_id):
