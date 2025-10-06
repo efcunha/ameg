@@ -17,8 +17,24 @@
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
         .btn { width: 100%; background: #3498db; color: white; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
         .btn:hover { background: #2980b9; }
+        .btn:disabled { background: #bdc3c7; cursor: not-allowed; }
+        .btn-secondary { background: #95a5a6; margin-bottom: 10px; }
+        .btn-secondary:hover { background: #7f8c8d; }
         .alert { padding: 10px; margin: 10px 0; background: #f8d7da; color: #721c24; border-radius: 5px; }
-        .info { background: #d1ecf1; color: #0c5460; padding: 15px; margin: 20px 0; border-radius: 5px; font-size: 14px; }
+        
+        .password-container { position: relative; }
+        .password-input { padding-right: 50px; }
+        .toggle-password { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #7f8c8d; }
+        
+        .password-rules { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; border: 1px solid #e9ecef; }
+        .password-rules h4 { margin: 0 0 10px 0; color: #495057; }
+        .rule { display: flex; align-items: center; margin: 5px 0; font-size: 14px; }
+        .rule-icon { margin-right: 8px; font-weight: bold; }
+        .rule-valid { color: #28a745; }
+        .rule-invalid { color: #dc3545; }
+        
+        .generate-password { display: flex; gap: 10px; align-items: center; margin: 10px 0; }
+        .generated-password { background: #e9ecef; padding: 8px; border-radius: 3px; font-family: monospace; font-size: 14px; flex: 1; }
     </style>
 </head>
 <body>
@@ -40,25 +56,152 @@
             {% endif %}
         {% endwith %}
         
-        <div class="info">
-            <strong>Requisitos de Senha:</strong><br>
-            • Mínimo 8 caracteres<br>
-            • Recomendado: letras, números e símbolos
-        </div>
-        
-        <form method="POST">
+        <form method="POST" id="userForm">
             <div class="form-group">
-                <label>Nome de Usuário:</label>
-                <input type="text" name="usuario" required>
+                <label for="usuario">Nome de Usuário:</label>
+                <input type="text" name="usuario" id="usuario" required>
             </div>
             
             <div class="form-group">
-                <label>Senha:</label>
-                <input type="password" name="senha" required minlength="8">
+                <label for="senha">Senha:</label>
+                <div class="password-container">
+                    <input type="password" name="senha" id="senha" class="password-input" required>
+                    <span class="toggle-password" onclick="togglePassword()">👁️</span>
+                </div>
+                
+                <div class="generate-password">
+                    <button type="button" class="btn btn-secondary" onclick="generatePassword()">🎲 Gerar Senha</button>
+                    <div id="generatedPassword" class="generated-password" style="display: none;"></div>
+                </div>
+                
+                <div class="password-rules">
+                    <h4>Requisitos de Senha:</h4>
+                    <div class="rule" id="rule-length">
+                        <span class="rule-icon">❌</span>
+                        <span>Mínimo 8 caracteres</span>
+                    </div>
+                    <div class="rule" id="rule-uppercase">
+                        <span class="rule-icon">❌</span>
+                        <span>Pelo menos 1 letra maiúscula</span>
+                    </div>
+                    <div class="rule" id="rule-lowercase">
+                        <span class="rule-icon">❌</span>
+                        <span>Pelo menos 1 letra minúscula</span>
+                    </div>
+                    <div class="rule" id="rule-number">
+                        <span class="rule-icon">❌</span>
+                        <span>Pelo menos 1 número</span>
+                    </div>
+                </div>
             </div>
             
-            <button type="submit" class="btn">Criar Usuário</button>
+            <div class="form-group">
+                <label for="tipo">Tipo de Usuário:</label>
+                <select name="tipo" id="tipo" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="usuario">Usuário</option>
+                    <option value="admin">Administrador</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn" id="submitBtn" disabled>Criar Usuário</button>
         </form>
     </div>
+
+    <script>
+        const senhaInput = document.getElementById('senha');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        // Validação em tempo real
+        senhaInput.addEventListener('input', function() {
+            validatePassword(this.value);
+        });
+        
+        function validatePassword(password) {
+            const rules = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password)
+            };
+            
+            // Atualizar indicadores visuais
+            updateRule('rule-length', rules.length);
+            updateRule('rule-uppercase', rules.uppercase);
+            updateRule('rule-lowercase', rules.lowercase);
+            updateRule('rule-number', rules.number);
+            
+            // Habilitar/desabilitar botão
+            const allValid = Object.values(rules).every(rule => rule);
+            submitBtn.disabled = !allValid;
+            
+            return allValid;
+        }
+        
+        function updateRule(ruleId, isValid) {
+            const rule = document.getElementById(ruleId);
+            const icon = rule.querySelector('.rule-icon');
+            
+            if (isValid) {
+                icon.textContent = '✅';
+                rule.className = 'rule rule-valid';
+            } else {
+                icon.textContent = '❌';
+                rule.className = 'rule rule-invalid';
+            }
+        }
+        
+        function generatePassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*';
+            const upperCase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const lowerCase = 'abcdefghijklmnopqrstuvwxyz';
+            const numbers = '0123456789';
+            
+            let password = '';
+            
+            // Garantir pelo menos um de cada tipo
+            password += upperCase[Math.floor(Math.random() * upperCase.length)];
+            password += lowerCase[Math.floor(Math.random() * lowerCase.length)];
+            password += numbers[Math.floor(Math.random() * numbers.length)];
+            
+            // Completar com caracteres aleatórios até 12 caracteres
+            for (let i = 3; i < 12; i++) {
+                password += chars[Math.floor(Math.random() * chars.length)];
+            }
+            
+            // Embaralhar a senha
+            password = password.split('').sort(() => Math.random() - 0.5).join('');
+            
+            // Mostrar senha gerada
+            const generatedDiv = document.getElementById('generatedPassword');
+            generatedDiv.textContent = password;
+            generatedDiv.style.display = 'block';
+            
+            // Aplicar ao campo
+            senhaInput.value = password;
+            validatePassword(password);
+        }
+        
+        function togglePassword() {
+            const senhaInput = document.getElementById('senha');
+            const toggleIcon = document.querySelector('.toggle-password');
+            
+            if (senhaInput.type === 'password') {
+                senhaInput.type = 'text';
+                toggleIcon.textContent = '🙈';
+            } else {
+                senhaInput.type = 'password';
+                toggleIcon.textContent = '👁️';
+            }
+        }
+        
+        // Validação no submit
+        document.getElementById('userForm').addEventListener('submit', function(e) {
+            const password = senhaInput.value;
+            if (!validatePassword(password)) {
+                e.preventDefault();
+                alert('A senha não atende aos requisitos mínimos de segurança!');
+            }
+        });
+    </script>
 </body>
 </html>

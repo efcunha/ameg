@@ -2007,6 +2007,24 @@ def criar_usuario():
         return redirect(url_for('dashboard'))
     return render_template('criar_usuario.html')
 
+def validar_senha(senha):
+    """Valida se a senha atende aos requisitos de segurança"""
+    import re
+    
+    if len(senha) < 8:
+        return False, "Senha deve ter pelo menos 8 caracteres"
+    
+    if not re.search(r'[A-Z]', senha):
+        return False, "Senha deve conter pelo menos uma letra maiúscula"
+    
+    if not re.search(r'[a-z]', senha):
+        return False, "Senha deve conter pelo menos uma letra minúscula"
+    
+    if not re.search(r'[0-9]', senha):
+        return False, "Senha deve conter pelo menos um número"
+    
+    return True, "Senha válida"
+
 @app.route('/criar_usuario', methods=['POST'])
 def salvar_usuario():
     if 'usuario' not in session:
@@ -2017,8 +2035,15 @@ def salvar_usuario():
     
     novo_usuario = request.form['usuario']
     nova_senha = request.form['senha']
+    tipo_usuario = request.form.get('tipo', 'usuario')
     
-    logger.info(f"👤 Criando novo usuário: {novo_usuario}")
+    # Validar senha
+    senha_valida, mensagem = validar_senha(nova_senha)
+    if not senha_valida:
+        flash(f'Erro na senha: {mensagem}')
+        return redirect(url_for('criar_usuario'))
+    
+    logger.info(f"👤 Criando novo usuário: {novo_usuario} (tipo: {tipo_usuario})")
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -2040,7 +2065,7 @@ def salvar_usuario():
         logger.debug("Hash da senha gerado")
         
         # No Railway sempre será PostgreSQL
-        cursor.execute('INSERT INTO usuarios (usuario, senha) VALUES (%s, %s)', (novo_usuario, senha_hash))
+        cursor.execute('INSERT INTO usuarios (usuario, senha, tipo) VALUES (%s, %s, %s)', (novo_usuario, senha_hash, tipo_usuario))
         logger.debug("Query INSERT executada")
         
         conn.commit()
