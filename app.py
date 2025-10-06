@@ -2296,7 +2296,16 @@ def editar_cadastro(cadastro_id):
         
         cadastro = cursor.fetchone()
         logger.debug(f"Cadastro encontrado: {cadastro is not None}")
-        logger.debug(f"Foto presente: {'foto_base64' in cadastro if cadastro else 'N/A'}")
+        
+        if cadastro:
+            foto_presente = cadastro.get('foto_base64') is not None
+            foto_tamanho = len(cadastro.get('foto_base64', '')) if cadastro.get('foto_base64') else 0
+            logger.debug(f"Foto presente: {foto_presente}")
+            logger.debug(f"Tamanho da foto: {foto_tamanho} caracteres")
+            if foto_presente and foto_tamanho > 0:
+                logger.debug(f"Primeiros 50 chars da foto: {cadastro.get('foto_base64', '')[:50]}...")
+            else:
+                logger.warning("⚠️ Campo foto_base64 está vazio ou nulo")
         
         # Buscar arquivos de saúde associados
         arquivos_saude = []

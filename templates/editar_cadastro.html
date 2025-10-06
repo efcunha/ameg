@@ -1462,12 +1462,27 @@
     const fotoBase64Input = document.getElementById('fotoBase64');
 
     // Carregar foto existente se houver
+    console.log('Verificando foto existente...');
+    console.log('Valor do campo foto_base64:', fotoBase64Input.value ? 'Existe (tamanho: ' + fotoBase64Input.value.length + ')' : 'Vazio');
+    
     if (fotoBase64Input.value) {
+        console.log('Tentando carregar foto existente...');
         const img = new Image();
         img.onload = () => {
+            console.log('Foto carregada com sucesso, desenhando no canvas...');
             ctx.drawImage(img, 0, 0, 120, 160);
+            photoCanvas.style.display = 'block';
+            photoPlaceholder.style.display = 'none';
+            retakeBtn.style.display = 'inline-block';
+            console.log('Foto exibida no canvas');
+        };
+        img.onerror = (error) => {
+            console.error('Erro ao carregar a imagem:', error);
+            console.log('Dados da imagem (primeiros 100 chars):', fotoBase64Input.value.substring(0, 100));
         };
         img.src = fotoBase64Input.value;
+    } else {
+        console.log('Nenhuma foto existente encontrada');
     }
 
     // Abrir câmera
