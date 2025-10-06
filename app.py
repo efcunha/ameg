@@ -1865,8 +1865,8 @@ def exportar():
                         ['Tipo Trabalho:', str(row['tipo_trabalho'] or '')],
                         ['Pessoas Trabalham:', str(row['pessoas_trabalham'] or '')],
                         ['Aposentados/Pensionistas:', str(row['aposentados_pensionistas'] or '')],
-                        ['Pessoas na Família:', str(row['pessoas_familia'] or '')],
-                        ['Número Famílias:', str(row['numero_familias'] or '')],
+                        ['Pessoas na Família:', str(row['num_pessoas_familia'] or '')],
+                        ['Número Famílias:', str(row['num_familias'] or '')],
                         ['Adultos:', str(row['adultos'] or '')],
                         ['Crianças:', str(row['criancas'] or '')],
                         ['Adolescentes:', str(row['adolescentes'] or '')],
@@ -1895,8 +1895,8 @@ def exportar():
                     elements.append(Spacer(1, 6))
                     
                     casa_data = [
-                        ['Tipo Casa:', str(row['tipo_casa'] or '')],
-                        ['Material Casa:', str(row['material_casa'] or '')],
+                        ['Tipo Casa:', str(row['casa_tipo'] or '')],
+                        ['Material Casa:', str(row['casa_material'] or '')],
                         ['Energia:', str(row['energia'] or '')],
                         ['Lixo:', str(row['lixo'] or '')],
                         ['Água:', str(row['agua'] or '')],
