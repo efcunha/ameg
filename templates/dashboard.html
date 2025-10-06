@@ -42,6 +42,9 @@
         {% if is_admin_user(session.usuario) %}
         <a href="/usuarios">👥 Usuários</a>
         <a href="/auditoria">🔍 Auditoria</a>
+        {% if session.usuario == 'admin' %}
+        <a href="/admin/reset" style="background: #dc3545;">⚠️ Reset</a>
+        {% endif %}
         {% endif %}
         <div class="export-menu">
             <a href="#" style="background: #27ae60;">Exportar ▼</a>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AMEG - Reset do Sistema</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/mobile.css">
+    <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .nav a:hover { background: #2980b9; }
+        .container { padding: 20px; max-width: 800px; margin: 0 auto; }
+        .logout { float: right; }
+        .alert { padding: 15px; margin: 20px 0; border-radius: 5px; }
+        .alert.success { background: #d4edda; color: #155724; }
+        .alert.error { background: #f8d7da; color: #721c24; }
+        .alert.warning { background: #fff3cd; color: #856404; }
+        
+        .reset-container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .danger-zone { border: 3px solid #dc3545; border-radius: 10px; padding: 20px; margin: 20px 0; background: #fff5f5; }
+        .warning-box { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        
+        .btn { padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
+        
+        .confirmation { margin: 20px 0; }
+        .confirmation input[type="checkbox"] { margin-right: 10px; }
+        .confirmation label { font-weight: bold; color: #dc3545; }
+        
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat-card { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #dee2e6; }
+        .stat-number { font-size: 1.5em; font-weight: bold; color: #495057; }
+        .stat-label { color: #6c757d; margin-top: 5px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AMEG - Sistema de Cadastro</h1>
+        <span>Bem-vindo, {{ session.usuario }}!</span>
+        <a href="/logout" class="logout" style="color: white; text-decoration: none;">Sair</a>
+    </div>
+
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/cadastrar">Novo Cadastro</a>
+        <a href="/relatorios">Relatórios</a>
+        <a href="/arquivos_cadastros">📁 Arquivos</a>
+        <a href="/usuarios">👥 Usuários</a>
+        <a href="/auditoria">🔍 Auditoria</a>
+        <a href="/admin/reset" style="background: #dc3545;">⚠️ Reset</a>
+    </div>
+
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if 'sucesso' in message %}success{% elif 'Erro' in message %}error{% else %}warning{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="reset-container">
+            <h2 style="color: #dc3545; text-align: center;">⚠️ RESET DO SISTEMA ⚠️</h2>
+            <p style="text-align: center; color: #6c757d;">Acesso restrito ao Administrador Principal (ID 1)</p>
+
+            <div class="warning-box">
+                <strong>⚠️ ATENÇÃO:</strong> Esta operação é <strong>IRREVERSÍVEL</strong> e irá:
+                <ul style="margin: 10px 0;">
+                    <li>🗑️ Apagar TODOS os cadastros</li>
+                    <li>🗑️ Apagar TODOS os arquivos de saúde</li>
+                    <li>🗑️ Apagar TODO o histórico de auditoria</li>
+                    <li>🔄 Reiniciar contadores de ID para 1</li>
+                </ul>
+                <strong>Os dados NÃO poderão ser recuperados!</strong>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="cadastros-count">-</div>
+                    <div class="stat-label">Cadastros</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="arquivos-count">-</div>
+                    <div class="stat-label">Arquivos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="auditoria-count">-</div>
+                    <div class="stat-label">Auditorias</div>
+                </div>
+            </div>
+
+            <div class="danger-zone">
+                <h3 style="color: #dc3545; margin-top: 0;">🚨 ZONA DE PERIGO</h3>
+                
+                <form method="POST" action="/admin/reset/execute" id="resetForm">
+                    <div class="confirmation">
+                        <input type="checkbox" id="confirm1" required>
+                        <label for="confirm1">Confirmo que entendo que esta ação é IRREVERSÍVEL</label>
+                    </div>
+                    
+                    <div class="confirmation">
+                        <input type="checkbox" id="confirm2" required>
+                        <label for="confirm2">Confirmo que quero APAGAR TODOS os dados do sistema</label>
+                    </div>
+                    
+                    <div class="confirmation">
+                        <input type="checkbox" id="confirm3" required>
+                        <label for="confirm3">Confirmo que sou o administrador principal e tenho autorização</label>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="/dashboard" class="btn btn-secondary">← Cancelar</a>
+                        <button type="submit" class="btn btn-danger" id="resetBtn" disabled>
+                            🗑️ EXECUTAR RESET COMPLETO
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Carregar estatísticas atuais
+        fetch('/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('cadastros-count').textContent = data.cadastros || 0;
+                document.getElementById('arquivos-count').textContent = data.arquivos || 0;
+                document.getElementById('auditoria-count').textContent = data.auditoria || 0;
+            })
+            .catch(() => {
+                document.getElementById('cadastros-count').textContent = '?';
+                document.getElementById('arquivos-count').textContent = '?';
+                document.getElementById('auditoria-count').textContent = '?';
+            });
+
+        // Controlar habilitação do botão
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const resetBtn = document.getElementById('resetBtn');
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                resetBtn.disabled = !allChecked;
+                
+                if (allChecked) {
+                    resetBtn.style.background = '#dc3545';
+                } else {
+                    resetBtn.style.background = '#6c757d';
+                }
+            });
+        });
+
+        // Confirmação final
+        document.getElementById('resetForm').addEventListener('submit', function(e) {
+            if (!confirm('ÚLTIMA CONFIRMAÇÃO: Tem certeza que deseja executar o reset completo? Esta ação NÃO pode ser desfeita!')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

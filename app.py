@@ -2817,3 +2817,105 @@ def auditoria():
         logger.error(f"Traceback: {traceback.format_exc()}")
         flash('Erro ao carregar dados de auditoria.')
         return redirect(url_for('dashboard'))
+@app.route('/admin/reset')
+def admin_reset():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    # Verificar se é o admin ID 1
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario'],))
+    admin_check = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
+    if not admin_check:
+        flash('Acesso negado! Apenas o admin principal pode acessar esta funcionalidade.')
+        return redirect(url_for('dashboard'))
+    
+    return render_template('admin_reset.html')
+
+@app.route('/admin/reset/execute', methods=['POST'])
+def admin_reset_execute():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    # Verificar se é o admin ID 1
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario'],))
+    admin_check = cursor.fetchone()
+    
+    if not admin_check:
+        cursor.close()
+        conn.close()
+        flash('Acesso negado! Apenas o admin principal pode executar o reset.')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        logger.warning(f"🚨 RESET INICIADO pelo admin ID 1: {session['usuario']}")
+        
+        # Zerar tabelas (mantém estrutura)
+        cursor.execute('TRUNCATE TABLE arquivos_saude RESTART IDENTITY CASCADE')
+        cursor.execute('TRUNCATE TABLE auditoria RESTART IDENTITY CASCADE')
+        cursor.execute('TRUNCATE TABLE cadastros RESTART IDENTITY CASCADE')
+        
+        # Resetar sequences manualmente (garantia)
+        cursor.execute('ALTER SEQUENCE arquivos_saude_id_seq RESTART WITH 1')
+        cursor.execute('ALTER SEQUENCE auditoria_id_seq RESTART WITH 1')
+        cursor.execute('ALTER SEQUENCE cadastros_id_seq RESTART WITH 1')
+        
+        conn.commit()
+        
+        # Registrar auditoria do reset
+        registrar_auditoria(
+            usuario=session['usuario'],
+            acao='RESET',
+            tabela='SISTEMA',
+            dados_novos='Reset completo das tabelas: cadastros, arquivos_saude, auditoria',
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent')
+        )
+        
+        logger.warning(f"✅ RESET CONCLUÍDO pelo admin ID 1: {session['usuario']}")
+        flash('Reset executado com sucesso! Todas as tabelas foram zeradas e contadores reiniciados.')
+        
+    except Exception as e:
+        logger.error(f"❌ Erro durante reset: {e}")
+        flash(f'Erro durante reset: {str(e)}')
+        conn.rollback()
+    
+    cursor.close()
+    conn.close()
+    return redirect(url_for('admin_reset'))
+@app.route('/api/stats')
+def api_stats():
+    if 'usuario' not in session:
+        return {"error": "Não autorizado"}, 401
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Contar registros em cada tabela
+        cursor.execute('SELECT COUNT(*) FROM cadastros')
+        cadastros = cursor.fetchone()[0] if cursor.fetchone() else 0
+        
+        cursor.execute('SELECT COUNT(*) FROM arquivos_saude')
+        arquivos = cursor.fetchone()[0] if cursor.fetchone() else 0
+        
+        cursor.execute('SELECT COUNT(*) FROM auditoria')
+        auditoria = cursor.fetchone()[0] if cursor.fetchone() else 0
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            "cadastros": cadastros,
+            "arquivos": arquivos,
+            "auditoria": auditoria
+        }
+        
+    except Exception as e:
+        return {"error": str(e)}, 500
