@@ -172,13 +172,14 @@
             
             let password = '';
             
-            // Garantir pelo menos um de cada tipo
+            // Garantir pelo menos um de cada tipo (4 caracteres)
             password += upperCase[Math.floor(Math.random() * upperCase.length)];
             password += lowerCase[Math.floor(Math.random() * lowerCase.length)];
             password += numbers[Math.floor(Math.random() * numbers.length)];
+            password += chars[Math.floor(Math.random() * chars.length)]; // 4º caractere aleatório
             
-            // Completar com caracteres aleatórios até 12 caracteres
-            for (let i = 3; i < 12; i++) {
+            // Completar com mais 4 caracteres aleatórios (total 8)
+            for (let i = 4; i < 8; i++) {
                 password += chars[Math.floor(Math.random() * chars.length)];
             }
             
