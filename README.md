@@ -81,51 +81,51 @@ git push origin main
 
 ```
 ameg/
-├── app.py                    # Aplicação principal Flask + compressão
-├── database.py               # Módulo PostgreSQL + security manager
-├── security.py               # Sistema de segurança avançado
-├── validators.py             # Validações backend centralizadas
-├── config.py                 # Configurações por ambiente
+├── app.py                        # Aplicação principal Flask + compressão
+├── database.py                   # Módulo PostgreSQL + security manager
+├── security.py                   # Sistema de segurança avançado
+├── validators.py                 # Validações backend centralizadas
+├── config.py                     # Configurações por ambiente
 ├── generate_admin_credentials.py # Gerador de credenciais seguras
-├── requirements.txt          # Dependências atualizadas (segurança)
-├── SECURITY.md               # Documentação de segurança
-├── DOCUMENTACAO_APP.md       # Documentação técnica detalhada
-├── Dockerfile                # Container para Railway
-├── start.sh                  # Script de inicialização
-├── railway.toml              # Configuração Railway
-├── .env.secure               # Credenciais locais (não commitado)
-├── .gitignore                # Arquivos protegidos
-├── templates/                # Templates HTML otimizados
-│   ├── login.html            # Login com validação
-│   ├── dashboard.html        # Dashboard + lazy loading
-│   ├── cadastrar.html        # Formulário + foto + validação
-│   ├── editar_cadastro.html  # Edição completa
-│   ├── relatorios.html       # Menu de relatórios
-│   ├── tipos_relatorios.html # 6 tipos de relatórios
-│   ├── relatorio_*.html      # Relatórios especializados
-│   ├── arquivos_*.html       # Gestão de arquivos
-│   ├── usuarios.html         # Gestão de usuários
-│   ├── criar_usuario.html    # Criação com validação
-│   ├── editar_usuario.html   # Edição de usuários
-│   ├── auditoria.html        # Sistema de auditoria
-│   ├── admin_reset.html      # Reset administrativo
-│   └── ficha.html            # Ficha individual completa
-├── static/                   # Arquivos estáticos otimizados
+├── requirements.txt              # Dependências atualizadas (segurança)
+├── SECURITY.md                   # Documentação de segurança
+├── DOCUMENTACAO_APP.md           # Documentação técnica detalhada
+├── Dockerfile                    # Container para Railway
+├── start.sh                      # Script de inicialização
+├── railway.toml                  # Configuração Railway
+├── .env.secure                   # Credenciais locais (não commitado)
+├── .gitignore                    # Arquivos protegidos
+├── templates/                    # Templates HTML otimizados
+│   ├── login.html                # Login com validação
+│   ├── dashboard.html            # Dashboard + lazy loading
+│   ├── cadastrar.html            # Formulário + foto + validação
+│   ├── editar_cadastro.html      # Edição completa
+│   ├── relatorios.html           # Menu de relatórios
+│   ├── tipos_relatorios.html     # 6 tipos de relatórios
+│   ├── relatorio_*.html          # Relatórios especializados
+│   ├── arquivos_*.html           # Gestão de arquivos
+│   ├── usuarios.html             # Gestão de usuários
+│   ├── criar_usuario.html        # Criação com validação
+│   ├── editar_usuario.html       # Edição de usuários
+│   ├── auditoria.html            # Sistema de auditoria
+│   ├── admin_reset.html          # Reset administrativo
+│   └── ficha.html                # Ficha individual completa
+├── static/                       # Arquivos estáticos otimizados
 │   ├── css/
-│   │   ├── mobile.css        # Estilos responsivos
-│   │   ├── mobile.min.css    # Versão minificada
-│   │   └── mobile.min.css.gz # Versão comprimida
+│   │   ├── mobile.css            # Estilos responsivos
+│   │   ├── mobile.min.css        # Versão minificada
+│   │   └── mobile.min.css.gz     # Versão comprimida
 │   ├── js/
-│   │   ├── validators.js     # Validação unificada
-│   │   ├── validators.min.js # Versão minificada
-│   │   ├── lazy-load.js      # Lazy loading inteligente
-│   │   ├── lazy-load.min.js  # Versão minificada
-│   │   ├── compress.py       # Script de compressão
-│   │   └── *.gz              # Arquivos comprimidos
+│   │   ├── validators.js         # Validação unificada
+│   │   ├── validators.min.js     # Versão minificada
+│   │   ├── lazy-load.js          # Lazy loading inteligente
+│   │   ├── lazy-load.min.js      # Versão minificada
+│   │   ├── compress.py           # Script de compressão
+│   │   └── *.gz                  # Arquivos comprimidos
 │   └── img/
-│       └── logo-ameg.jpeg    # Logo da AMEG
-├── data/                     # Uploads e dados
-└── imagens/                  # Recursos do projeto
+│       └── logo-ameg.jpeg        # Logo da AMEG
+├── data/                         # Uploads e dados
+└── imagens/                      # Recursos do projeto
 ```
 
 ## 🗄️ Banco de Dados
