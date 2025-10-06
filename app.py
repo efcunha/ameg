@@ -176,6 +176,10 @@ def static_files(filename):
 def login():
     if 'usuario' in session:
         return redirect(url_for('dashboard'))
+    
+    # Limpar mensagens flash antigas na tela de login
+    session.pop('_flashes', None)
+    
     return render_template('login.html')
 
 @app.route('/login', methods=['POST'])
