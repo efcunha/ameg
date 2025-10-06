@@ -75,54 +75,55 @@
                     <th>Saúde Mental</th>
                     <th>Deficiência</th>
                     <th>Cuidados Especiais</th>
-                    <th>Arquivos</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
                 {% for cadastro in cadastros %}
                 <tr>
-                    <td>{{ cadastro[0] }}</td>
-                    <td>{{ cadastro[1] }}</td>
-                    <td>{{ cadastro[2] or '-' }}</td>
-                    <td>{{ cadastro[3] or '-' }}</td>
-                    <td>{{ cadastro[4] or '-' }}</td>
+                    <td>{{ cadastro.id }}</td>
+                    <td>{{ cadastro.nome_completo }}</td>
+                    <td>{{ cadastro.idade or '-' }}</td>
+                    <td>{{ cadastro.telefone or '-' }}</td>
+                    <td>{{ cadastro.bairro or '-' }}</td>
                     <td>
-                        {% if cadastro[5] == 'Sim' %}
-                            <span class="health-tag">{{ cadastro[6] or 'Não especificado' }}</span>
+                        {% if cadastro.tem_doenca_cronica == 'Sim' %}
+                            <span class="health-tag">{{ cadastro.doencas_cronicas or 'Não especificado' }}</span>
                         {% else %}
                             -
                         {% endif %}
                     </td>
                     <td>
-                        {% if cadastro[7] == 'Sim' %}
-                            <span class="health-tag">{{ cadastro[8] or 'Não especificado' }}</span>
+                        {% if cadastro.usa_medicamento_continuo == 'Sim' %}
+                            <span class="health-tag">{{ cadastro.medicamentos_continuos or 'Não especificado' }}</span>
                         {% else %}
                             -
                         {% endif %}
                     </td>
                     <td>
-                        {% if cadastro[9] == 'Sim' %}
-                            <span class="health-tag">{{ cadastro[10] or 'Não especificado' }}</span>
+                        {% if cadastro.tem_doenca_mental == 'Sim' %}
+                            <span class="health-tag">{{ cadastro.doencas_mentais or 'Não especificado' }}</span>
                         {% else %}
                             -
                         {% endif %}
                     </td>
                     <td>
-                        {% if cadastro[11] == 'Sim' %}
-                            <span class="health-tag">{{ cadastro[12] or 'Não especificado' }}</span>
+                        {% if cadastro.tem_deficiencia == 'Sim' %}
+                            <span class="health-tag">{{ cadastro.tipo_deficiencia or 'Não especificado' }}</span>
                         {% else %}
                             -
                         {% endif %}
                     </td>
                     <td>
-                        {% if cadastro[13] == 'Sim' %}
-                            <span class="health-tag">{{ cadastro[14] or 'Não especificado' }}</span>
+                        {% if cadastro.precisa_cuidados_especiais == 'Sim' %}
+                            <span class="health-tag">{{ cadastro.cuidados_especiais or 'Não especificado' }}</span>
                         {% else %}
                             -
                         {% endif %}
                     </td>
                     <td>
-                        <a href="/arquivos_saude/{{ cadastro[0] }}" style="color: #3498db; text-decoration: none;">📁 Ver Arquivos</a>
+                        <a href="/arquivos_saude/{{ cadastro.id }}" style="color: #3498db; text-decoration: none; margin-right: 10px;">📁 Arquivos</a>
+                        <a href="/exportar?tipo=saude&formato=pdf&cadastro_id={{ cadastro.id }}" style="color: #e74c3c; text-decoration: none;" title="Exportar PDF individual">📋 PDF</a>
                     </td>
                 </tr>
                 {% endfor %}

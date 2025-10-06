@@ -909,24 +909,24 @@ def relatorio_saude():
         return redirect(url_for('login'))
     
     conn = get_db_connection()
-    c = cursor = conn[0].cursor() if isinstance(conn, tuple) else conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
-    c.execute('SELECT COUNT(*) FROM cadastros WHERE tem_doenca_cronica = %s', ('Sim',))
-    com_doenca_cronica = c.fetchone()[0]
+    cursor.execute('SELECT COUNT(*) FROM cadastros WHERE tem_doenca_cronica = %s', ('Sim',))
+    com_doenca_cronica = cursor.fetchone()['count']
     
-    c.execute('SELECT COUNT(*) FROM cadastros WHERE usa_medicamento_continuo = %s', ('Sim',))
-    usa_medicamento = c.fetchone()[0]
+    cursor.execute('SELECT COUNT(*) FROM cadastros WHERE usa_medicamento_continuo = %s', ('Sim',))
+    usa_medicamento = cursor.fetchone()['count']
     
-    c.execute('SELECT COUNT(*) FROM cadastros WHERE tem_doenca_mental = %s', ('Sim',))
-    com_doenca_mental = c.fetchone()[0]
+    cursor.execute('SELECT COUNT(*) FROM cadastros WHERE tem_doenca_mental = %s', ('Sim',))
+    com_doenca_mental = cursor.fetchone()['count']
     
-    c.execute('SELECT COUNT(*) FROM cadastros WHERE tem_deficiencia = %s', ('Sim',))
-    com_deficiencia = c.fetchone()[0]
+    cursor.execute('SELECT COUNT(*) FROM cadastros WHERE tem_deficiencia = %s', ('Sim',))
+    com_deficiencia = cursor.fetchone()['count']
     
-    c.execute('SELECT COUNT(*) FROM cadastros WHERE precisa_cuidados_especiais = %s', ('Sim',))
-    precisa_cuidados = c.fetchone()[0]
+    cursor.execute('SELECT COUNT(*) FROM cadastros WHERE precisa_cuidados_especiais = %s', ('Sim',))
+    precisa_cuidados = cursor.fetchone()['count']
     
-    c.execute("""SELECT id, nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
+    cursor.execute("""SELECT id, nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
                 usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
                 tem_deficiencia, tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais
                 FROM cadastros 
@@ -934,8 +934,9 @@ def relatorio_saude():
                 OR tem_doenca_mental = %s OR tem_deficiencia = %s 
                 OR precisa_cuidados_especiais = %s
                 ORDER BY nome_completo""", ('Sim', 'Sim', 'Sim', 'Sim', 'Sim'))
-    cadastros_saude = c.fetchall()
+    cadastros_saude = cursor.fetchall()
     
+    cursor.close()
     conn.close()
     
     stats = {
