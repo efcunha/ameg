@@ -1199,23 +1199,54 @@ def exportar():
     elif tipo == 'saude':
         if cadastro_id:
             logger.info(f"🏥 Buscando dados de saúde para cadastro_id={cadastro_id}")
-            cursor.execute('''SELECT nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
-                             usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
-                             tem_deficiencia, tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais FROM cadastros 
-                             WHERE id = %s''', (cadastro_id,))
-            dados = cursor.fetchall()
-            logger.info(f"📊 Encontrados {len(dados)} registros para cadastro_id={cadastro_id}")
+            # Buscar cadastro específico
+            cursor.execute('SELECT id, nome_completo, idade, telefone, bairro FROM cadastros WHERE id = %s', (cadastro_id,))
+            cadastro_base = cursor.fetchone()
+            
+            if cadastro_base:
+                # Buscar dados de saúde das pessoas
+                cursor.execute("""SELECT nome_pessoa, tem_doenca_cronica, doencas_cronicas,
+                                 usa_medicamento_continuo, medicamentos, tem_doenca_mental, doencas_mentais,
+                                 tem_deficiencia, deficiencias, precisa_cuidados_especiais, cuidados_especiais
+                                 FROM dados_saude_pessoa 
+                                 WHERE cadastro_id = %s 
+                                 AND (tem_doenca_cronica = 'Sim' OR usa_medicamento_continuo = 'Sim' 
+                                 OR tem_doenca_mental = 'Sim' OR tem_deficiencia = 'Sim' 
+                                 OR precisa_cuidados_especiais = 'Sim')
+                                 ORDER BY nome_pessoa""", (cadastro_id,))
+                pessoas_saude = cursor.fetchall()
+                dados = [{'cadastro': cadastro_base, 'pessoas_saude': pessoas_saude}]
+            else:
+                dados = []
             filename = f'relatorio_saude_{cadastro_id}'
         else:
             logger.info("🏥 Buscando todos os dados de saúde")
-            cursor.execute('''SELECT nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
-                             usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
-                             tem_deficiencia, tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais FROM cadastros 
-                             WHERE tem_doenca_cronica = %s OR usa_medicamento_continuo = %s 
-                             OR tem_doenca_mental = %s OR tem_deficiencia = %s OR precisa_cuidados_especiais = %s
-                             ORDER BY nome_completo''', ('Sim', 'Sim', 'Sim', 'Sim', 'Sim'))
-            dados = cursor.fetchall()
-            logger.info(f"📊 Encontrados {len(dados)} registros de saúde")
+            # Buscar todos os cadastros com dados de saúde
+            cursor.execute("""SELECT DISTINCT c.id, c.nome_completo, c.idade, c.telefone, c.bairro
+                            FROM cadastros c
+                            INNER JOIN dados_saude_pessoa dsp ON c.id = dsp.cadastro_id
+                            WHERE (dsp.tem_doenca_cronica = 'Sim' OR dsp.usa_medicamento_continuo = 'Sim' 
+                            OR dsp.tem_doenca_mental = 'Sim' OR dsp.tem_deficiencia = 'Sim' 
+                            OR dsp.precisa_cuidados_especiais = 'Sim')
+                            ORDER BY c.nome_completo""")
+            cadastros_base = cursor.fetchall()
+            
+            dados = []
+            for cadastro in cadastros_base:
+                cursor.execute("""SELECT nome_pessoa, tem_doenca_cronica, doencas_cronicas,
+                                 usa_medicamento_continuo, medicamentos, tem_doenca_mental, doencas_mentais,
+                                 tem_deficiencia, deficiencias, precisa_cuidados_especiais, cuidados_especiais
+                                 FROM dados_saude_pessoa 
+                                 WHERE cadastro_id = %s 
+                                 AND (tem_doenca_cronica = 'Sim' OR usa_medicamento_continuo = 'Sim' 
+                                 OR tem_doenca_mental = 'Sim' OR tem_deficiencia = 'Sim' 
+                                 OR precisa_cuidados_especiais = 'Sim')
+                                 ORDER BY nome_pessoa""", (cadastro['id'],))
+                pessoas_saude = cursor.fetchall()
+                if pessoas_saude:
+                    dados.append({'cadastro': cadastro, 'pessoas_saude': pessoas_saude})
+            
+            logger.info(f"📊 Encontrados {len(dados)} cadastros com dados de saúde")
             filename = 'relatorio_saude'
     elif tipo == 'estatistico':
         # Buscar todas as estatísticas como no relatório web
@@ -1306,9 +1337,29 @@ def exportar():
         if tipo == 'simplificado':
             writer.writerow(['Nome', 'Telefone', 'Bairro', 'Renda Familiar'])
         elif tipo == 'saude':
-            writer.writerow(['Nome', 'Idade', 'Telefone', 'Bairro', 'Doença Crônica', 'Doenças', 
+            writer.writerow(['Titular', 'Idade', 'Telefone', 'Bairro', 'Pessoa', 'Doença Crônica', 'Doenças', 
                            'Medicamento Contínuo', 'Medicamentos', 'Doença Mental', 'Doenças Mentais',
-                           'Deficiência', 'Tipo Deficiência'])
+                           'Deficiência', 'Deficiências', 'Cuidados Especiais', 'Cuidados'])
+            for item in dados:
+                cadastro = item['cadastro']
+                for pessoa in item['pessoas_saude']:
+                    writer.writerow([
+                        cadastro['nome_completo'],
+                        cadastro['idade'] or '',
+                        cadastro['telefone'] or '',
+                        cadastro['bairro'] or '',
+                        pessoa['nome_pessoa'],
+                        pessoa['tem_doenca_cronica'],
+                        pessoa['doencas_cronicas'] or '',
+                        pessoa['usa_medicamento_continuo'],
+                        pessoa['medicamentos'] or '',
+                        pessoa['tem_doenca_mental'],
+                        pessoa['doencas_mentais'] or '',
+                        pessoa['tem_deficiencia'],
+                        pessoa['deficiencias'] or '',
+                        pessoa['precisa_cuidados_especiais'],
+                        pessoa['cuidados_especiais'] or ''
+                    ])
         elif tipo == 'estatistico':
             writer.writerow(['=== RELATÓRIO ESTATÍSTICO COMPLETO ==='])
             writer.writerow([''])

@@ -52,8 +52,10 @@
     <div class="nav">
         <a href="/dashboard">Dashboard</a>
         <a href="/relatorios">← Voltar aos Relatórios</a>
-        <a href="/exportar?tipo=saude&formato=pdf" class="export-btn" style="background: #e74c3c;">📋 PDF</a>
-        <a href="/exportar?tipo=saude&formato=csv" class="export-btn">📊 CSV</a>
+        <div style="float: right;">
+            <a href="/exportar?tipo=saude&formato=pdf" class="export-btn" style="background: #e74c3c;">📋 Exportar Tudo PDF</a>
+            <a href="/exportar?tipo=saude&formato=csv" class="export-btn" style="background: #27ae60;">📊 Exportar Tudo CSV</a>
+        </div>
     </div>
     
     <div class="container">
@@ -165,7 +167,7 @@
                         {% if loop.first %}
                         <td class="actions-cell" rowspan="{{ item.pessoas_saude|length }}">
                             <a href="/arquivos_saude/{{ item.cadastro.id }}" style="color: #3498db;" title="Ver arquivos de saúde">📁 Arquivos</a>
-                            <a href="/exportar?tipo=saude&formato=pdf&cadastro_id={{ item.cadastro.id }}" style="color: #e74c3c;" title="Exportar PDF individual">📋 PDF</a>
+                            <a href="/exportar?tipo=saude&formato=pdf&cadastro_id={{ item.cadastro.id }}" style="color: #e74c3c;" title="Exportar PDF individual">📋 PDF Individual</a>
                         </td>
                         {% endif %}
                     </tr>
