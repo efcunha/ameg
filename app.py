@@ -2547,8 +2547,6 @@ def editar_cadastro(cadastro_id):
             cursor.execute('SELECT * FROM dados_saude_pessoa WHERE cadastro_id = %s ORDER BY id', (cadastro_id,))
             dados_saude_pessoas = cursor.fetchall()
             logger.debug(f"Dados de saúde encontrados para {len(dados_saude_pessoas)} pessoas")
-            
-            arquivos_saude = cursor.fetchall()
             logger.debug(f"Encontrados {len(arquivos_saude)} arquivos de saúde")
         
         cursor.close()
