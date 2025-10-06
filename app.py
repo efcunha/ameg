@@ -1195,15 +1195,17 @@ def exportar():
                     f"R$ {row[3] or '0'}" if row[3] else 'Não informado'
                 ])
         elif tipo == 'saude':
-            table_data = [['Nome', 'Idade', 'Telefone', 'Bairro', 'Doença Crônica', 'Medicamento']]
+            table_data = [['Nome', 'Idade', 'Telefone', 'Bairro', 'Doenças Crônicas', 'Medicamentos', 'Doenças Mentais', 'Deficiências']]
             for row in dados:
                 table_data.append([
-                    str(row[0] or ''),
-                    str(row[1] or ''),
-                    str(row[2] or ''),
-                    str(row[3] or ''),
-                    str(row[4] or ''),
-                    str(row[6] or '')
+                    str(row[0] or ''),  # nome_completo
+                    str(row[1] or ''),  # idade
+                    str(row[2] or ''),  # telefone
+                    str(row[3] or ''),  # bairro
+                    str(row[5] or 'Não informado') if row[4] == 'Sim' else 'Não',  # doencas_cronicas
+                    str(row[7] or 'Não informado') if row[6] == 'Sim' else 'Não',  # medicamentos_continuos
+                    str(row[9] or 'Não informado') if row[8] == 'Sim' else 'Não',  # doencas_mentais
+                    str(row[11] or 'Não informado') if row[10] == 'Sim' else 'Não'  # tipo_deficiencia
                 ])
         elif tipo == 'estatistico':
             # Criar múltiplas tabelas para o relatório estatístico completo
@@ -1639,16 +1641,35 @@ def exportar():
         # Criar tabela (exceto para estatístico, renda e cadastro individual que já criaram seus próprios elementos)
         if tipo not in ['estatistico', 'renda'] and not cadastro_id:
             table = Table(table_data)
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
+            
+            # Estilo específico para relatório de saúde com mais colunas
+            if tipo == 'saude':
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 8),
+                    ('FONTSIZE', (0, 1), (-1, -1), 7),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                    ('TOPPADDING', (0, 1), (-1, -1), 4),
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('WORDWRAP', (0, 0), (-1, -1), True)
+                ]))
+            else:
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
             elements.append(table)
         doc.build(elements)
         
