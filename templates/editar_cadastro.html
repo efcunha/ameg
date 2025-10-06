@@ -19,6 +19,18 @@
         .btn { background: #27ae60; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
         .btn:hover { background: #229954; }
         .logout { float: right; color: white; text-decoration: none; }
+        
+        /* Estilos para botões de foto */
+        .photo-controls .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+        }
+        
+        #photoPlaceholder:hover {
+            border-color: #3498db !important;
+            background: linear-gradient(135deg, #d5dbdb 0%, #a6acaf 100%) !important;
+            transform: scale(1.02);
+        }
     </style>
 </head>
 <body>
@@ -42,23 +54,35 @@
                 <h3>1. DADOS DO TITULAR</h3>
                 
                 <!-- Campo de Foto 3x4 -->
-                <div class="form-group">
-                    <label>Foto 3x4 do Titular</label>
-                    <div class="photo-capture">
-                        <div class="photo-preview">
-                            <canvas id="photoCanvas" width="240" height="320" style="border: 2px dashed #ddd; {% if cadastro.foto_base64 %}display: block;{% else %}display: none;{% endif %}"></canvas>
-                            <div id="photoPlaceholder" style="width: 240px; height: 320px; border: 2px dashed #ddd; display: {% if cadastro.foto_base64 %}none{% else %}flex{% endif %}; align-items: center; justify-content: center; background: #f9f9f9; color: #666;">
-                                Clique para capturar foto
+                <div class="form-group" style="text-align: center; margin-bottom: 30px;">
+                    <label style="font-size: 16px; color: #2c3e50; margin-bottom: 15px;">📷 Foto 3x4 do Titular</label>
+                    <div class="photo-capture" style="display: inline-block; background: #f8f9fa; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <div class="photo-preview" style="margin-bottom: 15px;">
+                            <canvas id="photoCanvas" width="240" height="320" style="border: 3px solid #3498db; border-radius: 10px; {% if cadastro.foto_base64 %}display: block;{% else %}display: none;{% endif %} box-shadow: 0 2px 10px rgba(0,0,0,0.1);"></canvas>
+                            <div id="photoPlaceholder" style="width: 240px; height: 320px; border: 3px dashed #bdc3c7; border-radius: 10px; display: {% if cadastro.foto_base64 %}none{% else %}flex{% endif %}; align-items: center; justify-content: center; background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%); color: #7f8c8d; cursor: pointer; transition: all 0.3s ease; font-size: 14px; text-align: center; padding: 20px; box-sizing: border-box;">
+                                <div>
+                                    <div style="font-size: 48px; margin-bottom: 10px;">📸</div>
+                                    <div style="font-weight: bold;">Clique para capturar</div>
+                                    <div style="font-size: 12px; margin-top: 5px;">ou use os botões abaixo</div>
+                                </div>
                             </div>
                         </div>
-                        <div class="photo-controls" style="margin-top: 10px;">
-                            <button type="button" id="startCamera" class="btn" style="background: #3498db; margin-right: 10px;">📷 Abrir Câmera</button>
-                            <button type="button" id="capturePhoto" class="btn" style="background: #27ae60; display: none;">📸 Capturar</button>
-                            <button type="button" id="retakePhoto" class="btn" style="background: #e74c3c; {% if cadastro.foto_base64 %}display: inline-block;{% else %}display: none;{% endif %}">🔄 Nova Foto</button>
-                            <input type="file" id="uploadPhoto" accept="image/*" style="display: none;">
-                            <button type="button" id="uploadBtn" class="btn" style="background: #f39c12;">📁 Upload</button>
+                        <div class="photo-controls" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                            <button type="button" id="startCamera" class="btn" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);">
+                                📷 Câmera
+                            </button>
+                            <button type="button" id="capturePhoto" class="btn" style="background: linear-gradient(135deg, #27ae60, #229954); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3); display: none;">
+                                📸 Capturar
+                            </button>
+                            <button type="button" id="retakePhoto" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3); {% if cadastro.foto_base64 %}display: inline-block;{% else %}display: none;{% endif %}">
+                                🔄 Nova Foto
+                            </button>
+                            <button type="button" id="uploadBtn" class="btn" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);">
+                                📁 Upload
+                            </button>
                         </div>
-                        <video id="cameraVideo" width="240" height="320" autoplay style="display: none; border: 1px solid #ddd;"></video>
+                        <video id="cameraVideo" width="240" height="320" autoplay style="display: none; border: 3px solid #27ae60; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);"></video>
+                        <input type="file" id="uploadPhoto" accept="image/*" style="display: none;">
                         <input type="hidden" name="foto_base64" id="fotoBase64" value="{{ cadastro.foto_base64 or '' }}">
                     </div>
                 </div>
