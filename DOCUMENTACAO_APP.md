@@ -261,12 +261,19 @@ def add_security_headers(response):
 - Verificação de privilégios administrativos
 - Validação de sessão Flask
 
-### 3. Upload Seguro
+### 3. Captura de Foto 3x4
+- **API getUserMedia**: Acesso à webcam do usuário
+- **Canvas HTML5**: Processamento e redimensionamento da imagem
+- **Base64**: Armazenamento da foto como string no banco
+- **Upload alternativo**: Suporte a upload de arquivos de imagem
+- **Validação**: Redimensionamento automático para 120x160px (proporção 3x4)
+
+### 4. Upload Seguro
 - Validação de extensões de arquivo
 - Nomes de arquivo seguros com `secure_filename()`
 - Limite de tamanho de arquivo (16MB)
 
-### 4. Validação de Dados
+### 5. Validação de Dados
 - Validação de limites de caracteres
 - Sanitização de entrada de dados
 - Proteção contra SQL injection (uso de parâmetros)
@@ -290,7 +297,8 @@ def add_security_headers(response):
 session['usuario']  # Nome do usuário logado
 ```
 
-### 2. Campos do Cadastro (57 campos)
+### 2. Campos do Cadastro (58 campos + foto)
+- **Foto 3x4**: Imagem em Base64 capturada via webcam ou upload
 - **Dados Pessoais**: nome, CPF, RG, telefone, endereço
 - **Dados Familiares**: companheiro, filhos, renda
 - **Dados Habitacionais**: tipo de casa, energia, água, esgoto

@@ -10,3 +10,4 @@ __pycache__/
 .DS_Store
 server.log
 ameg.db
+*.md

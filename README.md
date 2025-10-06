@@ -7,6 +7,7 @@ Sistema web para cadastro familiar da Associação dos Ambulantes e Trabalhadore
 - **Autenticação**: Login com usuário e senha
 - **Dashboard**: Visão geral dos cadastros
 - **Cadastro**: Formulário completo baseado no documento AMEG
+- **Captura de Foto**: Foto 3x4 via webcam com API getUserMedia
 - **Relatórios**: Listagem e estatísticas dos cadastrados
 - **Exportação**: Download dos dados em CSV
 - **Deploy**: Suporte para Railway com PostgreSQL
@@ -100,7 +101,7 @@ ameg/
 
 ### Tabelas
 - `usuarios`: Controle de acesso
-- `cadastros`: Dados completos dos cadastrados (57 campos)
+- `cadastros`: Dados completos dos cadastrados (58 campos + foto_base64)
 - `arquivos_saude`: Arquivos médicos enviados
 
 ## Deploy no Railway
@@ -126,6 +127,7 @@ git push
 
 ## Campos do Cadastro
 
+- **Foto 3x4**: Captura via webcam ou upload de arquivo
 - Dados pessoais: Nome, endereço, telefone, CPF, RG
 - Dados familiares: Companheiro, filhos, renda
 - Dados habitacionais: Casa, energia, água, esgoto
