@@ -51,37 +51,35 @@
             <h2>Cadastro Familiar</h2>
             
             <form method="POST" enctype="multipart/form-data">
-                <h3>1. DADOS DO TITULAR</h3>
-                
-                <!-- Campo de Foto 3x4 -->
-                <div class="form-group" style="text-align: center; margin-bottom: 30px;">
-                    <label style="font-size: 16px; color: #2c3e50; margin-bottom: 15px;">📷 Foto 3x4 do Titular</label>
-                    <div class="photo-capture" style="display: inline-block; background: #f8f9fa; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                        <div class="photo-preview" style="margin-bottom: 15px;">
-                            <canvas id="photoCanvas" width="240" height="320" style="border: 3px solid #3498db; border-radius: 10px; display: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1);"></canvas>
-                            <div id="photoPlaceholder" style="width: 240px; height: 320px; border: 3px dashed #bdc3c7; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%); color: #7f8c8d; cursor: pointer; transition: all 0.3s ease; font-size: 14px; text-align: center; padding: 20px; box-sizing: border-box;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                    <h3 style="margin: 0; flex: 1;">1. DADOS DO TITULAR</h3>
+                    
+                    <!-- Campo de Foto 3x4 - Posicionado à direita -->
+                    <div class="photo-capture" style="background: #f8f9fa; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div class="photo-preview" style="margin-bottom: 10px;">
+                            <canvas id="photoCanvas" width="120" height="160" style="border: 2px solid #3498db; border-radius: 8px; display: none; box-shadow: 0 1px 5px rgba(0,0,0,0.1);"></canvas>
+                            <div id="photoPlaceholder" style="width: 120px; height: 160px; border: 2px dashed #bdc3c7; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%); color: #7f8c8d; cursor: pointer; transition: all 0.3s ease; font-size: 10px; text-align: center; padding: 10px; box-sizing: border-box;">
                                 <div>
-                                    <div style="font-size: 48px; margin-bottom: 10px;">📸</div>
-                                    <div style="font-weight: bold;">Clique para capturar</div>
-                                    <div style="font-size: 12px; margin-top: 5px;">ou use os botões abaixo</div>
+                                    <div style="font-size: 24px; margin-bottom: 5px;">📸</div>
+                                    <div style="font-weight: bold; font-size: 9px;">Foto 3x4</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="photo-controls" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                            <button type="button" id="startCamera" class="btn" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);">
-                                📷 Câmera
+                        <div class="photo-controls" style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
+                            <button type="button" id="startCamera" class="btn" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; padding: 6px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; transition: all 0.3s ease;">
+                                📷
                             </button>
-                            <button type="button" id="capturePhoto" class="btn" style="background: linear-gradient(135deg, #27ae60, #229954); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3); display: none;">
-                                📸 Capturar
+                            <button type="button" id="capturePhoto" class="btn" style="background: linear-gradient(135deg, #27ae60, #229954); color: white; border: none; padding: 6px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; transition: all 0.3s ease; display: none;">
+                                📸
                             </button>
-                            <button type="button" id="retakePhoto" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3); display: none;">
-                                🔄 Nova Foto
+                            <button type="button" id="retakePhoto" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; border: none; padding: 6px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; transition: all 0.3s ease; display: none;">
+                                🔄
                             </button>
-                            <button type="button" id="uploadBtn" class="btn" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);">
-                                📁 Upload
+                            <button type="button" id="uploadBtn" class="btn" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; border: none; padding: 6px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; transition: all 0.3s ease;">
+                                📁
                             </button>
                         </div>
-                        <video id="cameraVideo" width="240" height="320" autoplay style="display: none; border: 3px solid #27ae60; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);"></video>
+                        <video id="cameraVideo" width="120" height="160" autoplay style="display: none; border: 2px solid #27ae60; border-radius: 8px;"></video>
                         <input type="file" id="uploadPhoto" accept="image/*" style="display: none;">
                         <input type="hidden" name="foto_base64" id="fotoBase64">
                     </div>
@@ -1427,8 +1425,8 @@
         try {
             stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { 
-                    width: 240, 
-                    height: 320,
+                    width: 120, 
+                    height: 160,
                     facingMode: 'user' 
                 } 
             });
@@ -1445,7 +1443,7 @@
 
     // Capturar foto
     captureBtn.addEventListener('click', () => {
-        ctx.drawImage(video, 0, 0, 240, 320);
+        ctx.drawImage(video, 0, 0, 120, 160);
         const imageData = canvas.toDataURL('image/jpeg', 0.8);
         fotoBase64Input.value = imageData;
         
@@ -1481,8 +1479,8 @@
             reader.onload = (e) => {
                 const img = new Image();
                 img.onload = () => {
-                    // Redimensionar para 240x320 (3x4)
-                    ctx.drawImage(img, 0, 0, 240, 320);
+                    // Redimensionar para 120x160 (3x4)
+                    ctx.drawImage(img, 0, 0, 120, 160);
                     const imageData = canvas.toDataURL('image/jpeg', 0.8);
                     fotoBase64Input.value = imageData;
                     
