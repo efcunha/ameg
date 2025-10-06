@@ -16,20 +16,21 @@ Sistema web para cadastro familiar da Associação dos Ambulantes e Trabalhadore
 ### 1. Desenvolvimento Local
 ```bash
 cd /home/efcunha/GitHub/ameg
-./testar.sh
+python app.py
 ```
 
 ### 2. Produção Local
 ```bash
 cd /home/efcunha/GitHub/ameg
-source venv/bin/activate
-python run.py
+python app.py
 ```
 
 ### 3. Deploy no Railway
 ```bash
 cd /home/efcunha/GitHub/ameg
-./deploy-railway.sh
+git add .
+git commit -m "Deploy updates"
+git push
 ```
 
 ## Acesso ao Sistema
@@ -49,20 +50,41 @@ cd /home/efcunha/GitHub/ameg
 ```
 ameg/
 ├── app.py                  # Aplicação principal Flask
-├── run.py                  # Script para desenvolvimento local
 ├── database.py             # Módulo de banco PostgreSQL/SQLite
-├── db_helper.py            # Helper para consultas híbridas
 ├── config.py               # Configurações por ambiente
-├── test_ameg.py            # Testes automatizados
-├── testar.sh               # Script executável para testes
-├── deploy-railway.sh       # Script de deploy Railway
-├── railway.json            # Configuração Railway
-├── railway.dockerfile      # Dockerfile para Railway
+├── reset_counter.py        # Script para zerar contador do banco
 ├── requirements.txt        # Dependências Python
-├── ameg.db                 # Banco SQLite (local)
+├── Dockerfile              # Dockerfile para Railway
+├── start.sh                # Script de inicialização
+├── railway.toml            # Configuração Railway
+├── railway.json            # Configuração Railway (legacy)
+├── .railwayignore          # Arquivos ignorados no deploy
+├── .dockerignore           # Arquivos ignorados no Docker
+├── .env.example            # Exemplo de variáveis de ambiente
+├── .gitignore              # Arquivos ignorados no Git
 ├── templates/              # Templates HTML
-├── uploads/saude/          # Arquivos de saúde enviados
-└── venv/                   # Ambiente virtual Python
+│   ├── login.html          # Página de login
+│   ├── dashboard.html      # Dashboard principal
+│   ├── cadastrar.html      # Formulário de cadastro
+│   ├── editar_cadastro.html # Edição de cadastros
+│   ├── relatorios.html     # Menu de relatórios
+│   ├── tipos_relatorios.html # Tipos de relatórios
+│   ├── relatorio_*.html    # Diversos relatórios
+│   ├── arquivos_*.html     # Gestão de arquivos
+│   ├── usuarios.html       # Gestão de usuários
+│   ├── criar_usuario.html  # Criação de usuários
+│   ├── editar_usuario.html # Edição de usuários
+│   └── ficha.html          # Ficha individual
+├── static/                 # Arquivos estáticos
+│   ├── css/
+│   │   └── mobile.css      # Estilos responsivos
+│   └── img/
+│       └── logo-ameg.jpeg  # Logo da AMEG
+├── imagens/                # Imagens do projeto
+│   └── LOGO AMEG.jpeg      # Logo original
+├── data/                   # Dados e uploads
+├── __pycache__/            # Cache Python
+└── .git/                   # Controle de versão Git
 ```
 
 ## Banco de Dados
@@ -91,7 +113,9 @@ railway login
 
 ### Deploy Automático
 ```bash
-./deploy-railway.sh
+git add .
+git commit -m "Deploy updates"
+git push
 ```
 
 ### Variáveis de Ambiente (Railway)
