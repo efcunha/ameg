@@ -251,6 +251,11 @@ def allowed_file(filename):
 def static_files(filename):
     return send_from_directory('static', filename)
 
+@app.route('/logo')
+def logo():
+    """Rota específica para o logo"""
+    return send_from_directory('static/img', 'logo-ameg.jpeg')
+
 @app.route('/')
 def login():
     if 'usuario' in session:
