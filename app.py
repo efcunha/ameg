@@ -2278,9 +2278,32 @@ def atualizar_cadastro(cadastro_id):
         logger.debug(f"Linhas afetadas: {rows_affected}")
         
         if rows_affected > 0:
+            # Upload de novos arquivos usando a mesma conexão
+            uploaded_files = []
+            for file_type in ['laudo', 'receita', 'imagem']:
+                # Processar arrays de arquivos
+                files = request.files.getlist(f'{file_type}[]')
+                descriptions = request.form.getlist(f'descricao_{file_type}[]')
+                
+                for i, file in enumerate(files):
+                    if file and file.filename and allowed_file(file.filename):
+                        logger.debug(f"Processando arquivo: {file.filename} ({file_type})")
+                        file_data = file.read()
+                        descricao = descriptions[i] if i < len(descriptions) else ''
+                        
+                        cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (%s, %s, %s, %s, %s)', 
+                                    (cadastro_id, file.filename, file_type, file_data, descricao))
+                        
+                        uploaded_files.append(f"{file_type}: {file.filename}")
+                        logger.debug(f"Arquivo {file.filename} salvo com sucesso")
+            
             conn.commit()
             logger.info(f"✅ Cadastro {cadastro_id} atualizado com sucesso")
-            flash('Cadastro atualizado com sucesso!')
+            
+            if uploaded_files:
+                flash(f'Cadastro atualizado com sucesso! Novos arquivos: {", ".join(uploaded_files)}')
+            else:
+                flash('Cadastro atualizado com sucesso!')
         else:
             logger.warning(f"⚠️ Nenhuma linha foi atualizada para cadastro {cadastro_id}")
             flash('Nenhuma alteração foi feita no cadastro.')
