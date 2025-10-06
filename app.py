@@ -586,18 +586,21 @@ def cadastrar():
             # Upload de arquivos usando a mesma conexão
             uploaded_files = []
             if cadastro_id:
-                for file_key in ['laudo', 'receita', 'imagem']:
-                    if file_key in request.files:
-                        file = request.files[file_key]
+                for file_type in ['laudo', 'receita', 'imagem']:
+                    # Processar arrays de arquivos
+                    files = request.files.getlist(f'{file_type}[]')
+                    descriptions = request.form.getlist(f'descricao_{file_type}[]')
+                    
+                    for i, file in enumerate(files):
                         if file and file.filename and allowed_file(file.filename):
-                            logger.debug(f"Processando arquivo: {file.filename} ({file_key})")
+                            logger.debug(f"Processando arquivo: {file.filename} ({file_type})")
                             file_data = file.read()
-                            descricao = request.form.get(f'descricao_{file_key}', '')
+                            descricao = descriptions[i] if i < len(descriptions) else ''
                             
                             cursor.execute('INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) VALUES (%s, %s, %s, %s, %s)', 
-                                        (cadastro_id, file.filename, file_key, file_data, descricao))
+                                        (cadastro_id, file.filename, file_type, file_data, descricao))
                             
-                            uploaded_files.append(file_key)
+                            uploaded_files.append(f"{file_type}: {file.filename}")
                             logger.debug(f"Arquivo {file.filename} salvo com sucesso")
             
             conn.commit()
