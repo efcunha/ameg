@@ -391,12 +391,12 @@
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Renda Familiar Bruta (R$)</label>
-                        <input type="number" step="0.01" name="renda_familiar" value="{{ cadastro.renda_familiar if cadastro else '0' }}" required min="0">
+                        <label>Renda Familiar Bruta (R$) *</label>
+                        <input type="number" step="0.01" name="renda_familiar" value="{{ cadastro.renda_familiar if cadastro and cadastro.renda_familiar > 0 else '' }}" required min="0.01" placeholder="Digite a renda familiar">
                     </div>
                     <div class="form-group">
-                        <label>Renda Per Capita (R$)</label>
-                        <input type="number" step="0.01" name="renda_per_capita" value="{{ cadastro.renda_per_capita if cadastro else '0' }}" required min="0">
+                        <label>Renda Per Capita (R$) *</label>
+                        <input type="number" step="0.01" name="renda_per_capita" value="{{ cadastro.renda_per_capita if cadastro and cadastro.renda_per_capita > 0 else '' }}" required min="0.01" placeholder="Digite a renda per capita">
                     </div>
                     <div class="form-group">
                         <label>Bolsa Família (R$)</label>

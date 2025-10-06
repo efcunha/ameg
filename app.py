@@ -2292,10 +2292,11 @@ def editar_cadastro(cadastro_id):
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         logger.debug(f"Buscando cadastro ID {cadastro_id}")
         
-        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
+        cursor.execute('SELECT *, foto_base64 FROM cadastros WHERE id = %s', (cadastro_id,))
         
         cadastro = cursor.fetchone()
         logger.debug(f"Cadastro encontrado: {cadastro is not None}")
+        logger.debug(f"Foto presente: {'foto_base64' in cadastro if cadastro else 'N/A'}")
         
         # Buscar arquivos de saúde associados
         arquivos_saude = []
