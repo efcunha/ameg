@@ -497,25 +497,25 @@
                                 <div class="checkbox-group">
                                     <div class="checkbox-item">
                                         <input type="checkbox" id="medicamento_1" name="saude_condicoes_1[]" value="medicamento" onchange="toggleEspecificacao(this, 'spec_medicamento_1')">
-                                        <label for="medicamento_1">Usa medicamento contínuo</label>
+                                        <label for="medicamento_1">Usa medicamento contínuo?</label>
                                         <input type="text" id="spec_medicamento_1" name="saude_medicamentos_1" placeholder="Especificar medicamentos" disabled>
                                     </div>
                                     
                                     <div class="checkbox-item">
                                         <input type="checkbox" id="doenca_mental_1" name="saude_condicoes_1[]" value="doenca_mental" onchange="toggleEspecificacao(this, 'spec_doenca_mental_1')">
-                                        <label for="doenca_mental_1">Tem doença mental</label>
+                                        <label for="doenca_mental_1">Tem doença mental?</label>
                                         <input type="text" id="spec_doenca_mental_1" name="saude_doencas_mentais_1" placeholder="Especificar doenças mentais" disabled>
                                     </div>
                                     
                                     <div class="checkbox-item">
                                         <input type="checkbox" id="deficiencia_1" name="saude_condicoes_1[]" value="deficiencia" onchange="toggleEspecificacao(this, 'spec_deficiencia_1')">
-                                        <label for="deficiencia_1">Tem deficiência</label>
+                                        <label for="deficiencia_1">Tem deficiência?</label>
                                         <input type="text" id="spec_deficiencia_1" name="saude_deficiencias_1" placeholder="Especificar deficiências" disabled>
                                     </div>
                                     
                                     <div class="checkbox-item">
                                         <input type="checkbox" id="cuidados_1" name="saude_condicoes_1[]" value="cuidados" onchange="toggleEspecificacao(this, 'spec_cuidados_1')">
-                                        <label for="cuidados_1">Precisa de cuidados especiais</label>
+                                        <label for="cuidados_1">Precisa de cuidados especiais?</label>
                                         <input type="text" id="spec_cuidados_1" name="saude_cuidados_especiais_1" placeholder="Especificar cuidados necessários" disabled>
                                     </div>
                                 </div>
@@ -570,25 +570,25 @@
                                 <div class="checkbox-group">
                                     <div class="checkbox-item">
                                         <input type="checkbox" id="medicamento_${contadorPessoas}" name="saude_condicoes_${contadorPessoas}[]" value="medicamento" onchange="toggleEspecificacao(this, 'spec_medicamento_${contadorPessoas}')">
-                                        <label for="medicamento_${contadorPessoas}">Usa medicamento contínuo</label>
+                                        <label for="medicamento_${contadorPessoas}">Usa medicamento contínuo?</label>
                                         <input type="text" id="spec_medicamento_${contadorPessoas}" name="saude_medicamentos_${contadorPessoas}" placeholder="Especificar medicamentos" disabled>
                                     </div>
                                     
                                     <div class="checkbox-item">
                                         <input type="checkbox" id="doenca_mental_${contadorPessoas}" name="saude_condicoes_${contadorPessoas}[]" value="doenca_mental" onchange="toggleEspecificacao(this, 'spec_doenca_mental_${contadorPessoas}')">
-                                        <label for="doenca_mental_${contadorPessoas}">Tem doença mental</label>
+                                        <label for="doenca_mental_${contadorPessoas}">Tem doença mental?</label>
                                         <input type="text" id="spec_doenca_mental_${contadorPessoas}" name="saude_doencas_mentais_${contadorPessoas}" placeholder="Especificar doenças mentais" disabled>
                                     </div>
                                     
                                     <div class="checkbox-item">
                                         <input type="checkbox" id="deficiencia_${contadorPessoas}" name="saude_condicoes_${contadorPessoas}[]" value="deficiencia" onchange="toggleEspecificacao(this, 'spec_deficiencia_${contadorPessoas}')">
-                                        <label for="deficiencia_${contadorPessoas}">Tem deficiência</label>
+                                        <label for="deficiencia_${contadorPessoas}">Tem deficiência?</label>
                                         <input type="text" id="spec_deficiencia_${contadorPessoas}" name="saude_deficiencias_${contadorPessoas}" placeholder="Especificar deficiências" disabled>
                                     </div>
                                     
                                     <div class="checkbox-item">
                                         <input type="checkbox" id="cuidados_${contadorPessoas}" name="saude_condicoes_${contadorPessoas}[]" value="cuidados" onchange="toggleEspecificacao(this, 'spec_cuidados_${contadorPessoas}')">
-                                        <label for="cuidados_${contadorPessoas}">Precisa de cuidados especiais</label>
+                                        <label for="cuidados_${contadorPessoas}">Precisa de cuidados especiais?</label>
                                         <input type="text" id="spec_cuidados_${contadorPessoas}" name="saude_cuidados_especiais_${contadorPessoas}" placeholder="Especificar cuidados necessários" disabled>
                                     </div>
                                 </div>
@@ -644,14 +644,14 @@
                 .checkbox-group {
                     display: flex;
                     flex-direction: column;
-                    gap: 15px;
+                    gap: 10px;
                 }
                 
                 .checkbox-item {
                     display: flex;
                     align-items: center;
-                    gap: 10px;
-                    padding: 10px;
+                    gap: 8px;
+                    padding: 8px;
                     border: 1px solid #ddd;
                     border-radius: 5px;
                     background: white;
@@ -662,14 +662,15 @@
                 }
                 
                 .checkbox-item label {
-                    min-width: 200px;
+                    min-width: 180px;
                     margin: 0;
                     font-weight: normal;
                 }
                 
                 .checkbox-item input[type="text"] {
-                    flex: 1;
-                    padding: 8px;
+                    flex: 2;
+                    min-width: 250px;
+                    padding: 10px;
                     border: 1px solid #ccc;
                     border-radius: 3px;
                 }
@@ -1354,32 +1355,6 @@
         }
     }
 
-    // Função para validar campos de saúde obrigatórios
-    function validateSaude() {
-        const validations = [
-            { checkbox: 'tem_doenca_cronica', field: 'doencas_cronicas', label: 'Quais doenças crônicas?' },
-            { checkbox: 'usa_medicamento_continuo', field: 'medicamentos_continuos', label: 'Quais medicamentos?' },
-            { checkbox: 'tem_doenca_mental', field: 'doencas_mentais', label: 'Quais doenças mentais?' },
-            { checkbox: 'tem_deficiencia', field: 'tipo_deficiencia', label: 'Tipo de deficiência?' },
-            { checkbox: 'precisa_cuidados_especiais', field: 'cuidados_especiais', label: 'Quais cuidados?' }
-        ];
-        
-        let hasErrors = false;
-        validations.forEach(validation => {
-            const checkbox = document.querySelector(`[name="${validation.checkbox}"]`);
-            const field = document.querySelector(`[name="${validation.field}"]`);
-            
-            if (checkbox && field && checkbox.checked && !field.value.trim()) {
-                showFieldError(field, `${validation.label} é obrigatório quando marcado como "Sim"`);
-                hasErrors = true;
-            } else if (field) {
-                clearFieldError(field);
-            }
-        });
-        
-        return !hasErrors;
-    }
-
     // Função para validar campos "Outro" obrigatórios
     function validateOutroFields() {
         const validations = [
@@ -1501,15 +1476,6 @@
             }
         });
 
-        // Validação campos saúde
-        const saudeCheckboxes = ['tem_doenca_cronica', 'usa_medicamento_continuo', 'tem_doenca_mental', 'tem_deficiencia', 'precisa_cuidados_especiais'];
-        saudeCheckboxes.forEach(fieldName => {
-            const input = document.querySelector(`[name="${fieldName}"]`);
-            if (input) {
-                input.addEventListener('change', validateSaude);
-            }
-        });
-
         // Validação campos "Outro"
         const outroCheckboxes = ['trabalho_incomoda_outro', 'fonte_renda_outro'];
         outroCheckboxes.forEach(fieldName => {
@@ -1541,7 +1507,6 @@
             if (!validateAge()) hasErrors = true;
             if (!validateCompanheiro()) hasErrors = true;
             if (!validateFamiliaSum()) hasErrors = true;
-            if (!validateSaude()) hasErrors = true;
             if (!validateOutroFields()) hasErrors = true;
             if (!validateHorario()) hasErrors = true;
             
