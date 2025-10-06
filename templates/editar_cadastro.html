@@ -78,11 +78,11 @@
                     </div>
                     <video id="cameraVideo" width="120" height="160" autoplay style="display: none; border: 2px solid #27ae60; border-radius: 8px;"></video>
                     <input type="file" id="uploadPhoto" accept="image/*" style="display: none;">
-                    <input type="hidden" name="foto_base64" id="fotoBase64" value="{{ cadastro.foto_base64 or '' }}">
                 </div>
             </div>
             
             <form method="POST" action="/atualizar_cadastro/{{ cadastro.id }}" enctype="multipart/form-data">
+                <input type="hidden" name="foto_base64" id="fotoBase64" value="{{ cadastro.foto_base64 or '' }}">
                 <h3 style="text-align: center;">1. DADOS DO TITULAR</h3>
                 
                 <div class="form-group">
