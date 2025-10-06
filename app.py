@@ -1,5 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, send_from_directory
+from flask_compress import Compress
 from database import get_db_connection, init_db_tables, create_admin_user, registrar_auditoria
+import os
+import gzip
 
 # Cache simples em memória para estatísticas
 stats_cache = {
@@ -71,6 +74,28 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'ameg_secret_2024_fallback_key_change_in_production')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+# Configurar compressão
+Compress(app)
+
+# Middleware para servir arquivos comprimidos
+@app.after_request
+def after_request(response):
+    # Adiciona headers de cache para arquivos estáticos
+    if request.endpoint == 'static':
+        response.cache_control.max_age = 31536000  # 1 ano
+        response.cache_control.public = True
+    
+    # Compressão manual para arquivos CSS/JS se disponível
+    if (request.endpoint == 'static' and 
+        request.accept_encodings.accept('gzip') and
+        (request.path.endswith('.css') or request.path.endswith('.js'))):
+        
+        gzip_path = request.path + '.gz'
+        if os.path.exists('static' + gzip_path.replace('/static', '')):
+            response.headers['Content-Encoding'] = 'gzip'
+    
+    return response
 
 logger.info("🚀 Iniciando aplicação AMEG")
 logger.info(f"RAILWAY_ENVIRONMENT: {os.environ.get('RAILWAY_ENVIRONMENT')}")
