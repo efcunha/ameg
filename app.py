@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, send_from_directory
-from database import get_db_connection, init_db_tables, create_admin_user
+from database import get_db_connection, init_db_tables, create_admin_user, registrar_auditoria
 from psycopg2.extras import RealDictCursor
 import csv
 import io
@@ -194,6 +194,17 @@ def fazer_login():
     
     if user and check_password_hash(user[0], senha):
         session['usuario'] = usuario
+        
+        # Registrar auditoria de login
+        registrar_auditoria(
+            usuario=usuario,
+            acao='LOGIN',
+            tabela='usuarios',
+            dados_novos=f"Login realizado com sucesso",
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent')
+        )
+        
         return redirect(url_for('dashboard'))
     else:
         flash('Usuário ou senha incorretos!')
@@ -567,6 +578,16 @@ def cadastrar():
             conn.commit()
             
             logger.info("✅ INSERT executado com sucesso!")
+            
+            # Registrar auditoria
+            registrar_auditoria(
+                usuario=session.get('usuario', 'Sistema'),
+                acao='INSERT',
+                tabela='cadastros',
+                dados_novos=f"Nome: {request.form.get('nome_completo')}, CPF: {request.form.get('cpf')}",
+                ip_address=request.remote_addr,
+                user_agent=request.headers.get('User-Agent')
+            )
         
             # Para obter o ID do cadastro inserido, usar a mesma conexão
             logger.debug("🔍 Buscando ID do cadastro inserido...")
@@ -2528,6 +2549,17 @@ def atualizar_cadastro(cadastro_id):
             conn.commit()
             logger.info(f"✅ Cadastro {cadastro_id} atualizado com sucesso")
             
+            # Registrar auditoria
+            registrar_auditoria(
+                usuario=session.get('usuario', 'Sistema'),
+                acao='UPDATE',
+                tabela='cadastros',
+                registro_id=cadastro_id,
+                dados_novos=f"Nome: {request.form.get('nome_completo')}, CPF: {request.form.get('cpf')}",
+                ip_address=request.remote_addr,
+                user_agent=request.headers.get('User-Agent')
+            )
+            
             if uploaded_files:
                 flash(f'Cadastro atualizado com sucesso! Novos arquivos: {", ".join(uploaded_files)}')
             else:
@@ -2602,3 +2634,107 @@ if __name__ == '__main__':
     logger.info(f"Debug mode: {app.debug}")
     logger.info(f"Environment: {'Railway' if os.environ.get('RAILWAY_ENVIRONMENT') else 'Local'}")
     app.run(host='0.0.0.0', port=port, debug=False)
+@app.route('/auditoria')
+def auditoria():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    # Verificar se é admin
+    if session.get('tipo') != 'admin':
+        flash('Acesso negado. Apenas administradores podem acessar a auditoria.')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Parâmetros de filtro
+        usuario_filtro = request.args.get('usuario', '')
+        acao_filtro = request.args.get('acao', '')
+        tabela_filtro = request.args.get('tabela', '')
+        data_inicial = request.args.get('data_inicial', '')
+        data_final = request.args.get('data_final', '')
+        page = int(request.args.get('page', 1))
+        per_page = 50
+        
+        # Construir query com filtros
+        where_conditions = []
+        params = []
+        
+        if usuario_filtro:
+            where_conditions.append("usuario ILIKE %s")
+            params.append(f"%{usuario_filtro}%")
+        
+        if acao_filtro:
+            where_conditions.append("acao = %s")
+            params.append(acao_filtro)
+        
+        if tabela_filtro:
+            where_conditions.append("tabela = %s")
+            params.append(tabela_filtro)
+        
+        if data_inicial:
+            where_conditions.append("DATE(data_acao) >= %s")
+            params.append(data_inicial)
+        
+        if data_final:
+            where_conditions.append("DATE(data_acao) <= %s")
+            params.append(data_final)
+        
+        where_clause = ""
+        if where_conditions:
+            where_clause = "WHERE " + " AND ".join(where_conditions)
+        
+        # Contar total de registros
+        cursor.execute(f"SELECT COUNT(*) FROM auditoria {where_clause}", params)
+        total_records = cursor.fetchone()[0]
+        total_pages = (total_records + per_page - 1) // per_page
+        
+        # Buscar registros com paginação
+        offset = (page - 1) * per_page
+        cursor.execute(f"""
+            SELECT * FROM auditoria {where_clause}
+            ORDER BY data_acao DESC
+            LIMIT %s OFFSET %s
+        """, params + [per_page, offset])
+        
+        auditorias = cursor.fetchall()
+        
+        # Estatísticas
+        cursor.execute("SELECT COUNT(*) FROM auditoria")
+        stats_total = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM auditoria WHERE DATE(data_acao) = CURRENT_DATE")
+        stats_hoje = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(DISTINCT usuario) FROM auditoria WHERE DATE(data_acao) >= CURRENT_DATE - INTERVAL '7 days'")
+        stats_usuarios = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT data_acao FROM auditoria ORDER BY data_acao DESC LIMIT 1")
+        ultima_acao = cursor.fetchone()
+        stats_ultima = ultima_acao[0].strftime('%H:%M') if ultima_acao else 'N/A'
+        
+        stats = {
+            'total': stats_total,
+            'hoje': stats_hoje,
+            'usuarios_ativos': stats_usuarios,
+            'ultima_acao': stats_ultima
+        }
+        
+        # Parâmetros para paginação
+        query_params = "&".join([f"{k}={v}" for k, v in request.args.items() if k != 'page'])
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template('auditoria.html', 
+                             auditorias=auditorias,
+                             stats=stats,
+                             page=page,
+                             total_pages=total_pages,
+                             query_params=query_params)
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao carregar auditoria: {e}")
+        flash('Erro ao carregar dados de auditoria.')
+        return redirect(url_for('dashboard'))

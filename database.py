@@ -323,6 +323,25 @@ def init_db_tables():
             
         logger.debug("✅ Tabela arquivos_saude criada")
         
+        # Tabela auditoria
+        logger.debug("Criando tabela auditoria...")
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS auditoria (
+                id SERIAL PRIMARY KEY,
+                usuario VARCHAR(100) NOT NULL,
+                acao VARCHAR(50) NOT NULL,
+                tabela VARCHAR(50) NOT NULL,
+                registro_id INTEGER,
+                dados_anteriores TEXT,
+                dados_novos TEXT,
+                ip_address VARCHAR(45),
+                user_agent TEXT,
+                data_acao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        logger.debug("✅ Tabela auditoria criada")
+        
+        
         conn.commit()
         logger.debug("✅ Commit realizado")
         cursor.close()
@@ -377,3 +396,21 @@ def create_admin_user():
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise
+def registrar_auditoria(usuario, acao, tabela, registro_id=None, dados_anteriores=None, dados_novos=None, ip_address=None, user_agent=None):
+    """Registra uma ação de auditoria no banco de dados"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO auditoria (usuario, acao, tabela, registro_id, dados_anteriores, dados_novos, ip_address, user_agent)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (usuario, acao, tabela, registro_id, dados_anteriores, dados_novos, ip_address, user_agent))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        logger.debug(f"✅ Auditoria registrada: {usuario} - {acao} - {tabela}")
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao registrar auditoria: {e}")
