@@ -1004,7 +1004,7 @@ def exportar():
             logger.info(f"🏥 Buscando dados de saúde para cadastro_id={cadastro_id}")
             cursor.execute('''SELECT nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
                              usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
-                             tem_deficiencia, tipo_deficiencia FROM cadastros 
+                             tem_deficiencia, tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais FROM cadastros 
                              WHERE id = %s''', (cadastro_id,))
             dados = cursor.fetchall()
             logger.info(f"📊 Encontrados {len(dados)} registros para cadastro_id={cadastro_id}")
@@ -1013,10 +1013,10 @@ def exportar():
             logger.info("🏥 Buscando todos os dados de saúde")
             cursor.execute('''SELECT nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
                              usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
-                             tem_deficiencia, tipo_deficiencia FROM cadastros 
+                             tem_deficiencia, tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais FROM cadastros 
                              WHERE tem_doenca_cronica = %s OR usa_medicamento_continuo = %s 
-                             OR tem_doenca_mental = %s OR tem_deficiencia = %s
-                             ORDER BY nome_completo''', ('Sim', 'Sim', 'Sim', 'Sim'))
+                             OR tem_doenca_mental = %s OR tem_deficiencia = %s OR precisa_cuidados_especiais = %s
+                             ORDER BY nome_completo''', ('Sim', 'Sim', 'Sim', 'Sim', 'Sim'))
             dados = cursor.fetchall()
             logger.info(f"📊 Encontrados {len(dados)} registros de saúde")
             filename = 'relatorio_saude'
@@ -1236,7 +1236,7 @@ def exportar():
                     f"R$ {row[3] or '0'}" if row[3] else 'Não informado'
                 ])
         elif tipo == 'saude':
-            table_data = [['Nome', 'Idade', 'Telefone', 'Bairro', 'Doenças Crônicas', 'Medicamentos', 'Doenças Mentais', 'Deficiências']]
+            table_data = [['Nome', 'Idade', 'Telefone', 'Bairro', 'Doenças Crônicas', 'Medicamentos', 'Doenças Mentais', 'Deficiências', 'Cuidados Especiais']]
             logger.info(f"🔍 Processando {len(dados)} registros para PDF de saúde")
             for i, row in enumerate(dados):
                 logger.info(f"📋 Registro {i+1}: {dict(row) if hasattr(row, 'keys') else row}")
@@ -1248,7 +1248,8 @@ def exportar():
                     str(row['doencas_cronicas'] or 'Não informado') if row['tem_doenca_cronica'] == 'Sim' else 'Não',
                     str(row['medicamentos_continuos'] or 'Não informado') if row['usa_medicamento_continuo'] == 'Sim' else 'Não',
                     str(row['doencas_mentais'] or 'Não informado') if row['tem_doenca_mental'] == 'Sim' else 'Não',
-                    str(row['tipo_deficiencia'] or 'Não informado') if row['tem_deficiencia'] == 'Sim' else 'Não'
+                    str(row['tipo_deficiencia'] or 'Não informado') if row['tem_deficiencia'] == 'Sim' else 'Não',
+                    str(row['cuidados_especiais'] or 'Não informado') if row['precisa_cuidados_especiais'] == 'Sim' else 'Não'
                 ])
         elif tipo == 'estatistico':
             # Criar múltiplas tabelas para o relatório estatístico completo
