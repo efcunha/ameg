@@ -18,6 +18,14 @@ instance/
 
 # Uploads
 uploads/
+
+# Arquivos de segurança - NUNCA COMMITAR
+.env.secure
+.env.local
+admin_credentials.txt
+security_keys.txt
+*.key
+*.pem
 data/
 
 # Environment

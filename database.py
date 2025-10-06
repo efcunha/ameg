@@ -4,6 +4,13 @@ from psycopg2.extras import RealDictCursor
 from werkzeug.security import generate_password_hash
 import logging
 
+# Importar security manager
+try:
+    from security import security_manager
+except ImportError:
+    security_manager = None
+    logging.warning("Security manager não disponível - usando fallback")
+
 logger = logging.getLogger(__name__)
 
 def get_db_connection():
@@ -376,7 +383,7 @@ def init_db_tables():
         raise
 
 def create_admin_user():
-    """Cria usuário admin padrão"""
+    """Cria usuário admin padrão com proteção adicional"""
     logger.info("👤 Criando usuário admin...")
     try:
         conn = get_db_connection()
@@ -394,14 +401,20 @@ def create_admin_user():
             conn.close()
             return
         
-        # Criar admin
+        # Criar admin com proteção adicional
         admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin@2024!Secure')
         logger.debug(f"Senha admin configurada: {bool(admin_password)}")
         
-        senha_hash = generate_password_hash(admin_password)
-        logger.debug("Hash da senha gerado")
+        # Usar security manager se disponível
+        if security_manager:
+            senha_hash = security_manager.hash_admin_password(admin_password)
+            logger.debug("Hash da senha gerado com security manager")
+        else:
+            senha_hash = generate_password_hash(admin_password)
+            logger.debug("Hash da senha gerado com fallback")
         
-        cursor.execute('INSERT INTO usuarios (usuario, senha) VALUES (%s, %s)', ('admin', senha_hash))
+        cursor.execute('INSERT INTO usuarios (usuario, senha, tipo) VALUES (%s, %s, %s)', 
+                      ('admin', senha_hash, 'admin'))
         logger.debug("Query INSERT executada")
         
         conn.commit()
