@@ -2900,13 +2900,13 @@ def api_stats():
         
         # Contar registros em cada tabela
         cursor.execute('SELECT COUNT(*) FROM cadastros')
-        cadastros = cursor.fetchone()[0] if cursor.fetchone() else 0
+        cadastros = cursor.fetchone()[0]
         
         cursor.execute('SELECT COUNT(*) FROM arquivos_saude')
-        arquivos = cursor.fetchone()[0] if cursor.fetchone() else 0
+        arquivos = cursor.fetchone()[0]
         
         cursor.execute('SELECT COUNT(*) FROM auditoria')
-        auditoria = cursor.fetchone()[0] if cursor.fetchone() else 0
+        auditoria = cursor.fetchone()[0]
         
         cursor.close()
         conn.close()
@@ -2918,4 +2918,5 @@ def api_stats():
         }
         
     except Exception as e:
+        logger.error(f"Erro na API stats: {e}")
         return {"error": str(e)}, 500
