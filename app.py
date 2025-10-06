@@ -1774,7 +1774,7 @@ def exportar():
                 # PDF detalhado para um cadastro específico com TODOS os campos
                 for row in dados:
                     # Título do cadastro
-                    nome_para = Paragraph(f"<b>Cadastro: {row[1] or 'Não informado'}</b>", styles['Heading2'])
+                    nome_para = Paragraph(f"<b>Cadastro: {row['nome_completo'] or 'Não informado'}</b>", styles['Heading2'])
                     elements.append(nome_para)
                     elements.append(Spacer(1, 12))
                     
@@ -1784,23 +1784,23 @@ def exportar():
                     elements.append(Spacer(1, 6))
                     
                     pessoais_data = [
-                        ['Nome Completo:', str(row[1] or '')],
-                        ['Endereço:', f"{row[2] or ''}, {row[3] or ''}"],
-                        ['Bairro:', str(row[4] or '')],
-                        ['CEP:', str(row[5] or '')],
-                        ['Telefone:', str(row[6] or '')],
-                        ['Ponto Referência:', str(row[7] or '')],
-                        ['Gênero:', str(row[8] or '')],
-                        ['Idade:', str(row[9] or '')],
-                        ['Data Nascimento:', str(row[10] or '')],
-                        ['Título Eleitor:', str(row[11] or '')],
-                        ['Cidade Título:', str(row[12] or '')],
-                        ['CPF:', str(row[13] or '')],
-                        ['RG:', str(row[14] or '')],
-                        ['NIS:', str(row[15] or '')],
-                        ['Estado Civil:', str(row[16] or '')],
-                        ['Escolaridade:', str(row[17] or '')],
-                        ['Profissão:', str(row[18] or '')]
+                        ['Nome Completo:', str(row['nome_completo'] or '')],
+                        ['Endereço:', f"{row['endereco'] or ''}, {row['numero'] or ''}"],
+                        ['Bairro:', str(row['bairro'] or '')],
+                        ['CEP:', str(row['cep'] or '')],
+                        ['Telefone:', str(row['telefone'] or '')],
+                        ['Ponto Referência:', str(row['ponto_referencia'] or '')],
+                        ['Gênero:', str(row['genero'] or '')],
+                        ['Idade:', str(row['idade'] or '')],
+                        ['Data Nascimento:', str(row['data_nascimento'] or '')],
+                        ['Título Eleitor:', str(row['titulo_eleitor'] or '')],
+                        ['Cidade Título:', str(row['cidade_titulo'] or '')],
+                        ['CPF:', str(row['cpf'] or '')],
+                        ['RG:', str(row['rg'] or '')],
+                        ['NIS:', str(row['nis'] or '')],
+                        ['Estado Civil:', str(row['estado_civil'] or '')],
+                        ['Escolaridade:', str(row['escolaridade'] or '')],
+                        ['Profissão:', str(row['profissao'] or '')]
                     ]
                     
                     pessoais_table = Table(pessoais_data, colWidths=[120, 350])
@@ -1815,22 +1815,22 @@ def exportar():
                     elements.append(Spacer(1, 15))
                     
                     # Dados do Companheiro
-                    if row[19]:  # Se tem companheiro
+                    if row['nome_companheiro']:  # Se tem companheiro
                         comp_para = Paragraph("<b>💑 Dados do Companheiro(a)</b>", styles['Heading3'])
                         elements.append(comp_para)
                         elements.append(Spacer(1, 6))
                         
                         comp_data = [
-                            ['Nome Companheiro:', str(row[19] or '')],
-                            ['CPF Companheiro:', str(row[20] or '')],
-                            ['RG Companheiro:', str(row[21] or '')],
-                            ['Idade Companheiro:', str(row[22] or '')],
-                            ['Escolaridade Companheiro:', str(row[23] or '')],
-                            ['Profissão Companheiro:', str(row[24] or '')],
-                            ['Data Nasc. Companheiro:', str(row[25] or '')],
-                            ['Título Companheiro:', str(row[26] or '')],
-                            ['Cidade Título Comp.:', str(row[27] or '')],
-                            ['NIS Companheiro:', str(row[28] or '')]
+                            ['Nome Companheiro:', str(row['nome_companheiro'] or '')],
+                            ['CPF Companheiro:', str(row['cpf_companheiro'] or '')],
+                            ['RG Companheiro:', str(row['rg_companheiro'] or '')],
+                            ['Idade Companheiro:', str(row['idade_companheiro'] or '')],
+                            ['Escolaridade Companheiro:', str(row['escolaridade_companheiro'] or '')],
+                            ['Profissão Companheiro:', str(row['profissao_companheiro'] or '')],
+                            ['Data Nasc. Companheiro:', str(row['data_nascimento_companheiro'] or '')],
+                            ['Título Companheiro:', str(row['titulo_eleitor_companheiro'] or '')],
+                            ['Cidade Título Comp.:', str(row['cidade_titulo_companheiro'] or '')],
+                            ['NIS Companheiro:', str(row['nis_companheiro'] or '')]
                         ]
                         
                         comp_table = Table(comp_data, colWidths=[120, 350])
@@ -1850,20 +1850,20 @@ def exportar():
                     elements.append(Spacer(1, 6))
                     
                     familia_data = [
-                        ['Tipo Trabalho:', str(row[29] or '')],
-                        ['Pessoas Trabalham:', str(row[30] or '')],
-                        ['Aposentados/Pensionistas:', str(row[31] or '')],
-                        ['Pessoas na Família:', str(row[32] or '')],
-                        ['Número Famílias:', str(row[33] or '')],
-                        ['Adultos:', str(row[34] or '')],
-                        ['Crianças:', str(row[35] or '')],
-                        ['Adolescentes:', str(row[36] or '')],
-                        ['Idosos:', str(row[37] or '')],
-                        ['Gestantes:', str(row[38] or '')],
-                        ['Nutrizes:', str(row[39] or '')],
-                        ['Renda Familiar:', f"R$ {row[40] or '0'}"],
-                        ['Renda Per Capita:', f"R$ {row[41] or '0'}"],
-                        ['Bolsa Família:', f"R$ {row[42] or '0'}"]
+                        ['Tipo Trabalho:', str(row['tipo_trabalho'] or '')],
+                        ['Pessoas Trabalham:', str(row['pessoas_trabalham'] or '')],
+                        ['Aposentados/Pensionistas:', str(row['aposentados_pensionistas'] or '')],
+                        ['Pessoas na Família:', str(row['pessoas_familia'] or '')],
+                        ['Número Famílias:', str(row['numero_familias'] or '')],
+                        ['Adultos:', str(row['adultos'] or '')],
+                        ['Crianças:', str(row['criancas'] or '')],
+                        ['Adolescentes:', str(row['adolescentes'] or '')],
+                        ['Idosos:', str(row['idosos'] or '')],
+                        ['Gestantes:', str(row['gestantes'] or '')],
+                        ['Nutrizes:', str(row['nutrizes'] or '')],
+                        ['Renda Familiar:', f"R$ {row['renda_familiar'] or '0'}"],
+                        ['Renda Per Capita:', f"R$ {row['renda_per_capita'] or '0'}"],
+                        ['Bolsa Família:', f"R$ {row['bolsa_familia'] or '0'}"]
                     ]
                     
                     familia_table = Table(familia_data, colWidths=[120, 350])
@@ -1883,12 +1883,12 @@ def exportar():
                     elements.append(Spacer(1, 6))
                     
                     casa_data = [
-                        ['Tipo Casa:', str(row[43] or '')],
-                        ['Material Casa:', str(row[44] or '')],
-                        ['Energia:', str(row[45] or '')],
-                        ['Lixo:', str(row[46] or '')],
-                        ['Água:', str(row[47] or '')],
-                        ['Esgoto:', str(row[48] or '')]
+                        ['Tipo Casa:', str(row['tipo_casa'] or '')],
+                        ['Material Casa:', str(row['material_casa'] or '')],
+                        ['Energia:', str(row['energia'] or '')],
+                        ['Lixo:', str(row['lixo'] or '')],
+                        ['Água:', str(row['agua'] or '')],
+                        ['Esgoto:', str(row['esgoto'] or '')]
                     ]
                     
                     casa_table = Table(casa_data, colWidths=[120, 350])
