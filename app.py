@@ -1237,7 +1237,9 @@ def exportar():
                 ])
         elif tipo == 'saude':
             table_data = [['Nome', 'Idade', 'Telefone', 'Bairro', 'Doenças Crônicas', 'Medicamentos', 'Doenças Mentais', 'Deficiências']]
-            for row in dados:
+            logger.info(f"🔍 Processando {len(dados)} registros para PDF de saúde")
+            for i, row in enumerate(dados):
+                logger.info(f"📋 Registro {i+1}: {dict(row) if hasattr(row, 'keys') else row}")
                 table_data.append([
                     str(row['nome_completo'] or ''),
                     str(row['idade'] or ''),
