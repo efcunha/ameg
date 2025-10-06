@@ -247,10 +247,6 @@ def add_security_headers(response):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route('/static/<path:filename>')
-def static_files(filename):
-    return send_from_directory('static', filename)
-
 @app.route('/logo')
 def logo():
     """Rota específica para o logo"""
