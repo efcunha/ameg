@@ -977,8 +977,10 @@ def exportar():
     formato = request.args.get('formato', 'csv')
     cadastro_id = request.args.get('cadastro_id')  # Para exportar cadastro individual
     
+    logger.info(f"🔄 Exportando: tipo={tipo}, formato={formato}, cadastro_id={cadastro_id}")
+    
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     
     if tipo == 'completo':
         if cadastro_id:
@@ -995,13 +997,16 @@ def exportar():
         filename = 'relatorio_simplificado'
     elif tipo == 'saude':
         if cadastro_id:
+            logger.info(f"🏥 Buscando dados de saúde para cadastro_id={cadastro_id}")
             cursor.execute('''SELECT nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
                              usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
                              tem_deficiencia, tipo_deficiencia FROM cadastros 
                              WHERE id = %s''', (cadastro_id,))
             dados = cursor.fetchall()
+            logger.info(f"📊 Encontrados {len(dados)} registros para cadastro_id={cadastro_id}")
             filename = f'relatorio_saude_{cadastro_id}'
         else:
+            logger.info("🏥 Buscando todos os dados de saúde")
             cursor.execute('''SELECT nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
                              usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
                              tem_deficiencia, tipo_deficiencia FROM cadastros 
@@ -1009,6 +1014,7 @@ def exportar():
                              OR tem_doenca_mental = %s OR tem_deficiencia = %s
                              ORDER BY nome_completo''', ('Sim', 'Sim', 'Sim', 'Sim'))
             dados = cursor.fetchall()
+            logger.info(f"📊 Encontrados {len(dados)} registros de saúde")
             filename = 'relatorio_saude'
     elif tipo == 'estatistico':
         # Buscar todas as estatísticas como no relatório web
@@ -1229,14 +1235,14 @@ def exportar():
             table_data = [['Nome', 'Idade', 'Telefone', 'Bairro', 'Doenças Crônicas', 'Medicamentos', 'Doenças Mentais', 'Deficiências']]
             for row in dados:
                 table_data.append([
-                    str(row[0] or ''),  # nome_completo
-                    str(row[1] or ''),  # idade
-                    str(row[2] or ''),  # telefone
-                    str(row[3] or ''),  # bairro
-                    str(row[5] or 'Não informado') if row[4] == 'Sim' else 'Não',  # doencas_cronicas
-                    str(row[7] or 'Não informado') if row[6] == 'Sim' else 'Não',  # medicamentos_continuos
-                    str(row[9] or 'Não informado') if row[8] == 'Sim' else 'Não',  # doencas_mentais
-                    str(row[11] or 'Não informado') if row[10] == 'Sim' else 'Não'  # tipo_deficiencia
+                    str(row['nome_completo'] or ''),
+                    str(row['idade'] or ''),
+                    str(row['telefone'] or ''),
+                    str(row['bairro'] or ''),
+                    str(row['doencas_cronicas'] or 'Não informado') if row['tem_doenca_cronica'] == 'Sim' else 'Não',
+                    str(row['medicamentos_continuos'] or 'Não informado') if row['usa_medicamento_continuo'] == 'Sim' else 'Não',
+                    str(row['doencas_mentais'] or 'Não informado') if row['tem_doenca_mental'] == 'Sim' else 'Não',
+                    str(row['tipo_deficiencia'] or 'Não informado') if row['tem_deficiencia'] == 'Sim' else 'Não'
                 ])
         elif tipo == 'estatistico':
             # Criar múltiplas tabelas para o relatório estatístico completo
