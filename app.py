@@ -1107,18 +1107,8 @@ def relatorio_saude():
     cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE precisa_cuidados_especiais = %s', ('Sim',))
     precisa_cuidados = cursor.fetchone()['count']
     
-    # Query principal usando JOIN com a nova tabela
-    base_query = """SELECT DISTINCT c.id, c.nome_completo, c.idade, c.telefone, c.bairro,
-                    STRING_AGG(DISTINCT CASE WHEN dsp.tem_doenca_cronica = 'Sim' THEN dsp.doencas_cronicas END, ', ') as doencas_cronicas,
-                    STRING_AGG(DISTINCT CASE WHEN dsp.usa_medicamento_continuo = 'Sim' THEN dsp.medicamentos END, ', ') as medicamentos_continuos,
-                    STRING_AGG(DISTINCT CASE WHEN dsp.tem_doenca_mental = 'Sim' THEN dsp.doencas_mentais END, ', ') as doencas_mentais,
-                    STRING_AGG(DISTINCT CASE WHEN dsp.tem_deficiencia = 'Sim' THEN dsp.deficiencias END, ', ') as tipo_deficiencia,
-                    STRING_AGG(DISTINCT CASE WHEN dsp.precisa_cuidados_especiais = 'Sim' THEN dsp.cuidados_especiais END, ', ') as cuidados_especiais,
-                    MAX(CASE WHEN dsp.tem_doenca_cronica = 'Sim' THEN 'Sim' ELSE 'Não' END) as tem_doenca_cronica,
-                    MAX(CASE WHEN dsp.usa_medicamento_continuo = 'Sim' THEN 'Sim' ELSE 'Não' END) as usa_medicamento_continuo,
-                    MAX(CASE WHEN dsp.tem_doenca_mental = 'Sim' THEN 'Sim' ELSE 'Não' END) as tem_doenca_mental,
-                    MAX(CASE WHEN dsp.tem_deficiencia = 'Sim' THEN 'Sim' ELSE 'Não' END) as tem_deficiencia,
-                    MAX(CASE WHEN dsp.precisa_cuidados_especiais = 'Sim' THEN 'Sim' ELSE 'Não' END) as precisa_cuidados_especiais
+    # Query principal - buscar cadastros com dados de saúde e suas pessoas
+    base_query = """SELECT DISTINCT c.id, c.nome_completo, c.idade, c.telefone, c.bairro
                 FROM cadastros c
                 INNER JOIN dados_saude_pessoa dsp ON c.id = dsp.cadastro_id
                 WHERE (dsp.tem_doenca_cronica = %s OR dsp.usa_medicamento_continuo = %s 
@@ -1132,16 +1122,34 @@ def relatorio_saude():
         base_query += " AND LOWER(c.nome_completo) LIKE LOWER(%s)"
         params.append(f'%{busca_nome}%')
     
-    # Adicionar GROUP BY e ordenação
-    base_query += " GROUP BY c.id, c.nome_completo, c.idade, c.telefone, c.bairro"
-    
+    # Adicionar ordenação
     if ordem == 'desc':
         base_query += " ORDER BY c.nome_completo DESC"
     else:
         base_query += " ORDER BY c.nome_completo ASC"
     
     cursor.execute(base_query, params)
-    cadastros_saude = cursor.fetchall()
+    cadastros_base = cursor.fetchall()
+    
+    # Para cada cadastro, buscar os dados detalhados de saúde de cada pessoa
+    cadastros_saude = []
+    for cadastro in cadastros_base:
+        cursor.execute("""SELECT nome_pessoa, tem_doenca_cronica, doencas_cronicas,
+                         usa_medicamento_continuo, medicamentos, tem_doenca_mental, doencas_mentais,
+                         tem_deficiencia, deficiencias, precisa_cuidados_especiais, cuidados_especiais
+                         FROM dados_saude_pessoa 
+                         WHERE cadastro_id = %s 
+                         AND (tem_doenca_cronica = 'Sim' OR usa_medicamento_continuo = 'Sim' 
+                         OR tem_doenca_mental = 'Sim' OR tem_deficiencia = 'Sim' 
+                         OR precisa_cuidados_especiais = 'Sim')
+                         ORDER BY nome_pessoa""", (cadastro['id'],))
+        pessoas_saude = cursor.fetchall()
+        
+        if pessoas_saude:  # Só adicionar se tem pessoas com condições de saúde
+            cadastros_saude.append({
+                'cadastro': cadastro,
+                'pessoas_saude': pessoas_saude
+            })
     
     cursor.close()
     conn.close()

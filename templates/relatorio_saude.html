@@ -106,6 +106,7 @@
                     <th>Idade</th>
                     <th>Telefone</th>
                     <th>Bairro</th>
+                    <th>Pessoa</th>
                     <th>Doenças Crônicas</th>
                     <th>Medicamentos</th>
                     <th>Saúde Mental</th>
@@ -115,53 +116,60 @@
                 </tr>
             </thead>
             <tbody>
-                {% for cadastro in cadastros %}
-                <tr>
-                    <td>{{ cadastro.id }}</td>
-                    <td>{{ cadastro.nome_completo }}</td>
-                    <td>{{ cadastro.idade or '-' }}</td>
-                    <td>{{ cadastro.telefone or '-' }}</td>
-                    <td>{{ cadastro.bairro or '-' }}</td>
-                    <td>
-                        {% if cadastro.tem_doenca_cronica == 'Sim' %}
-                            <span class="health-tag">{{ cadastro.doencas_cronicas or 'Não especificado' }}</span>
-                        {% else %}
-                            -
+                {% for item in cadastros %}
+                    {% for pessoa in item.pessoas_saude %}
+                    <tr>
+                        {% if loop.first %}
+                        <td rowspan="{{ item.pessoas_saude|length }}">{{ item.cadastro.id }}</td>
+                        <td rowspan="{{ item.pessoas_saude|length }}">{{ item.cadastro.nome_completo }}</td>
+                        <td rowspan="{{ item.pessoas_saude|length }}">{{ item.cadastro.idade or '-' }}</td>
+                        <td rowspan="{{ item.pessoas_saude|length }}">{{ item.cadastro.telefone or '-' }}</td>
+                        <td rowspan="{{ item.pessoas_saude|length }}">{{ item.cadastro.bairro or '-' }}</td>
                         {% endif %}
-                    </td>
-                    <td>
-                        {% if cadastro.usa_medicamento_continuo == 'Sim' %}
-                            <span class="health-tag">{{ cadastro.medicamentos_continuos or 'Não especificado' }}</span>
-                        {% else %}
-                            -
+                        <td><strong>{{ pessoa.nome_pessoa }}</strong></td>
+                        <td>
+                            {% if pessoa.tem_doenca_cronica == 'Sim' %}
+                                <span class="health-tag">{{ pessoa.doencas_cronicas or 'Não especificado' }}</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pessoa.usa_medicamento_continuo == 'Sim' %}
+                                <span class="health-tag">{{ pessoa.medicamentos or 'Não especificado' }}</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pessoa.tem_doenca_mental == 'Sim' %}
+                                <span class="health-tag">{{ pessoa.doencas_mentais or 'Não especificado' }}</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pessoa.tem_deficiencia == 'Sim' %}
+                                <span class="health-tag">{{ pessoa.deficiencias or 'Não especificado' }}</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pessoa.precisa_cuidados_especiais == 'Sim' %}
+                                <span class="health-tag">{{ pessoa.cuidados_especiais or 'Não especificado' }}</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        {% if loop.first %}
+                        <td class="actions-cell" rowspan="{{ item.pessoas_saude|length }}">
+                            <a href="/arquivos_saude/{{ item.cadastro.id }}" style="color: #3498db;" title="Ver arquivos de saúde">📁 Arquivos</a>
+                            <a href="/exportar?tipo=saude&formato=pdf&cadastro_id={{ item.cadastro.id }}" style="color: #e74c3c;" title="Exportar PDF individual">📋 PDF</a>
+                        </td>
                         {% endif %}
-                    </td>
-                    <td>
-                        {% if cadastro.tem_doenca_mental == 'Sim' %}
-                            <span class="health-tag">{{ cadastro.doencas_mentais or 'Não especificado' }}</span>
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if cadastro.tem_deficiencia == 'Sim' %}
-                            <span class="health-tag">{{ cadastro.tipo_deficiencia or 'Não especificado' }}</span>
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if cadastro.precisa_cuidados_especiais == 'Sim' %}
-                            <span class="health-tag">{{ cadastro.cuidados_especiais or 'Não especificado' }}</span>
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td class="actions-cell">
-                        <a href="/arquivos_saude/{{ cadastro.id }}" style="color: #3498db;" title="Ver arquivos de saúde">📁 Arquivos</a>
-                        <a href="/exportar?tipo=saude&formato=pdf&cadastro_id={{ cadastro.id }}" style="color: #e74c3c;" title="Exportar PDF individual">📋 PDF</a>
-                    </td>
-                </tr>
+                    </tr>
+                    {% endfor %}
                 {% endfor %}
             </tbody>
         </table>
