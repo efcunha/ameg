@@ -908,6 +908,10 @@ def relatorio_saude():
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
+    # Parâmetros de filtro
+    busca_nome = request.args.get('busca_nome', '').strip()
+    ordem = request.args.get('ordem', 'asc')
+    
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
@@ -926,14 +930,29 @@ def relatorio_saude():
     cursor.execute('SELECT COUNT(*) FROM cadastros WHERE precisa_cuidados_especiais = %s', ('Sim',))
     precisa_cuidados = cursor.fetchone()['count']
     
-    cursor.execute("""SELECT id, nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
+    # Query com filtros
+    base_query = """SELECT id, nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
                 usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
                 tem_deficiencia, tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais
                 FROM cadastros 
-                WHERE tem_doenca_cronica = %s OR usa_medicamento_continuo = %s 
+                WHERE (tem_doenca_cronica = %s OR usa_medicamento_continuo = %s 
                 OR tem_doenca_mental = %s OR tem_deficiencia = %s 
-                OR precisa_cuidados_especiais = %s
-                ORDER BY nome_completo""", ('Sim', 'Sim', 'Sim', 'Sim', 'Sim'))
+                OR precisa_cuidados_especiais = %s)"""
+    
+    params = ['Sim', 'Sim', 'Sim', 'Sim', 'Sim']
+    
+    # Adicionar filtro por nome se fornecido
+    if busca_nome:
+        base_query += " AND LOWER(nome_completo) LIKE LOWER(%s)"
+        params.append(f'%{busca_nome}%')
+    
+    # Adicionar ordenação
+    if ordem == 'desc':
+        base_query += " ORDER BY nome_completo DESC"
+    else:
+        base_query += " ORDER BY nome_completo ASC"
+    
+    cursor.execute(base_query, params)
     cadastros_saude = cursor.fetchall()
     
     cursor.close()

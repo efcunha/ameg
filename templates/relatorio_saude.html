@@ -82,6 +82,21 @@
         </div>
         
         <h3>📋 Cadastros com Necessidades de Saúde</h3>
+        
+        <!-- Filtro por nome -->
+        <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <form method="GET" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <label for="busca_nome" style="font-weight: bold;">🔍 Buscar por nome:</label>
+                <input type="text" id="busca_nome" name="busca_nome" value="{{ request.args.get('busca_nome', '') }}" 
+                       placeholder="Digite o nome..." style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; flex: 1; min-width: 200px;">
+                <select name="ordem" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="asc" {{ 'selected' if request.args.get('ordem') == 'asc' else '' }}>A → Z</option>
+                    <option value="desc" {{ 'selected' if request.args.get('ordem') == 'desc' else '' }}>Z → A</option>
+                </select>
+                <button type="submit" style="background: #3498db; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">Filtrar</button>
+                <a href="/relatorio_saude" style="background: #95a5a6; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px;">Limpar</a>
+            </form>
+        </div>
         <table>
             <thead>
                 <tr>
