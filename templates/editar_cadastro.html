@@ -48,11 +48,11 @@
     
     <div class="container">
         <div class="form-card">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-                <h2 style="margin: 0; flex: 1;">Editar Cadastro Familiar</h2>
-                
-                <!-- Campo de Foto 3x4 - Alinhado com o título -->
-                <div class="photo-capture" style="background: #f8f9fa; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h2>Editar Cadastro Familiar</h2>
+            
+            <!-- Campo de Foto 3x4 - Centralizado -->
+            <div style="text-align: center; margin: 20px 0;">
+                <div class="photo-capture" style="display: inline-block; background: #f8f9fa; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     <div class="photo-preview" style="margin-bottom: 10px;">
                         <canvas id="photoCanvas" width="120" height="160" style="border: 2px solid #3498db; border-radius: 8px; {% if cadastro.foto_base64 %}display: block;{% else %}display: none;{% endif %} box-shadow: 0 1px 5px rgba(0,0,0,0.1);"></canvas>
                         <div id="photoPlaceholder" style="width: 120px; height: 160px; border: 2px dashed #bdc3c7; border-radius: 8px; display: {% if cadastro.foto_base64 %}none{% else %}flex{% endif %}; align-items: center; justify-content: center; background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%); color: #7f8c8d; cursor: pointer; transition: all 0.3s ease; font-size: 10px; text-align: center; padding: 10px; box-sizing: border-box;">
@@ -83,9 +83,7 @@
             </div>
             
             <form method="POST" action="/atualizar_cadastro/{{ cadastro.id }}" enctype="multipart/form-data">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-                    <h3 style="margin: 0; flex: 1;">1. DADOS DO TITULAR</h3>
-                </div>
+                <h3>1. DADOS DO TITULAR</h3>
                 
                 <div class="form-group">
                     <label>Nome Completo *</label>
