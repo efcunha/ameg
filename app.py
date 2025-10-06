@@ -2703,8 +2703,8 @@ def auditoria():
         logger.debug(f"WHERE clause: {where_clause}")
         
         # Contar total de registros
-        cursor.execute(f"SELECT COUNT(*) FROM auditoria {where_clause}", params)
-        total_records = cursor.fetchone()[0]
+        cursor.execute(f"SELECT COUNT(*) as total FROM auditoria {where_clause}", params)
+        total_records = cursor.fetchone()['total']
         total_pages = (total_records + per_page - 1) // per_page
         
         logger.debug(f"Total de registros: {total_records}")
@@ -2721,18 +2721,18 @@ def auditoria():
         logger.debug(f"Registros encontrados: {len(auditorias)}")
         
         # Estatísticas
-        cursor.execute("SELECT COUNT(*) FROM auditoria")
-        stats_total = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) as total FROM auditoria")
+        stats_total = cursor.fetchone()['total']
         
-        cursor.execute("SELECT COUNT(*) FROM auditoria WHERE DATE(data_acao) = CURRENT_DATE")
-        stats_hoje = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) as hoje FROM auditoria WHERE DATE(data_acao) = CURRENT_DATE")
+        stats_hoje = cursor.fetchone()['hoje']
         
-        cursor.execute("SELECT COUNT(DISTINCT usuario) FROM auditoria WHERE DATE(data_acao) >= CURRENT_DATE - INTERVAL '7 days'")
-        stats_usuarios = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(DISTINCT usuario) as usuarios FROM auditoria WHERE DATE(data_acao) >= CURRENT_DATE - INTERVAL '7 days'")
+        stats_usuarios = cursor.fetchone()['usuarios']
         
         cursor.execute("SELECT data_acao FROM auditoria ORDER BY data_acao DESC LIMIT 1")
         ultima_acao = cursor.fetchone()
-        stats_ultima = ultima_acao[0].strftime('%H:%M') if ultima_acao else 'N/A'
+        stats_ultima = ultima_acao['data_acao'].strftime('%H:%M') if ultima_acao else 'N/A'
         
         stats = {
             'total': stats_total,
