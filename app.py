@@ -970,7 +970,11 @@ def relatorio_saude():
 
 @app.route('/exportar')
 def exportar():
+    logger.info("🚀 FUNÇÃO EXPORTAR CHAMADA")
+    logger.info(f"🔍 Args recebidos: {dict(request.args)}")
+    
     if 'usuario' not in session:
+        logger.warning("❌ Usuário não logado")
         return redirect(url_for('login'))
     
     tipo = request.args.get('tipo', 'completo')
@@ -1711,6 +1715,7 @@ def exportar():
         doc.build(elements)
         
         buffer.seek(0)
+        logger.info(f"✅ PDF gerado com sucesso: {filename}.pdf")
         return send_file(
             buffer,
             mimetype='application/pdf',
