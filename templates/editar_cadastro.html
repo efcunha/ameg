@@ -498,6 +498,12 @@
                                     <label>Condições de saúde:</label>
                                     <div class="checkbox-group">
                                         <div class="checkbox-item">
+                                            <input type="checkbox" id="doenca_cronica_{{ loop.index }}" name="saude_condicoes_{{ loop.index }}[]" value="doenca_cronica" {{ 'checked' if pessoa.tem_doenca_cronica == 'Sim' else '' }} onchange="toggleEspecificacao(this, 'spec_doenca_cronica_{{ loop.index }}')">
+                                            <label for="doenca_cronica_{{ loop.index }}">Tem doença crônica?</label>
+                                            <input type="text" id="spec_doenca_cronica_{{ loop.index }}" name="saude_doencas_cronicas_{{ loop.index }}" value="{{ pessoa.doencas_cronicas or '' }}" placeholder="Especificar doenças crônicas" {{ 'disabled' if pessoa.tem_doenca_cronica != 'Sim' else '' }}>
+                                        </div>
+                                        
+                                        <div class="checkbox-item">
                                             <input type="checkbox" id="medicamento_{{ loop.index }}" name="saude_condicoes_{{ loop.index }}[]" value="medicamento" {{ 'checked' if pessoa.usa_medicamento_continuo == 'Sim' else '' }} onchange="toggleEspecificacao(this, 'spec_medicamento_{{ loop.index }}')">
                                             <label for="medicamento_{{ loop.index }}">Usa medicamento contínuo?</label>
                                             <input type="text" id="spec_medicamento_{{ loop.index }}" name="saude_medicamentos_{{ loop.index }}" value="{{ pessoa.medicamentos or '' }}" placeholder="Especificar medicamentos" {{ 'disabled' if pessoa.usa_medicamento_continuo != 'Sim' else '' }}>
@@ -543,6 +549,12 @@
                                 <div class="form-group">
                                     <label>Condições de saúde:</label>
                                     <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="doenca_cronica_1" name="saude_condicoes_1[]" value="doenca_cronica" onchange="toggleEspecificacao(this, 'spec_doenca_cronica_1')">
+                                            <label for="doenca_cronica_1">Tem doença crônica?</label>
+                                            <input type="text" id="spec_doenca_cronica_1" name="saude_doencas_cronicas_1" placeholder="Especificar doenças crônicas" disabled>
+                                        </div>
+                                        
                                         <div class="checkbox-item">
                                             <input type="checkbox" id="medicamento_1" name="saude_condicoes_1[]" value="medicamento" onchange="toggleEspecificacao(this, 'spec_medicamento_1')">
                                             <label for="medicamento_1">Usa medicamento contínuo?</label>
@@ -617,6 +629,12 @@
                             <div class="form-group">
                                 <label>Condições de saúde:</label>
                                 <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="doenca_cronica_${contadorPessoas}" name="saude_condicoes_${contadorPessoas}[]" value="doenca_cronica" onchange="toggleEspecificacao(this, 'spec_doenca_cronica_${contadorPessoas}')">
+                                        <label for="doenca_cronica_${contadorPessoas}">Tem doença crônica?</label>
+                                        <input type="text" id="spec_doenca_cronica_${contadorPessoas}" name="saude_doencas_cronicas_${contadorPessoas}" placeholder="Especificar doenças crônicas" disabled>
+                                    </div>
+                                    
                                     <div class="checkbox-item">
                                         <input type="checkbox" id="medicamento_${contadorPessoas}" name="saude_condicoes_${contadorPessoas}[]" value="medicamento" onchange="toggleEspecificacao(this, 'spec_medicamento_${contadorPessoas}')">
                                         <label for="medicamento_${contadorPessoas}">Usa medicamento contínuo?</label>
@@ -695,14 +713,14 @@
                 .checkbox-group {
                     display: flex;
                     flex-direction: column;
-                    gap: 10px;
+                    gap: 5px;
                 }
                 
                 .checkbox-item {
                     display: flex;
                     align-items: center;
-                    gap: 8px;
-                    padding: 8px;
+                    gap: 5px;
+                    padding: 5px;
                     border: 1px solid #ddd;
                     border-radius: 5px;
                     background: white;
@@ -710,20 +728,23 @@
                 
                 .checkbox-item input[type="checkbox"] {
                     margin: 0;
+                    flex-shrink: 0;
                 }
                 
                 .checkbox-item label {
-                    min-width: 180px;
+                    min-width: 160px;
                     margin: 0;
                     font-weight: normal;
+                    font-size: 14px;
                 }
                 
                 .checkbox-item input[type="text"] {
-                    flex: 2;
-                    min-width: 250px;
-                    padding: 10px;
+                    flex: 3;
+                    min-width: 300px;
+                    padding: 12px;
                     border: 1px solid #ccc;
                     border-radius: 3px;
+                    font-size: 14px;
                 }
                 
                 .btn-add-pessoa, .btn-remove-pessoa {
