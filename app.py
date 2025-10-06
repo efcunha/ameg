@@ -1091,42 +1091,54 @@ def relatorio_saude():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
-    cursor.execute('SELECT COUNT(*) FROM cadastros WHERE tem_doenca_cronica = %s', ('Sim',))
+    # Estatísticas usando a nova tabela dados_saude_pessoa
+    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE tem_doenca_cronica = %s', ('Sim',))
     com_doenca_cronica = cursor.fetchone()['count']
     
-    cursor.execute('SELECT COUNT(*) FROM cadastros WHERE usa_medicamento_continuo = %s', ('Sim',))
+    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE usa_medicamento_continuo = %s', ('Sim',))
     usa_medicamento = cursor.fetchone()['count']
     
-    cursor.execute('SELECT COUNT(*) FROM cadastros WHERE tem_doenca_mental = %s', ('Sim',))
+    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE tem_doenca_mental = %s', ('Sim',))
     com_doenca_mental = cursor.fetchone()['count']
     
-    cursor.execute('SELECT COUNT(*) FROM cadastros WHERE tem_deficiencia = %s', ('Sim',))
+    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE tem_deficiencia = %s', ('Sim',))
     com_deficiencia = cursor.fetchone()['count']
     
-    cursor.execute('SELECT COUNT(*) FROM cadastros WHERE precisa_cuidados_especiais = %s', ('Sim',))
+    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE precisa_cuidados_especiais = %s', ('Sim',))
     precisa_cuidados = cursor.fetchone()['count']
     
-    # Query com filtros
-    base_query = """SELECT id, nome_completo, idade, telefone, bairro, tem_doenca_cronica, doencas_cronicas,
-                usa_medicamento_continuo, medicamentos_continuos, tem_doenca_mental, doencas_mentais,
-                tem_deficiencia, tipo_deficiencia, precisa_cuidados_especiais, cuidados_especiais
-                FROM cadastros 
-                WHERE (tem_doenca_cronica = %s OR usa_medicamento_continuo = %s 
-                OR tem_doenca_mental = %s OR tem_deficiencia = %s 
-                OR precisa_cuidados_especiais = %s)"""
+    # Query principal usando JOIN com a nova tabela
+    base_query = """SELECT DISTINCT c.id, c.nome_completo, c.idade, c.telefone, c.bairro,
+                    STRING_AGG(DISTINCT CASE WHEN dsp.tem_doenca_cronica = 'Sim' THEN dsp.doencas_cronicas END, ', ') as doencas_cronicas,
+                    STRING_AGG(DISTINCT CASE WHEN dsp.usa_medicamento_continuo = 'Sim' THEN dsp.medicamentos END, ', ') as medicamentos_continuos,
+                    STRING_AGG(DISTINCT CASE WHEN dsp.tem_doenca_mental = 'Sim' THEN dsp.doencas_mentais END, ', ') as doencas_mentais,
+                    STRING_AGG(DISTINCT CASE WHEN dsp.tem_deficiencia = 'Sim' THEN dsp.deficiencias END, ', ') as tipo_deficiencia,
+                    STRING_AGG(DISTINCT CASE WHEN dsp.precisa_cuidados_especiais = 'Sim' THEN dsp.cuidados_especiais END, ', ') as cuidados_especiais,
+                    MAX(CASE WHEN dsp.tem_doenca_cronica = 'Sim' THEN 'Sim' ELSE 'Não' END) as tem_doenca_cronica,
+                    MAX(CASE WHEN dsp.usa_medicamento_continuo = 'Sim' THEN 'Sim' ELSE 'Não' END) as usa_medicamento_continuo,
+                    MAX(CASE WHEN dsp.tem_doenca_mental = 'Sim' THEN 'Sim' ELSE 'Não' END) as tem_doenca_mental,
+                    MAX(CASE WHEN dsp.tem_deficiencia = 'Sim' THEN 'Sim' ELSE 'Não' END) as tem_deficiencia,
+                    MAX(CASE WHEN dsp.precisa_cuidados_especiais = 'Sim' THEN 'Sim' ELSE 'Não' END) as precisa_cuidados_especiais
+                FROM cadastros c
+                INNER JOIN dados_saude_pessoa dsp ON c.id = dsp.cadastro_id
+                WHERE (dsp.tem_doenca_cronica = %s OR dsp.usa_medicamento_continuo = %s 
+                OR dsp.tem_doenca_mental = %s OR dsp.tem_deficiencia = %s 
+                OR dsp.precisa_cuidados_especiais = %s)"""
     
     params = ['Sim', 'Sim', 'Sim', 'Sim', 'Sim']
     
     # Adicionar filtro por nome se fornecido
     if busca_nome:
-        base_query += " AND LOWER(nome_completo) LIKE LOWER(%s)"
+        base_query += " AND LOWER(c.nome_completo) LIKE LOWER(%s)"
         params.append(f'%{busca_nome}%')
     
-    # Adicionar ordenação
+    # Adicionar GROUP BY e ordenação
+    base_query += " GROUP BY c.id, c.nome_completo, c.idade, c.telefone, c.bairro"
+    
     if ordem == 'desc':
-        base_query += " ORDER BY nome_completo DESC"
+        base_query += " ORDER BY c.nome_completo DESC"
     else:
-        base_query += " ORDER BY nome_completo ASC"
+        base_query += " ORDER BY c.nome_completo ASC"
     
     cursor.execute(base_query, params)
     cadastros_saude = cursor.fetchall()
@@ -1828,7 +1840,7 @@ def exportar():
                             ['Escolaridade Companheiro:', str(row['escolaridade_companheiro'] or '')],
                             ['Profissão Companheiro:', str(row['profissao_companheiro'] or '')],
                             ['Data Nasc. Companheiro:', str(row['data_nascimento_companheiro'] or '')],
-                            ['Título Companheiro:', str(row['titulo_eleitor_companheiro'] or '')],
+                            ['Título Companheiro:', str(row['titulo_companheiro'] or '')],
                             ['Cidade Título Comp.:', str(row['cidade_titulo_companheiro'] or '')],
                             ['NIS Companheiro:', str(row['nis_companheiro'] or '')]
                         ]
