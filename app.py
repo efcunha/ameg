@@ -1691,9 +1691,9 @@ def exportar():
                         f"R$ {row[40] or '0'}" if (hasattr(row, '__getitem__') and row[40]) else 'Não informado'
                     ])
         
-        # Criar tabela (exceto para estatístico, renda e cadastro individual que já criaram seus próprios elementos)
+        # Criar tabela (exceto para estatístico, renda e cadastro completo individual)
         logger.info(f"🔧 Verificando se deve criar tabela: tipo={tipo}, cadastro_id={cadastro_id}")
-        if tipo not in ['estatistico', 'renda'] and not cadastro_id:
+        if tipo not in ['estatistico', 'renda'] and not (tipo == 'completo' and cadastro_id):
             logger.info(f"📊 Criando tabela com {len(table_data)} linhas")
             logger.info(f"📋 Cabeçalho da tabela: {table_data[0] if table_data else 'Vazio'}")
             table = Table(table_data)
@@ -1731,7 +1731,7 @@ def exportar():
             logger.info("✅ Adicionando tabela aos elementos do PDF")
             elements.append(table)
         else:
-            logger.info(f"⚠️ Tabela NÃO será criada: tipo={tipo}, cadastro_id={cadastro_id}")
+            logger.info(f"⚠️ Tabela NÃO será criada: tipo={tipo}, cadastro_id={cadastro_id}, condição: {tipo not in ['estatistico', 'renda'] and not (tipo == 'completo' and cadastro_id)}")
         
         logger.info(f"🔨 Construindo PDF com {len(elements)} elementos")
         doc.build(elements)
