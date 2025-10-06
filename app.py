@@ -1229,6 +1229,12 @@ def exportar():
         elements.append(title)
         elements.append(Spacer(1, 12))
         
+        # Adicionar subtítulo para relatório individual de saúde
+        if tipo == 'saude' and cadastro_id:
+            subtitle = Paragraph(f"<i>Relatório detalhado de condições de saúde - Cadastro ID: {cadastro_id}</i>", styles['Normal'])
+            elements.append(subtitle)
+            elements.append(Spacer(1, 8))
+        
         # Dados da tabela
         logger.info(f"🔧 Preparando dados da tabela para tipo={tipo}")
         if tipo == 'simplificado':
@@ -1247,16 +1253,38 @@ def exportar():
             logger.info(f"🔍 Processando {len(dados)} registros para PDF de saúde")
             for i, row in enumerate(dados):
                 logger.info(f"📋 Registro {i+1}: {dict(row) if hasattr(row, 'keys') else row}")
+                
+                # Formatação melhorada dos dados
+                doencas_cronicas = 'Não possui'
+                if row['tem_doenca_cronica'] == 'Sim':
+                    doencas_cronicas = str(row['doencas_cronicas'] or 'Não especificado')[:50] + ('...' if len(str(row['doencas_cronicas'] or '')) > 50 else '')
+                
+                medicamentos = 'Não usa'
+                if row['usa_medicamento_continuo'] == 'Sim':
+                    medicamentos = str(row['medicamentos_continuos'] or 'Não especificado')[:50] + ('...' if len(str(row['medicamentos_continuos'] or '')) > 50 else '')
+                
+                doencas_mentais = 'Não possui'
+                if row['tem_doenca_mental'] == 'Sim':
+                    doencas_mentais = str(row['doencas_mentais'] or 'Não especificado')[:50] + ('...' if len(str(row['doencas_mentais'] or '')) > 50 else '')
+                
+                deficiencias = 'Não possui'
+                if row['tem_deficiencia'] == 'Sim':
+                    deficiencias = str(row['tipo_deficiencia'] or 'Não especificado')[:50] + ('...' if len(str(row['tipo_deficiencia'] or '')) > 50 else '')
+                
+                cuidados = 'Não precisa'
+                if row['precisa_cuidados_especiais'] == 'Sim':
+                    cuidados = str(row['cuidados_especiais'] or 'Não especificado')[:50] + ('...' if len(str(row['cuidados_especiais'] or '')) > 50 else '')
+                
                 row_data = [
-                    str(row['nome_completo'] or ''),
-                    str(row['idade'] or ''),
-                    str(row['telefone'] or ''),
-                    str(row['bairro'] or ''),
-                    str(row['doencas_cronicas'] or 'Não informado') if row['tem_doenca_cronica'] == 'Sim' else 'Não',
-                    str(row['medicamentos_continuos'] or 'Não informado') if row['usa_medicamento_continuo'] == 'Sim' else 'Não',
-                    str(row['doencas_mentais'] or 'Não informado') if row['tem_doenca_mental'] == 'Sim' else 'Não',
-                    str(row['tipo_deficiencia'] or 'Não informado') if row['tem_deficiencia'] == 'Sim' else 'Não',
-                    str(row['cuidados_especiais'] or 'Não informado') if row['precisa_cuidados_especiais'] == 'Sim' else 'Não'
+                    str(row['nome_completo'] or 'Não informado')[:30] + ('...' if len(str(row['nome_completo'] or '')) > 30 else ''),
+                    f"{row['idade']} anos" if row['idade'] else 'N/I',
+                    str(row['telefone'] or 'Não informado'),
+                    str(row['bairro'] or 'Não informado')[:20] + ('...' if len(str(row['bairro'] or '')) > 20 else ''),
+                    doencas_cronicas,
+                    medicamentos,
+                    doencas_mentais,
+                    deficiencias,
+                    cuidados
                 ]
                 logger.info(f"📝 Linha da tabela {i+1}: {row_data}")
                 table_data.append(row_data)
@@ -1701,21 +1729,47 @@ def exportar():
             # Estilo específico para relatório de saúde com mais colunas
             if tipo == 'saude':
                 logger.info("🎨 Aplicando estilo para tabela de saúde")
+                # Definir larguras das colunas para melhor layout
+                col_widths = [2.2*inch, 0.8*inch, 1.2*inch, 1.2*inch, 1.8*inch, 1.8*inch, 1.5*inch, 1.5*inch, 1.5*inch]
+                table = Table(table_data, colWidths=col_widths)
                 table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    # Cabeçalho
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
                     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 8),
-                    ('FONTSIZE', (0, 1), (-1, -1), 7),
-                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-                    ('TOPPADDING', (0, 1), (-1, -1), 4),
-                    ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
-                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('FONTSIZE', (0, 0), (-1, 0), 9),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                    ('TOPPADDING', (0, 0), (-1, 0), 10),
+                    
+                    # Dados
+                    ('ALIGN', (0, 1), (0, -1), 'LEFT'),    # Nome - esquerda
+                    ('ALIGN', (1, 1), (1, -1), 'CENTER'),  # Idade - centro
+                    ('ALIGN', (2, 1), (2, -1), 'CENTER'),  # Telefone - centro
+                    ('ALIGN', (3, 1), (3, -1), 'LEFT'),    # Bairro - esquerda
+                    ('ALIGN', (4, 1), (-1, -1), 'LEFT'),   # Campos de saúde - esquerda
+                    
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 8),
+                    ('TOPPADDING', (0, 1), (-1, -1), 6),
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                    
+                    # Cores alternadas nas linhas
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+                    
+                    # Bordas
                     ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    ('LINEBELOW', (0, 0), (-1, 0), 2, colors.darkblue),
+                    
+                    # Quebra de linha e alinhamento vertical
                     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                     ('WORDWRAP', (0, 0), (-1, -1), True)
                 ]))
+            else:
+                table = Table(table_data)
             else:
                 logger.info("🎨 Aplicando estilo padrão para tabela")
                 table.setStyle(TableStyle([
