@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, send_from_directory
 from database import get_db_connection, init_db_tables, create_admin_user
+from psycopg2.extras import RealDictCursor
 import csv
 import io
 import os
@@ -2079,7 +2080,7 @@ def editar_cadastro(cadastro_id):
     logger.info(f"📝 Carregando cadastro para edição: ID {cadastro_id}")
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         logger.debug(f"Buscando cadastro ID {cadastro_id}")
         
         cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
