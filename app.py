@@ -1192,18 +1192,21 @@ def exportar():
     
     # Para PDF, usar ReportLab
     elif formato == 'pdf':
+        logger.info("📄 Iniciando geração de PDF")
         from reportlab.lib.pagesizes import letter, A4
         from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
         from reportlab.lib.styles import getSampleStyleSheet
         from reportlab.lib import colors
         from reportlab.lib.units import inch
         
+        logger.info("📦 Criando buffer e documento PDF")
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=A4)
         elements = []
         styles = getSampleStyleSheet()
         
         # Título
+        logger.info(f"📝 Criando título para tipo={tipo}, cadastro_id={cadastro_id}")
         if tipo == 'completo':
             title = Paragraph("AMEG - Relatório Completo de Cadastros", styles['Title'])
         elif tipo == 'simplificado':
@@ -1222,11 +1225,14 @@ def exportar():
         else:
             title = Paragraph("AMEG - Relatório Geral", styles['Title'])
         
+        logger.info("✅ Título criado, adicionando aos elementos")
         elements.append(title)
         elements.append(Spacer(1, 12))
         
         # Dados da tabela
+        logger.info(f"🔧 Preparando dados da tabela para tipo={tipo}")
         if tipo == 'simplificado':
+            logger.info("📊 Processando dados simplificados")
             table_data = [['Nome', 'Telefone', 'Bairro', 'Renda']]
             for row in dados:
                 table_data.append([
@@ -1236,11 +1242,12 @@ def exportar():
                     f"R$ {row[3] or '0'}" if row[3] else 'Não informado'
                 ])
         elif tipo == 'saude':
+            logger.info("🏥 Processando dados de saúde")
             table_data = [['Nome', 'Idade', 'Telefone', 'Bairro', 'Doenças Crônicas', 'Medicamentos', 'Doenças Mentais', 'Deficiências', 'Cuidados Especiais']]
             logger.info(f"🔍 Processando {len(dados)} registros para PDF de saúde")
             for i, row in enumerate(dados):
                 logger.info(f"📋 Registro {i+1}: {dict(row) if hasattr(row, 'keys') else row}")
-                table_data.append([
+                row_data = [
                     str(row['nome_completo'] or ''),
                     str(row['idade'] or ''),
                     str(row['telefone'] or ''),
@@ -1250,7 +1257,9 @@ def exportar():
                     str(row['doencas_mentais'] or 'Não informado') if row['tem_doenca_mental'] == 'Sim' else 'Não',
                     str(row['tipo_deficiencia'] or 'Não informado') if row['tem_deficiencia'] == 'Sim' else 'Não',
                     str(row['cuidados_especiais'] or 'Não informado') if row['precisa_cuidados_especiais'] == 'Sim' else 'Não'
-                ])
+                ]
+                logger.info(f"📝 Linha da tabela {i+1}: {row_data}")
+                table_data.append(row_data)
         elif tipo == 'estatistico':
             # Criar múltiplas tabelas para o relatório estatístico completo
             from reportlab.platypus import Paragraph, Spacer
@@ -1683,11 +1692,15 @@ def exportar():
                     ])
         
         # Criar tabela (exceto para estatístico, renda e cadastro individual que já criaram seus próprios elementos)
+        logger.info(f"🔧 Verificando se deve criar tabela: tipo={tipo}, cadastro_id={cadastro_id}")
         if tipo not in ['estatistico', 'renda'] and not cadastro_id:
+            logger.info(f"📊 Criando tabela com {len(table_data)} linhas")
+            logger.info(f"📋 Cabeçalho da tabela: {table_data[0] if table_data else 'Vazio'}")
             table = Table(table_data)
             
             # Estilo específico para relatório de saúde com mais colunas
             if tipo == 'saude':
+                logger.info("🎨 Aplicando estilo para tabela de saúde")
                 table.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -1704,6 +1717,7 @@ def exportar():
                     ('WORDWRAP', (0, 0), (-1, -1), True)
                 ]))
             else:
+                logger.info("🎨 Aplicando estilo padrão para tabela")
                 table.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -1714,7 +1728,12 @@ def exportar():
                     ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                     ('GRID', (0, 0), (-1, -1), 1, colors.black)
                 ]))
+            logger.info("✅ Adicionando tabela aos elementos do PDF")
             elements.append(table)
+        else:
+            logger.info(f"⚠️ Tabela NÃO será criada: tipo={tipo}, cadastro_id={cadastro_id}")
+        
+        logger.info(f"🔨 Construindo PDF com {len(elements)} elementos")
         doc.build(elements)
         
         buffer.seek(0)
