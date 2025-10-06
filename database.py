@@ -341,6 +341,26 @@ def init_db_tables():
         ''')
         logger.debug("✅ Tabela auditoria criada")
         
+        # Criar índices para otimização de performance
+        logger.debug("Criando índices de otimização...")
+        
+        # Índices para tabela cadastros
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_cadastros_cpf ON cadastros(cpf)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_cadastros_nome ON cadastros(nome_completo)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_cadastros_data ON cadastros(data_cadastro)')
+        
+        # Índices para tabela auditoria
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_auditoria_usuario ON auditoria(usuario)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_auditoria_data ON auditoria(data_acao)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_auditoria_tabela ON auditoria(tabela)')
+        
+        # Índices para tabela arquivos_saude
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_arquivos_cadastro ON arquivos_saude(cadastro_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_arquivos_data ON arquivos_saude(data_upload)')
+        
+        logger.debug("✅ Índices de otimização criados")
+        
+        
         
         conn.commit()
         logger.debug("✅ Commit realizado")

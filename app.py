@@ -1,12 +1,66 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, send_from_directory
 from database import get_db_connection, init_db_tables, create_admin_user, registrar_auditoria
+
+# Cache simples em memória para estatísticas
+stats_cache = {
+    'data': None,
+    'timestamp': None,
+    'ttl': 300  # 5 minutos
+}
+
+def get_cached_stats():
+    """Retorna estatísticas do cache ou busca no banco se expirado"""
+    now = datetime.now()
+    
+    # Verificar se cache é válido
+    if (stats_cache['data'] is not None and 
+        stats_cache['timestamp'] is not None and
+        (now - stats_cache['timestamp']).seconds < stats_cache['ttl']):
+        return stats_cache['data']
+    
+    # Cache expirado, buscar dados atualizados
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Contar registros otimizado
+        cursor.execute('SELECT COUNT(*) FROM cadastros')
+        total_cadastros = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM arquivos_saude')
+        total_arquivos = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM usuarios WHERE tipo = %s', ('admin',))
+        total_admins = cursor.fetchone()[0]
+        
+        cursor.close()
+        conn.close()
+        
+        # Atualizar cache
+        stats_cache['data'] = {
+            'total': total_cadastros,
+            'arquivos': total_arquivos,
+            'admins': total_admins
+        }
+        stats_cache['timestamp'] = now
+        
+        return stats_cache['data']
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar estatísticas: {e}")
+        return {'total': 0, 'arquivos': 0, 'admins': 0}
+
+def invalidate_stats_cache():
+    """Invalida o cache de estatísticas"""
+    stats_cache['data'] = None
+    stats_cache['timestamp'] = None
 from psycopg2.extras import RealDictCursor
 import csv
 import io
 import os
 import logging
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
@@ -226,17 +280,18 @@ def dashboard():
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
+    # Usar cache para estatísticas
+    stats = get_cached_stats()
+    
+    # Buscar últimos cadastros (não cachear pois muda frequentemente)
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT COUNT(*) FROM cadastros')
-    total = cursor.fetchone()[0]
-    
     cursor.execute('SELECT id, nome_completo, telefone, bairro, data_cadastro FROM cadastros ORDER BY data_cadastro DESC LIMIT 5')
     ultimos = cursor.fetchall()
     cursor.close()
     conn.close()
     
-    return render_template('dashboard.html', total=total, ultimos=ultimos)
+    return render_template('dashboard.html', total=stats['total'], ultimos=ultimos)
 
 @app.route('/arquivos_cadastros')
 def arquivos_cadastros():
@@ -585,6 +640,9 @@ def cadastrar():
             
             logger.info("✅ INSERT executado com sucesso!")
             
+            # Invalidar cache de estatísticas
+            invalidate_stats_cache()
+            
             # Registrar auditoria
             registrar_auditoria(
                 usuario=session.get('usuario', 'Sistema'),
@@ -667,14 +725,24 @@ def relatorio_completo():
         logger.warning("⚠️ Usuário não logado tentando acessar relatorio_completo")
         return redirect(url_for('login'))
     
+    # Paginação
+    page = int(request.args.get('page', 1))
+    per_page = 50  # 50 registros por página
+    offset = (page - 1) * per_page
+    
     try:
         logger.info("📊 Obtendo conexão com banco de dados...")
         conn = get_db_connection()
         cursor = conn.cursor()
         logger.info("✅ Conexão estabelecida")
         
-        logger.info("🔍 Executando query SELECT * FROM cadastros...")
-        cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
+        # Contar total de registros
+        cursor.execute('SELECT COUNT(*) FROM cadastros')
+        total_records = cursor.fetchone()[0]
+        total_pages = (total_records + per_page - 1) // per_page
+        
+        logger.info(f"🔍 Executando query paginada (página {page}/{total_pages})...")
+        cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo LIMIT %s OFFSET %s', (per_page, offset))
         logger.info("✅ Query executada com sucesso")
         
         logger.info("📋 Fazendo fetchall()...")
@@ -691,7 +759,11 @@ def relatorio_completo():
         logger.info("✅ Conexão fechada")
         
         logger.info("🎨 Renderizando template relatorio_completo.html...")
-        return render_template('relatorio_completo.html', cadastros=cadastros)
+        return render_template('relatorio_completo.html', 
+                             cadastros=cadastros,
+                             page=page,
+                             total_pages=total_pages,
+                             total_records=total_records)
         
     except Exception as e:
         logger.error(f"❌ ERRO em relatorio_completo: {str(e)}")
@@ -2895,26 +2967,13 @@ def api_stats():
         return {"error": "Não autorizado"}, 401
     
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Contar registros em cada tabela
-        cursor.execute('SELECT COUNT(*) FROM cadastros')
-        cadastros = cursor.fetchone()[0]
-        
-        cursor.execute('SELECT COUNT(*) FROM arquivos_saude')
-        arquivos = cursor.fetchone()[0]
-        
-        cursor.execute('SELECT COUNT(*) FROM auditoria')
-        auditoria = cursor.fetchone()[0]
-        
-        cursor.close()
-        conn.close()
+        # Usar cache para estatísticas
+        stats = get_cached_stats()
         
         return {
-            "cadastros": cadastros,
-            "arquivos": arquivos,
-            "auditoria": auditoria
+            "cadastros": stats['total'],
+            "arquivos": stats['arquivos'],
+            "auditoria": stats.get('auditoria', 0)  # Fallback para compatibilidade
         }
         
     except Exception as e:
