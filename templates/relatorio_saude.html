@@ -17,28 +17,29 @@
         table { width: 100%; background: white; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); table-layout: fixed; }
         th, td { padding: 6px; text-align: left; border-bottom: 1px solid #ddd; font-size: 11px; word-wrap: break-word; overflow-wrap: break-word; }
         th { background: #e74c3c; color: white; }
-        th:nth-child(1) { width: 5%; } /* ID */
-        th:nth-child(2) { width: 15%; } /* Nome */
-        th:nth-child(3) { width: 6%; } /* Idade */
-        th:nth-child(4) { width: 10%; } /* Telefone */
-        th:nth-child(5) { width: 10%; } /* Bairro */
+        th:nth-child(1) { width: 4%; } /* ID */
+        th:nth-child(2) { width: 14%; } /* Nome */
+        th:nth-child(3) { width: 5%; } /* Idade */
+        th:nth-child(4) { width: 9%; } /* Telefone */
+        th:nth-child(5) { width: 9%; } /* Bairro */
         th:nth-child(6) { width: 12%; } /* Doenças Crônicas */
         th:nth-child(7) { width: 12%; } /* Medicamentos */
         th:nth-child(8) { width: 10%; } /* Saúde Mental */
         th:nth-child(9) { width: 10%; } /* Deficiência */
         th:nth-child(10) { width: 10%; } /* Cuidados Especiais */
-        th:nth-child(11) { width: 10%; } /* Ações */
+        th:nth-child(11) { width: 15%; } /* Ações */
         th { background: #e74c3c; color: white; }
         .logout { float: right; color: white; text-decoration: none; }
         .export-btn { background: #27ae60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px; display: inline-block; }
         .health-tag { background: #e74c3c; color: white; padding: 2px 4px; border-radius: 3px; font-size: 10px; margin: 1px; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .actions-cell { white-space: nowrap; }
-        .actions-cell a { font-size: 10px; margin-right: 5px; text-decoration: none; }
+        .actions-cell a { font-size: 16px; margin-right: 8px; text-decoration: none; padding: 4px; border-radius: 3px; display: inline-block; }
+        .actions-cell a:hover { background: #f8f9fa; }
         @media (max-width: 768px) {
             .container { padding: 10px; }
             th, td { font-size: 9px; padding: 4px; }
             .health-tag { font-size: 8px; padding: 1px 3px; }
-            .actions-cell a { font-size: 9px; }
+            .actions-cell a { font-size: 14px; margin-right: 6px; }
         }
     </style>
 </head>
@@ -157,8 +158,8 @@
                         {% endif %}
                     </td>
                     <td class="actions-cell">
-                        <a href="/arquivos_saude/{{ cadastro.id }}" style="color: #3498db;" title="Ver arquivos">📁</a>
-                        <a href="/exportar?tipo=saude&formato=pdf&cadastro_id={{ cadastro.id }}" style="color: #e74c3c;" title="Exportar PDF">📋</a>
+                        <a href="/arquivos_saude/{{ cadastro.id }}" style="color: #3498db;" title="Ver arquivos de saúde">📁 Arquivos</a>
+                        <a href="/exportar?tipo=saude&formato=pdf&cadastro_id={{ cadastro.id }}" style="color: #e74c3c;" title="Exportar PDF individual">📋 PDF</a>
                     </td>
                 </tr>
                 {% endfor %}
