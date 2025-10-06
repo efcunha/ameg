@@ -728,18 +728,21 @@ def cadastrar():
                         nome_pessoa = request.form.get(f'saude_nome_{pessoa_num}')
                         
                         if nome_pessoa:  # Só processar se tem nome
+                            # Processar checkboxes de condições
+                            condicoes = request.form.getlist(f'saude_condicoes_{pessoa_num}[]')
+                            
                             dados_pessoa = {
                                 'nome_pessoa': nome_pessoa,
-                                'tem_doenca_cronica': request.form.get(f'saude_doenca_cronica_{pessoa_num}', ''),
+                                'tem_doenca_cronica': 'Sim' if 'doenca_cronica' in condicoes else 'Não',
                                 'doencas_cronicas': request.form.get(f'saude_doencas_cronicas_{pessoa_num}', ''),
-                                'usa_medicamento_continuo': request.form.get(f'saude_medicamento_continuo_{pessoa_num}', ''),
+                                'usa_medicamento_continuo': 'Sim' if 'medicamento' in condicoes else 'Não',
                                 'medicamentos': request.form.get(f'saude_medicamentos_{pessoa_num}', ''),
-                                'tem_doenca_mental': request.form.get(f'saude_doenca_mental_{pessoa_num}', ''),
+                                'tem_doenca_mental': 'Sim' if 'doenca_mental' in condicoes else 'Não',
                                 'doencas_mentais': request.form.get(f'saude_doencas_mentais_{pessoa_num}', ''),
-                                'tem_deficiencia': request.form.get(f'saude_deficiencia_{pessoa_num}', ''),
+                                'tem_deficiencia': 'Sim' if 'deficiencia' in condicoes else 'Não',
                                 'deficiencias': request.form.get(f'saude_deficiencias_{pessoa_num}', ''),
-                                'precisa_cuidados_especiais': request.form.get(f'saude_cuidados_especiais_{pessoa_num}', ''),
-                                'cuidados_especiais': request.form.get(f'saude_cuidados_desc_{pessoa_num}', '')
+                                'precisa_cuidados_especiais': 'Sim' if 'cuidados' in condicoes else 'Não',
+                                'cuidados_especiais': request.form.get(f'saude_cuidados_especiais_{pessoa_num}', '')
                             }
                             
                             # Inserir dados de saúde da pessoa
@@ -2773,18 +2776,21 @@ def atualizar_cadastro(cadastro_id):
                     nome_pessoa = request.form.get(f'saude_nome_{pessoa_num}')
                     
                     if nome_pessoa:  # Só processar se tem nome
+                        # Processar checkboxes de condições
+                        condicoes = request.form.getlist(f'saude_condicoes_{pessoa_num}[]')
+                        
                         dados_pessoa = {
                             'nome_pessoa': nome_pessoa,
-                            'tem_doenca_cronica': request.form.get(f'saude_doenca_cronica_{pessoa_num}', ''),
+                            'tem_doenca_cronica': 'Sim' if 'doenca_cronica' in condicoes else 'Não',
                             'doencas_cronicas': request.form.get(f'saude_doencas_cronicas_{pessoa_num}', ''),
-                            'usa_medicamento_continuo': request.form.get(f'saude_medicamento_continuo_{pessoa_num}', ''),
+                            'usa_medicamento_continuo': 'Sim' if 'medicamento' in condicoes else 'Não',
                             'medicamentos': request.form.get(f'saude_medicamentos_{pessoa_num}', ''),
-                            'tem_doenca_mental': request.form.get(f'saude_doenca_mental_{pessoa_num}', ''),
+                            'tem_doenca_mental': 'Sim' if 'doenca_mental' in condicoes else 'Não',
                             'doencas_mentais': request.form.get(f'saude_doencas_mentais_{pessoa_num}', ''),
-                            'tem_deficiencia': request.form.get(f'saude_deficiencia_{pessoa_num}', ''),
+                            'tem_deficiencia': 'Sim' if 'deficiencia' in condicoes else 'Não',
                             'deficiencias': request.form.get(f'saude_deficiencias_{pessoa_num}', ''),
-                            'precisa_cuidados_especiais': request.form.get(f'saude_cuidados_especiais_{pessoa_num}', ''),
-                            'cuidados_especiais': request.form.get(f'saude_cuidados_desc_{pessoa_num}', '')
+                            'precisa_cuidados_especiais': 'Sim' if 'cuidados' in condicoes else 'Não',
+                            'cuidados_especiais': request.form.get(f'saude_cuidados_especiais_{pessoa_num}', '')
                         }
                         
                         # Inserir dados de saúde da pessoa
