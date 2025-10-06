@@ -5,6 +5,7 @@ import csv
 import io
 import os
 import logging
+import traceback
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -186,7 +187,7 @@ def fazer_login():
     cursor = conn.cursor()
     
     # No Railway sempre será PostgreSQL
-    cursor.execute('SELECT senha FROM usuarios WHERE usuario = %s', (usuario,))
+    cursor.execute('SELECT senha, tipo FROM usuarios WHERE usuario = %s', (usuario,))
     
     user = cursor.fetchone()
     cursor.close()
@@ -194,6 +195,7 @@ def fazer_login():
     
     if user and check_password_hash(user[0], senha):
         session['usuario'] = usuario
+        session['tipo'] = user[1]  # Definir o tipo na sessão
         
         # Registrar auditoria de login
         registrar_auditoria(
@@ -2636,17 +2638,24 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=port, debug=False)
 @app.route('/auditoria')
 def auditoria():
+    logger.info("🔍 Acessando rota de auditoria")
+    
     if 'usuario' not in session:
+        logger.debug("Usuário não logado tentando acessar auditoria")
         return redirect(url_for('login'))
     
     # Verificar se é admin
     if session.get('tipo') != 'admin':
+        logger.warning(f"Usuário {session.get('usuario')} (tipo: {session.get('tipo')}) tentou acessar auditoria")
         flash('Acesso negado. Apenas administradores podem acessar a auditoria.')
         return redirect(url_for('dashboard'))
+    
+    logger.info(f"Admin {session.get('usuario')} acessando auditoria")
     
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
+        logger.debug("Conexão estabelecida para auditoria")
         
         # Parâmetros de filtro
         usuario_filtro = request.args.get('usuario', '')
@@ -2656,6 +2665,8 @@ def auditoria():
         data_final = request.args.get('data_final', '')
         page = int(request.args.get('page', 1))
         per_page = 50
+        
+        logger.debug(f"Filtros: usuario={usuario_filtro}, acao={acao_filtro}, tabela={tabela_filtro}")
         
         # Construir query com filtros
         where_conditions = []
@@ -2685,10 +2696,14 @@ def auditoria():
         if where_conditions:
             where_clause = "WHERE " + " AND ".join(where_conditions)
         
+        logger.debug(f"WHERE clause: {where_clause}")
+        
         # Contar total de registros
         cursor.execute(f"SELECT COUNT(*) FROM auditoria {where_clause}", params)
         total_records = cursor.fetchone()[0]
         total_pages = (total_records + per_page - 1) // per_page
+        
+        logger.debug(f"Total de registros: {total_records}")
         
         # Buscar registros com paginação
         offset = (page - 1) * per_page
@@ -2699,6 +2714,7 @@ def auditoria():
         """, params + [per_page, offset])
         
         auditorias = cursor.fetchall()
+        logger.debug(f"Registros encontrados: {len(auditorias)}")
         
         # Estatísticas
         cursor.execute("SELECT COUNT(*) FROM auditoria")
@@ -2721,11 +2737,15 @@ def auditoria():
             'ultima_acao': stats_ultima
         }
         
+        logger.debug(f"Estatísticas: {stats}")
+        
         # Parâmetros para paginação
         query_params = "&".join([f"{k}={v}" for k, v in request.args.items() if k != 'page'])
         
         cursor.close()
         conn.close()
+        
+        logger.info("✅ Dados de auditoria carregados com sucesso")
         
         return render_template('auditoria.html', 
                              auditorias=auditorias,
@@ -2736,5 +2756,6 @@ def auditoria():
         
     except Exception as e:
         logger.error(f"❌ Erro ao carregar auditoria: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         flash('Erro ao carregar dados de auditoria.')
         return redirect(url_for('dashboard'))
