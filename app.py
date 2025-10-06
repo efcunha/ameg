@@ -88,7 +88,7 @@ def after_request(response):
     
     # Compressão manual para arquivos CSS/JS se disponível
     if (request.endpoint == 'static' and 
-        request.accept_encodings.accept('gzip') and
+        'gzip' in request.accept_encodings and
         (request.path.endswith('.css') or request.path.endswith('.js'))):
         
         gzip_path = request.path + '.gz'
