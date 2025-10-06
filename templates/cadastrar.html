@@ -1407,6 +1407,15 @@
         });
     });
     
+    // Interceptar submit do formulário para verificar foto
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const fotoValue = document.getElementById('fotoBase64').value;
+        console.log('🚀 SUBMIT - Valor da foto:', fotoValue ? 'Presente (' + fotoValue.length + ' chars)' : 'AUSENTE');
+        if (!fotoValue) {
+            console.warn('⚠️ ATENÇÃO: Formulário sendo enviado SEM foto!');
+        }
+    });
+
     // Controle de Captura de Foto
     let stream = null;
     const video = document.getElementById('cameraVideo');
