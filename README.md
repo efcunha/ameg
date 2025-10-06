@@ -49,42 +49,42 @@ git push
 
 ```
 ameg/
-├── app.py                  # Aplicação principal Flask
-├── database.py             # Módulo de banco PostgreSQL/SQLite
-├── config.py               # Configurações por ambiente
-├── reset_counter.py        # Script para zerar contador do banco
-├── requirements.txt        # Dependências Python
-├── Dockerfile              # Dockerfile para Railway
-├── start.sh                # Script de inicialização
-├── railway.toml            # Configuração Railway
-├── railway.json            # Configuração Railway (legacy)
-├── .railwayignore          # Arquivos ignorados no deploy
-├── .dockerignore           # Arquivos ignorados no Docker
-├── .env.example            # Exemplo de variáveis de ambiente
-├── .gitignore              # Arquivos ignorados no Git
-├── templates/              # Templates HTML
-│   ├── login.html          # Página de login
-│   ├── dashboard.html      # Dashboard principal
-│   ├── cadastrar.html      # Formulário de cadastro
-│   ├── editar_cadastro.html # Edição de cadastros
-│   ├── relatorios.html     # Menu de relatórios
+├── app.py                    # Aplicação principal Flask
+├── database.py               # Módulo de banco PostgreSQL/SQLite
+├── config.py                 # Configurações por ambiente
+├── reset_counter.py          # Script para zerar contador do banco
+├── requirements.txt          # Dependências Python
+├── Dockerfile                # Dockerfile para Railway
+├── start.sh                  # Script de inicialização
+├── railway.toml              # Configuração Railway
+├── railway.json              # Configuração Railway (legacy)
+├── .railwayignore            # Arquivos ignorados no deploy
+├── .dockerignore             # Arquivos ignorados no Docker
+├── .env.example              # Exemplo de variáveis de ambiente
+├── .gitignore                # Arquivos ignorados no Git
+├── templates/                # Templates HTML
+│   ├── login.html            # Página de login
+│   ├── dashboard.html        # Dashboard principal
+│   ├── cadastrar.html        # Formulário de cadastro
+│   ├── editar_cadastro.html  # Edição de cadastros
+│   ├── relatorios.html       # Menu de relatórios
 │   ├── tipos_relatorios.html # Tipos de relatórios
-│   ├── relatorio_*.html    # Diversos relatórios
-│   ├── arquivos_*.html     # Gestão de arquivos
-│   ├── usuarios.html       # Gestão de usuários
-│   ├── criar_usuario.html  # Criação de usuários
-│   ├── editar_usuario.html # Edição de usuários
-│   └── ficha.html          # Ficha individual
-├── static/                 # Arquivos estáticos
+│   ├── relatorio_*.html      # Diversos relatórios
+│   ├── arquivos_*.html       # Gestão de arquivos
+│   ├── usuarios.html         # Gestão de usuários
+│   ├── criar_usuario.html    # Criação de usuários
+│   ├── editar_usuario.html   # Edição de usuários
+│   └── ficha.html            # Ficha individual
+├── static/                   # Arquivos estáticos
 │   ├── css/
-│   │   └── mobile.css      # Estilos responsivos
+│   │   └── mobile.css        # Estilos responsivos
 │   └── img/
-│       └── logo-ameg.jpeg  # Logo da AMEG
-├── imagens/                # Imagens do projeto
-│   └── LOGO AMEG.jpeg      # Logo original
-├── data/                   # Dados e uploads
-├── __pycache__/            # Cache Python
-└── .git/                   # Controle de versão Git
+│       └── logo-ameg.jpeg    # Logo da AMEG
+├── imagens/                  # Imagens do projeto
+│   └── LOGO AMEG.jpeg        # Logo original
+├── data/                     # Dados e uploads
+├── __pycache__/              # Cache Python
+└── .git/                     # Controle de versão Git
 ```
 
 ## Banco de Dados
