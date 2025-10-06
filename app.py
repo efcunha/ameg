@@ -716,6 +716,53 @@ def cadastrar():
                             uploaded_files.append(f"{file_type}: {file.filename}")
                             logger.debug(f"Arquivo {file.filename} salvo com sucesso")
             
+            # Processar dados de saúde por pessoa
+            if cadastro_id:
+                logger.debug("Processando dados de saúde por pessoa...")
+                pessoas_saude = []
+                
+                # Buscar todos os campos de saúde por pessoa
+                for key in request.form.keys():
+                    if key.startswith('saude_nome_'):
+                        pessoa_num = key.split('_')[-1]
+                        nome_pessoa = request.form.get(f'saude_nome_{pessoa_num}')
+                        
+                        if nome_pessoa:  # Só processar se tem nome
+                            dados_pessoa = {
+                                'nome_pessoa': nome_pessoa,
+                                'tem_doenca_cronica': request.form.get(f'saude_doenca_cronica_{pessoa_num}', ''),
+                                'doencas_cronicas': request.form.get(f'saude_doencas_cronicas_{pessoa_num}', ''),
+                                'usa_medicamento_continuo': request.form.get(f'saude_medicamento_continuo_{pessoa_num}', ''),
+                                'medicamentos': request.form.get(f'saude_medicamentos_{pessoa_num}', ''),
+                                'tem_doenca_mental': request.form.get(f'saude_doenca_mental_{pessoa_num}', ''),
+                                'doencas_mentais': request.form.get(f'saude_doencas_mentais_{pessoa_num}', ''),
+                                'tem_deficiencia': request.form.get(f'saude_deficiencia_{pessoa_num}', ''),
+                                'deficiencias': request.form.get(f'saude_deficiencias_{pessoa_num}', ''),
+                                'precisa_cuidados_especiais': request.form.get(f'saude_cuidados_especiais_{pessoa_num}', ''),
+                                'cuidados_especiais': request.form.get(f'saude_cuidados_desc_{pessoa_num}', '')
+                            }
+                            
+                            # Inserir dados de saúde da pessoa
+                            cursor.execute('''
+                                INSERT INTO dados_saude_pessoa (
+                                    cadastro_id, nome_pessoa, tem_doenca_cronica, doencas_cronicas,
+                                    usa_medicamento_continuo, medicamentos, tem_doenca_mental, doencas_mentais,
+                                    tem_deficiencia, deficiencias, precisa_cuidados_especiais, cuidados_especiais
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            ''', (
+                                cadastro_id, dados_pessoa['nome_pessoa'], dados_pessoa['tem_doenca_cronica'],
+                                dados_pessoa['doencas_cronicas'], dados_pessoa['usa_medicamento_continuo'],
+                                dados_pessoa['medicamentos'], dados_pessoa['tem_doenca_mental'],
+                                dados_pessoa['doencas_mentais'], dados_pessoa['tem_deficiencia'],
+                                dados_pessoa['deficiencias'], dados_pessoa['precisa_cuidados_especiais'],
+                                dados_pessoa['cuidados_especiais']
+                            ))
+                            
+                            pessoas_saude.append(nome_pessoa)
+                            logger.debug(f"Dados de saúde salvos para: {nome_pessoa}")
+                
+                logger.info(f"✅ Dados de saúde salvos para {len(pessoas_saude)} pessoas")
+            
             conn.commit()
             conn.close()
             logger.info("✅ Cadastro e arquivos salvos com sucesso no banco")

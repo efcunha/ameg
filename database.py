@@ -330,6 +330,28 @@ def init_db_tables():
             
         logger.debug("✅ Tabela arquivos_saude criada")
         
+        # Criar tabela dados_saude_pessoa
+        logger.debug("Criando tabela dados_saude_pessoa...")
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS dados_saude_pessoa (
+                id SERIAL PRIMARY KEY,
+                cadastro_id INTEGER REFERENCES cadastros(id) ON DELETE CASCADE,
+                nome_pessoa VARCHAR(255) NOT NULL,
+                tem_doenca_cronica VARCHAR(10),
+                doencas_cronicas TEXT,
+                usa_medicamento_continuo VARCHAR(10),
+                medicamentos TEXT,
+                tem_doenca_mental VARCHAR(10),
+                doencas_mentais TEXT,
+                tem_deficiencia VARCHAR(10),
+                deficiencias TEXT,
+                precisa_cuidados_especiais VARCHAR(10),
+                cuidados_especiais TEXT,
+                data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        logger.debug("✅ Tabela dados_saude_pessoa criada")
+        
         # Tabela auditoria
         logger.debug("Criando tabela auditoria...")
         cursor.execute('''
