@@ -2439,6 +2439,14 @@ def atualizar_cadastro(cadastro_id):
         
         logger.debug(f"Total de campos para atualização: {len(campos)}")
         
+        # Log específico para foto_base64
+        foto_form_value = request.form.get('foto_base64', '')
+        logger.debug(f"🖼️ Valor foto_base64 do formulário: {'Presente' if foto_form_value else 'Ausente'}")
+        logger.debug(f"🖼️ Tamanho foto_base64: {len(foto_form_value)} caracteres")
+        if foto_form_value:
+            logger.debug(f"🖼️ Primeiros 50 chars: {foto_form_value[:50]}...")
+        
+        
         # Tratar campos numéricos vazios como NULL
         def safe_int_or_null(value):
             if value == '' or value is None:
