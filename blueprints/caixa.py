@@ -238,6 +238,7 @@ def exportar_comprovantes_pdf(movimentacao_id):
         from reportlab.lib.units import inch
         import io
         from PIL import Image as PILImage
+        import PyPDF2
         
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -329,7 +330,6 @@ def exportar_comprovantes_pdf(movimentacao_id):
                     elif comp['tipo_arquivo'] == 'application/pdf':
                         # Para PDFs, extrair e incorporar conteúdo
                         try:
-                            import PyPDF2
                             pdf_buffer = io.BytesIO(arquivo_dados)
                             pdf_reader = PyPDF2.PdfReader(pdf_buffer)
                             
@@ -337,17 +337,29 @@ def exportar_comprovantes_pdf(movimentacao_id):
                             elements.append(Spacer(1, 10))
                             
                             # Extrair texto de cada página
+                            total_pages = len(pdf_reader.pages)
+                            logger.info(f"🔍 PDF {comp['nome_arquivo']} tem {total_pages} páginas")
+                            
                             for page_num, page in enumerate(pdf_reader.pages, 1):
-                                text = page.extract_text()
-                                if text.strip():
-                                    elements.append(Paragraph(f"Página {page_num}:", styles['Normal']))
-                                    # Limitar texto para evitar PDFs muito grandes
-                                    text_preview = text[:2000] + "..." if len(text) > 2000 else text
-                                    elements.append(Paragraph(text_preview, styles['Normal']))
-                                    elements.append(Spacer(1, 10))
+                                try:
+                                    text = page.extract_text()
+                                    logger.info(f"📄 Página {page_num}: {len(text)} caracteres extraídos")
+                                    
+                                    if text.strip():
+                                        elements.append(Paragraph(f"Página {page_num}:", styles['Normal']))
+                                        # Limitar texto para evitar PDFs muito grandes
+                                        text_preview = text[:1500] + "..." if len(text) > 1500 else text
+                                        elements.append(Paragraph(text_preview, styles['Normal']))
+                                        elements.append(Spacer(1, 10))
+                                    else:
+                                        elements.append(Paragraph(f"Página {page_num}: (sem texto extraível)", styles['Italic']))
+                                        
+                                except Exception as page_error:
+                                    logger.error(f"❌ Erro na página {page_num}: {page_error}")
+                                    elements.append(Paragraph(f"Página {page_num}: (erro ao extrair texto)", styles['Italic']))
                             
                         except Exception as pdf_error:
-                            logger.error(f"Erro ao processar PDF {comp['nome_arquivo']}: {pdf_error}")
+                            logger.error(f"❌ Erro ao processar PDF {comp['nome_arquivo']}: {pdf_error}")
                             elements.append(Paragraph(f"📄 Arquivo PDF: {comp['nome_arquivo']}", styles['Normal']))
                             elements.append(Paragraph("(Erro ao extrair conteúdo do PDF)", styles['Italic']))
                         
