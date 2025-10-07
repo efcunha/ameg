@@ -26,7 +26,16 @@ def arquivos_cadastros():
             HAVING COUNT(a.id) > 0
             ORDER BY c.nome_completo
         ''')
-        cadastros_com_arquivos = cursor.fetchall()
+        resultados = cursor.fetchall()
+        
+        # Converter tuplas em dicionários
+        cadastros_com_arquivos = []
+        for resultado in resultados:
+            cadastros_com_arquivos.append({
+                'id': resultado[0],
+                'nome_completo': resultado[1],
+                'arquivos_count': resultado[2]
+            })
         
         cursor.close()
         conn.close()

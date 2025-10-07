@@ -68,7 +68,7 @@ def get_cached_stats():
             # Estatísticas de saúde
             cursor.execute('''
                 SELECT 
-                    COUNT(CASE WHEN doenca_cronica = 'sim' THEN 1 END) as com_doenca,
+                    COUNT(CASE WHEN doencas_cronicas = 'sim' THEN 1 END) as com_doenca,
                     COUNT(CASE WHEN deficiencia = 'sim' THEN 1 END) as com_deficiencia,
                     COUNT(CASE WHEN medicamento_continuo = 'sim' THEN 1 END) as usa_medicamento
                 FROM cadastros
