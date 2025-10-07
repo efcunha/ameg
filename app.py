@@ -3353,87 +3353,134 @@ def editar_movimentacao(movimentacao_id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
-    logger.info(f"=== INICIANDO EDIÇÃO DE MOVIMENTAÇÃO ===")
-    logger.info(f"Usuário: {session['usuario']}, Movimentação ID: {movimentacao_id}, Método: {request.method}")
+    logger.info(f"🔧 === EDITAR MOVIMENTAÇÃO - INÍCIO ===")
+    logger.info(f"👤 Usuário: {session['usuario']}")
+    logger.info(f"🆔 Movimentação ID: {movimentacao_id}")
+    logger.info(f"📋 Método HTTP: {request.method}")
     
     if not usuario_tem_permissao(session['usuario'], 'caixa'):
-        logger.warning(f"Usuário {session['usuario']} sem permissão para editar movimentações")
+        logger.warning(f"⚠️ Usuário {session['usuario']} sem permissão para editar movimentações")
         flash('Você não tem permissão para editar movimentações', 'error')
         return redirect(url_for('dashboard'))
     
     try:
-        logger.info("Conectando ao banco de dados...")
+        logger.info("🔌 Conectando ao banco de dados...")
         conn = get_db_connection()
-        cursor = conn.cursor()
-        logger.info("Conexão estabelecida com sucesso")
+        
+        # IMPORTANTE: Usar RealDictCursor para retornar dados como dicionário
+        import psycopg2.extras
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        logger.info("✅ Conexão estabelecida com RealDictCursor")
         
         if request.method == 'GET':
-            logger.info("Processando requisição GET - carregando dados para edição...")
+            logger.info("📖 === MÉTODO GET - CARREGANDO DADOS ===")
             
             # Buscar dados da movimentação
-            logger.info(f"Buscando dados da movimentação ID {movimentacao_id}...")
+            logger.info(f"🔍 Buscando dados da movimentação ID {movimentacao_id}...")
             cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
             movimentacao = cursor.fetchone()
             
             if not movimentacao:
-                logger.warning(f"Movimentação ID {movimentacao_id} não encontrada")
+                logger.warning(f"❌ Movimentação ID {movimentacao_id} não encontrada")
                 flash('Movimentação não encontrada', 'error')
                 return redirect(url_for('caixa'))
             
-            logger.info(f"Movimentação encontrada: Tipo={movimentacao[1]}, Valor={movimentacao[2]}")
+            logger.info(f"✅ Movimentação encontrada:")
+            logger.info(f"  🆔 ID: {movimentacao['id']}")
+            logger.info(f"  📊 Tipo: '{movimentacao['tipo']}'")
+            logger.info(f"  💰 Valor: R$ {movimentacao['valor']}")
+            logger.info(f"  📝 Descrição: '{movimentacao['descricao']}'")
+            logger.info(f"  👤 Cadastro ID: {movimentacao['cadastro_id']}")
+            logger.info(f"  🏷️ Nome Pessoa: '{movimentacao['nome_pessoa']}'")
+            logger.info(f"  🧾 Número Recibo: '{movimentacao['numero_recibo']}'")
+            logger.info(f"  📋 Observações: '{movimentacao['observacoes']}'")
+            logger.info(f"  📅 Data: {movimentacao['data_movimentacao']}")
+            logger.info(f"  👨‍💼 Usuário: '{movimentacao['usuario']}'")
             
             # Buscar pessoas cadastradas
-            logger.info("Buscando lista de pessoas cadastradas...")
+            logger.info("👥 Buscando lista de pessoas cadastradas...")
             pessoas = listar_cadastros_simples()
-            logger.info(f"Encontradas {len(pessoas)} pessoas cadastradas")
+            logger.info(f"✅ Encontradas {len(pessoas)} pessoas cadastradas")
             
             cursor.close()
             conn.close()
-            logger.info("Conexão fechada - renderizando template de edição")
+            logger.info("🔌 Conexão fechada")
             
+            logger.info("🎨 Renderizando template editar_movimentacao.html...")
             return render_template('editar_movimentacao.html', 
                                  movimentacao=movimentacao, 
                                  pessoas=pessoas)
         
         elif request.method == 'POST':
-            logger.info("Processando requisição POST - salvando alterações...")
+            logger.info("💾 === MÉTODO POST - SALVANDO ALTERAÇÕES ===")
             
             # Buscar dados atuais para auditoria
-            logger.info(f"Buscando dados atuais da movimentação ID {movimentacao_id} para auditoria...")
+            logger.info(f"🔍 Buscando dados atuais da movimentação ID {movimentacao_id} para auditoria...")
             cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
             dados_anteriores = cursor.fetchone()
             
             if not dados_anteriores:
-                logger.warning(f"Movimentação ID {movimentacao_id} não encontrada para edição")
+                logger.warning(f"❌ Movimentação ID {movimentacao_id} não encontrada para edição")
                 flash('Movimentação não encontrada', 'error')
                 return redirect(url_for('caixa'))
             
-            logger.info(f"Dados anteriores: Tipo={dados_anteriores[1]}, Valor={dados_anteriores[2]}")
+            logger.info(f"✅ Dados anteriores encontrados:")
+            logger.info(f"  📊 Tipo anterior: '{dados_anteriores['tipo']}'")
+            logger.info(f"  💰 Valor anterior: R$ {dados_anteriores['valor']}")
+            logger.info(f"  📝 Descrição anterior: '{dados_anteriores['descricao']}'")
             
             # Processar dados do formulário
-            logger.info("Processando dados do formulário...")
+            logger.info("📋 Processando dados do formulário...")
             tipo = request.form.get('tipo')
-            valor = float(request.form.get('valor', 0))
+            valor_str = request.form.get('valor', '0')
             descricao = request.form.get('descricao', '').strip()
-            cadastro_id = request.form.get('cadastro_id') or None
+            cadastro_id = request.form.get('cadastro_id')
             nome_pessoa = request.form.get('nome_pessoa', '').strip()
             numero_recibo = request.form.get('numero_recibo', '').strip()
             observacoes = request.form.get('observacoes', '').strip()
             
-            logger.info(f"Novos dados: Tipo={tipo}, Valor={valor}, Descrição={descricao[:50]}...")
+            logger.info(f"📝 Dados recebidos do formulário:")
+            logger.info(f"  📊 Tipo: '{tipo}'")
+            logger.info(f"  💰 Valor (string): '{valor_str}'")
+            logger.info(f"  📝 Descrição: '{descricao}'")
+            logger.info(f"  👤 Cadastro ID: '{cadastro_id}'")
+            logger.info(f"  🏷️ Nome Pessoa: '{nome_pessoa}'")
+            logger.info(f"  🧾 Número Recibo: '{numero_recibo}'")
+            logger.info(f"  📋 Observações: '{observacoes}'")
             
+            # Validações
             if not descricao:
-                logger.warning("Descrição não fornecida - validação falhou")
+                logger.warning("❌ Descrição não fornecida - validação falhou")
                 flash('Descrição é obrigatória', 'error')
                 return redirect(url_for('editar_movimentacao', movimentacao_id=movimentacao_id))
             
+            try:
+                valor = float(valor_str)
+                logger.info(f"✅ Valor convertido para float: {valor}")
+            except ValueError:
+                logger.warning(f"❌ Erro ao converter valor '{valor_str}' para float")
+                flash('Valor deve ser um número válido', 'error')
+                return redirect(url_for('editar_movimentacao', movimentacao_id=movimentacao_id))
+            
             if valor <= 0:
-                logger.warning(f"Valor inválido: {valor} - deve ser maior que zero")
+                logger.warning(f"❌ Valor inválido: {valor} - deve ser maior que zero")
                 flash('Valor deve ser maior que zero', 'error')
                 return redirect(url_for('editar_movimentacao', movimentacao_id=movimentacao_id))
             
+            # Converter cadastro_id
+            if cadastro_id == '' or cadastro_id is None:
+                cadastro_id = None
+                logger.info("  👤 Cadastro ID convertido para None (vazio)")
+            else:
+                try:
+                    cadastro_id = int(cadastro_id)
+                    logger.info(f"  👤 Cadastro ID convertido para int: {cadastro_id}")
+                except ValueError:
+                    logger.warning(f"❌ Erro ao converter cadastro_id '{cadastro_id}' para int")
+                    cadastro_id = None
+            
             # Atualizar movimentação
-            logger.info(f"Executando UPDATE da movimentação ID {movimentacao_id}...")
+            logger.info(f"💾 Executando UPDATE da movimentação ID {movimentacao_id}...")
             cursor.execute('''
                 UPDATE movimentacoes_caixa 
                 SET tipo = %s, valor = %s, descricao = %s, cadastro_id = %s, 
@@ -3443,32 +3490,53 @@ def editar_movimentacao(movimentacao_id):
                   numero_recibo, observacoes, movimentacao_id))
             
             linhas_afetadas = cursor.rowcount
-            logger.info(f"Linhas afetadas: {linhas_afetadas}")
+            logger.info(f"📊 Linhas afetadas pelo UPDATE: {linhas_afetadas}")
+            
+            if linhas_afetadas == 0:
+                logger.warning("❌ Nenhuma linha foi atualizada")
+                flash('Erro ao atualizar movimentação', 'error')
+                return redirect(url_for('editar_movimentacao', movimentacao_id=movimentacao_id))
             
             conn.commit()
-            logger.info("Commit realizado com sucesso")
+            logger.info("✅ Commit realizado com sucesso")
+            
             cursor.close()
             conn.close()
-            logger.info("Conexão fechada")
+            logger.info("🔌 Conexão fechada")
             
             # Registrar auditoria
-            logger.info("Registrando auditoria da edição...")
+            logger.info("📋 Registrando auditoria da edição...")
             registrar_auditoria(
                 session['usuario'], 'UPDATE', 'movimentacoes_caixa', 
                 movimentacao_id, str(dados_anteriores), 
                 f"Tipo: {tipo}, Valor: {valor}, Descrição: {descricao}"
             )
-            logger.info("Auditoria registrada com sucesso")
+            logger.info("✅ Auditoria registrada com sucesso")
             
             flash('Movimentação atualizada com sucesso!', 'success')
-            logger.info(f"✅ Movimentação ID {movimentacao_id} atualizada com sucesso pelo usuário {session['usuario']}")
+            logger.info(f"🎉 Movimentação ID {movimentacao_id} atualizada com sucesso pelo usuário {session['usuario']}")
             return redirect(url_for('caixa'))
     
     except Exception as e:
-        logger.error(f"❌ Erro ao editar movimentação ID {movimentacao_id}: {e}")
-        logger.error(f"Tipo do erro: {type(e)}")
+        logger.error(f"💥 ERRO CRÍTICO ao editar movimentação ID {movimentacao_id}:")
+        logger.error(f"❌ Erro: {str(e)}")
+        logger.error(f"❌ Tipo do erro: {type(e).__name__}")
         import traceback
-        logger.error(f"Traceback completo: {traceback.format_exc()}")
+        logger.error(f"❌ Traceback completo:")
+        for line in traceback.format_exc().split('\n'):
+            if line.strip():
+                logger.error(f"   {line}")
+        
+        # Tentar fechar conexões se existirem
+        try:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+            logger.info("🔌 Conexões fechadas após erro")
+        except:
+            pass
+            
         flash('Erro ao editar movimentação', 'error')
         return redirect(url_for('caixa'))
 

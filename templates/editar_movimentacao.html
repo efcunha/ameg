@@ -53,6 +53,15 @@
                 {% if movimentacao.tipo == 'entrada' %}💰 Editar Entrada{% else %}💸 Editar Saída{% endif %}
             </h3>
             
+            <!-- Debug info (remover em produção) -->
+            <div style="background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 0.9em; color: #666;">
+                <strong>Debug Info:</strong><br>
+                Tipo da movimentação: "{{ movimentacao.tipo }}"<br>
+                ID: {{ movimentacao.id }}<br>
+                Valor: R$ {{ movimentacao.valor }}<br>
+                Descrição: {{ movimentacao.descricao }}
+            </div>
+            
             <form method="POST">
                 <div class="form-group">
                     <label>Tipo:</label>
