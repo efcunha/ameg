@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, send_from_directory
 from flask_compress import Compress
-from database import get_db_connection, init_db_tables, create_admin_user, registrar_auditoria
+from database import get_db_connection, init_db_tables, create_admin_user, registrar_auditoria, inserir_movimentacao_caixa, inserir_comprovante_caixa, listar_movimentacoes_caixa, obter_saldo_caixa, listar_cadastros_simples
 import os
 import gzip
 
@@ -2976,13 +2976,13 @@ def caixa():
     
     try:
         # Obter saldo atual
-        saldo = database.obter_saldo_caixa()
+        saldo = obter_saldo_caixa()
         
         # Obter pessoas cadastradas para o select
-        pessoas = database.listar_cadastros_simples()
+        pessoas = listar_cadastros_simples()
         
         # Obter últimas movimentações
-        movimentacoes = database.listar_movimentacoes_caixa(limit=20)
+        movimentacoes = listar_movimentacoes_caixa(limit=20)
         
         return render_template('caixa.html', 
                              saldo=saldo, 
@@ -3017,7 +3017,7 @@ def processar_movimentacao_caixa():
             return redirect(url_for('caixa'))
         
         # Inserir movimentação
-        movimentacao_id = database.inserir_movimentacao_caixa(
+        movimentacao_id = inserir_movimentacao_caixa(
             tipo, valor, descricao, cadastro_id, nome_pessoa, 
             numero_recibo, observacoes, session['usuario']
         )
@@ -3042,7 +3042,7 @@ def processar_movimentacao_caixa():
                 
                 # Salvar comprovante
                 arquivo_dados = comprovante.read()
-                database.inserir_comprovante_caixa(
+                inserir_comprovante_caixa(
                     movimentacao_id, 
                     comprovante.filename,
                     comprovante.content_type,
@@ -3069,7 +3069,7 @@ def relatorio_caixa():
         data_fim = request.args.get('data_fim', '')
         
         # Obter todas as movimentações (sem limite para relatório)
-        movimentacoes = database.listar_movimentacoes_caixa(limit=1000, tipo=tipo if tipo else None)
+        movimentacoes = listar_movimentacoes_caixa(limit=1000, tipo=tipo if tipo else None)
         
         # Calcular totais
         total_entradas = sum(m['valor'] for m in movimentacoes if m['tipo'] == 'entrada')

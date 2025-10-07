@@ -1,40 +1,78 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <title>AMEG - Sistema de Caixa</title>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Caixa - AMEG</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.min.css') }}">
+    <link rel="stylesheet" href="/static/css/mobile.min.css">
     <style>
-        .caixa-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .saldo-card { background: linear-gradient(135deg, #4CAF50, #45a049); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .nav a:hover { background: #2980b9; }
+        .container { padding: 20px; }
+        .logout { float: right; }
+        
+        .saldo-card { background: linear-gradient(135deg, #4CAF50, #45a049); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .saldo-valor { font-size: 2em; font-weight: bold; margin: 10px 0; }
-        .resumo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .resumo-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
-        .resumo-card.entrada { border-left: 4px solid #4CAF50; }
-        .resumo-card.saida { border-left: 4px solid #f44336; }
+        .stats { display: flex; gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; flex: 1; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .stat-card.entrada { border-left: 4px solid #4CAF50; }
+        .stat-card.saida { border-left: 4px solid #f44336; }
+        .stat-number { font-size: 1.5em; font-weight: bold; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .form-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .movimentacoes-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .movimentacoes-table th, .movimentacoes-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        .movimentacoes-table th { background-color: #f5f5f5; font-weight: bold; }
+        .form-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; background: white; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #3498db; color: white; }
         .entrada-row { background-color: #f8fff8; }
         .saida-row { background-color: #fff8f8; }
-        .comprovantes-list { margin-top: 10px; }
         .comprovante-item { display: inline-block; margin: 2px; padding: 4px 8px; background: #e3f2fd; border-radius: 4px; font-size: 0.8em; }
-        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-primary { background: #2196F3; color: white; }
-        .btn-success { background: #4CAF50; color: white; }
-        .btn-danger { background: #f44336; color: white; }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-secondary { background: #95a5a6; color: white; }
         .hidden { display: none; }
-        .file-upload { border: 2px dashed #ddd; padding: 20px; text-align: center; border-radius: 8px; margin-top: 10px; }
-        .file-upload.dragover { border-color: #2196F3; background-color: #f0f8ff; }
+        .file-upload { border: 2px dashed #ddd; padding: 20px; text-align: center; border-radius: 5px; margin-top: 10px; }
+        .file-upload.dragover { border-color: #3498db; background-color: #f0f8ff; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .alert { padding: 15px; margin: 20px 0; border-radius: 5px; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
-    <div class="caixa-container">
-        <h1>💰 Sistema de Caixa AMEG</h1>
+    <div class="header">
+        <h1>AMEG - Sistema de Caixa</h1>
+        <span>Bem-vindo, {{ session.usuario }}!</span>
+        <a href="/logout" class="logout" style="color: white; text-decoration: none;">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/cadastrar">Novo Cadastro</a>
+        <a href="/relatorios">Relatórios</a>
+        <a href="/caixa" style="background: #27ae60;">💰 Caixa</a>
+        <a href="/arquivos_cadastros">📁 Arquivos</a>
+        {% if is_admin_user(session.usuario) %}
+        <a href="/usuarios">👥 Usuários</a>
+        <a href="/auditoria">🔍 Auditoria</a>
+        {% endif %}
+    </div>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
         
         <!-- Saldo Atual -->
         <div class="saldo-card">
@@ -43,18 +81,14 @@
         </div>
         
         <!-- Resumo -->
-        <div class="resumo-grid">
-            <div class="resumo-card entrada">
-                <h3>Total Entradas</h3>
-                <div style="font-size: 1.5em; color: #4CAF50; font-weight: bold;">
-                    R$ {{ "%.2f"|format(saldo.total_entradas) }}
-                </div>
+        <div class="stats">
+            <div class="stat-card entrada">
+                <div class="stat-number" style="color: #27ae60;">R$ {{ "%.2f"|format(saldo.total_entradas) }}</div>
+                <div>Total Entradas</div>
             </div>
-            <div class="resumo-card saida">
-                <h3>Total Saídas</h3>
-                <div style="font-size: 1.5em; color: #f44336; font-weight: bold;">
-                    R$ {{ "%.2f"|format(saldo.total_saidas) }}
-                </div>
+            <div class="stat-card saida">
+                <div class="stat-number" style="color: #e74c3c;">R$ {{ "%.2f"|format(saldo.total_saidas) }}</div>
+                <div>Total Saídas</div>
             </div>
         </div>
         
@@ -62,14 +96,14 @@
         <div class="btn-group">
             <button class="btn btn-success" onclick="mostrarForm('entrada')">➕ Nova Entrada</button>
             <button class="btn btn-danger" onclick="mostrarForm('saida')">➖ Nova Saída</button>
-            <button class="btn btn-primary" onclick="window.location.href='/relatorio_caixa'">📊 Relatório</button>
+            <a href="/relatorio_caixa" class="btn btn-primary">📊 Relatório</a>
         </div>
         
         <!-- Formulários -->
         <div class="form-grid">
             <!-- Formulário de Entrada -->
             <div id="form-entrada" class="form-card hidden">
-                <h3 style="color: #4CAF50;">💰 Nova Entrada</h3>
+                <h3 style="color: #27ae60;">💰 Nova Entrada</h3>
                 <form method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="tipo" value="entrada">
                     
@@ -120,13 +154,13 @@
                     </div>
                     
                     <button type="submit" class="btn btn-success">💾 Registrar Entrada</button>
-                    <button type="button" class="btn" onclick="esconderForm('entrada')" style="background: #ccc;">❌ Cancelar</button>
+                    <button type="button" class="btn btn-secondary" onclick="esconderForm('entrada')">❌ Cancelar</button>
                 </form>
             </div>
             
             <!-- Formulário de Saída -->
             <div id="form-saida" class="form-card hidden">
-                <h3 style="color: #f44336;">💸 Nova Saída</h3>
+                <h3 style="color: #e74c3c;">💸 Nova Saída</h3>
                 <form method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="tipo" value="saida">
                     
@@ -177,7 +211,7 @@
                     </div>
                     
                     <button type="submit" class="btn btn-danger">💾 Registrar Saída</button>
-                    <button type="button" class="btn" onclick="esconderForm('saida')" style="background: #ccc;">❌ Cancelar</button>
+                    <button type="button" class="btn btn-secondary" onclick="esconderForm('saida')">❌ Cancelar</button>
                 </form>
             </div>
         </div>
@@ -185,7 +219,7 @@
         <!-- Lista de Movimentações -->
         <div class="form-card">
             <h3>📋 Últimas Movimentações</h3>
-            <table class="movimentacoes-table">
+            <table>
                 <thead>
                     <tr>
                         <th>Data</th>
@@ -204,9 +238,9 @@
                         <td>{{ mov.data_movimentacao.strftime('%d/%m/%Y %H:%M') }}</td>
                         <td>
                             {% if mov.tipo == 'entrada' %}
-                                <span style="color: #4CAF50; font-weight: bold;">➕ Entrada</span>
+                                <span style="color: #27ae60; font-weight: bold;">➕ Entrada</span>
                             {% else %}
-                                <span style="color: #f44336; font-weight: bold;">➖ Saída</span>
+                                <span style="color: #e74c3c; font-weight: bold;">➖ Saída</span>
                             {% endif %}
                         </td>
                         <td style="font-weight: bold;">R$ {{ "%.2f"|format(mov.valor) }}</td>
@@ -225,10 +259,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-        
-        <div style="text-align: center; margin-top: 20px;">
-            <a href="/dashboard" class="btn btn-primary">🏠 Voltar ao Dashboard</a>
         </div>
     </div>
     
