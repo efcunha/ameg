@@ -3144,6 +3144,134 @@ def relatorio_caixa():
         flash('Erro ao gerar relatório', 'error')
         return redirect(url_for('caixa'))
 
+@app.route('/excluir_movimentacao/<int:movimentacao_id>')
+def excluir_movimentacao(movimentacao_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    if not usuario_tem_permissao(session['usuario'], 'caixa'):
+        flash('Você não tem permissão para excluir movimentações', 'error')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Buscar dados da movimentação para auditoria
+        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+        movimentacao = cursor.fetchone()
+        
+        if not movimentacao:
+            flash('Movimentação não encontrada', 'error')
+            return redirect(url_for('caixa'))
+        
+        # Excluir movimentação (comprovantes são excluídos automaticamente por CASCADE)
+        cursor.execute('DELETE FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        # Registrar auditoria
+        registrar_auditoria(
+            session['usuario'], 'DELETE', 'movimentacoes_caixa', 
+            movimentacao_id, str(movimentacao), None
+        )
+        
+        flash('Movimentação excluída com sucesso!', 'success')
+        return redirect(url_for('caixa'))
+    
+    except Exception as e:
+        logger.error(f"Erro ao excluir movimentação: {e}")
+        flash('Erro ao excluir movimentação', 'error')
+        return redirect(url_for('caixa'))
+
+@app.route('/editar_movimentacao/<int:movimentacao_id>', methods=['GET', 'POST'])
+def editar_movimentacao(movimentacao_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    if not usuario_tem_permissao(session['usuario'], 'caixa'):
+        flash('Você não tem permissão para editar movimentações', 'error')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        if request.method == 'GET':
+            # Buscar dados da movimentação
+            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+            movimentacao = cursor.fetchone()
+            
+            if not movimentacao:
+                flash('Movimentação não encontrada', 'error')
+                return redirect(url_for('caixa'))
+            
+            # Buscar pessoas cadastradas
+            pessoas = listar_cadastros_simples()
+            
+            cursor.close()
+            conn.close()
+            
+            return render_template('editar_movimentacao.html', 
+                                 movimentacao=movimentacao, 
+                                 pessoas=pessoas)
+        
+        elif request.method == 'POST':
+            # Buscar dados atuais para auditoria
+            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+            dados_anteriores = cursor.fetchone()
+            
+            if not dados_anteriores:
+                flash('Movimentação não encontrada', 'error')
+                return redirect(url_for('caixa'))
+            
+            # Processar dados do formulário
+            tipo = request.form.get('tipo')
+            valor = float(request.form.get('valor', 0))
+            descricao = request.form.get('descricao', '').strip()
+            cadastro_id = request.form.get('cadastro_id') or None
+            nome_pessoa = request.form.get('nome_pessoa', '').strip()
+            numero_recibo = request.form.get('numero_recibo', '').strip()
+            observacoes = request.form.get('observacoes', '').strip()
+            
+            if not descricao:
+                flash('Descrição é obrigatória', 'error')
+                return redirect(url_for('editar_movimentacao', movimentacao_id=movimentacao_id))
+            
+            if valor <= 0:
+                flash('Valor deve ser maior que zero', 'error')
+                return redirect(url_for('editar_movimentacao', movimentacao_id=movimentacao_id))
+            
+            # Atualizar movimentação
+            cursor.execute('''
+                UPDATE movimentacoes_caixa 
+                SET tipo = %s, valor = %s, descricao = %s, cadastro_id = %s, 
+                    nome_pessoa = %s, numero_recibo = %s, observacoes = %s
+                WHERE id = %s
+            ''', (tipo, valor, descricao, cadastro_id, nome_pessoa, 
+                  numero_recibo, observacoes, movimentacao_id))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            # Registrar auditoria
+            registrar_auditoria(
+                session['usuario'], 'UPDATE', 'movimentacoes_caixa', 
+                movimentacao_id, str(dados_anteriores), 
+                f"Tipo: {tipo}, Valor: {valor}, Descrição: {descricao}"
+            )
+            
+            flash('Movimentação atualizada com sucesso!', 'success')
+            return redirect(url_for('caixa'))
+    
+    except Exception as e:
+        logger.error(f"Erro ao editar movimentação: {e}")
+        flash('Erro ao editar movimentação', 'error')
+        return redirect(url_for('caixa'))
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     logger.info(f"🚀 Iniciando AMEG na porta {port}")

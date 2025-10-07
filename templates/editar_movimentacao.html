@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AMEG - Editar Movimentação</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/mobile.min.css">
+    <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .nav a:hover { background: #2980b9; }
+        .container { padding: 20px; }
+        .logout { float: right; }
+        .form-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-secondary { background: #95a5a6; color: white; }
+        .alert { padding: 15px; margin: 20px 0; border-radius: 5px; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AMEG - Editar Movimentação</h1>
+        <span>Bem-vindo, {{ session.usuario }}!</span>
+        <a href="/logout" class="logout" style="color: white; text-decoration: none;">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/caixa">💰 Caixa</a>
+    </div>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="form-card">
+            <h3 style="color: {% if movimentacao.tipo == 'entrada' %}#27ae60{% else %}#e74c3c{% endif %};">
+                {% if movimentacao.tipo == 'entrada' %}💰 Editar Entrada{% else %}💸 Editar Saída{% endif %}
+            </h3>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label>Tipo:</label>
+                    <select name="tipo" class="form-control" required>
+                        <option value="entrada" {% if movimentacao.tipo == 'entrada' %}selected{% endif %}>Entrada</option>
+                        <option value="saida" {% if movimentacao.tipo == 'saida' %}selected{% endif %}>Saída</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Valor (R$):</label>
+                    <input type="number" name="valor" step="0.01" min="0" value="{{ movimentacao.valor }}" required class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label>Descrição:</label>
+                    <textarea name="descricao" required class="form-control" rows="3">{{ movimentacao.descricao }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Pessoa (opcional):</label>
+                    <select name="cadastro_id" class="form-control" onchange="preencherNome(this)">
+                        <option value="">Selecione uma pessoa cadastrada...</option>
+                        {% for pessoa in pessoas %}
+                        <option value="{{ pessoa.id }}" data-nome="{{ pessoa.nome_completo }}" 
+                                {% if pessoa.id == movimentacao.cadastro_id %}selected{% endif %}>
+                            {{ pessoa.nome_completo }} (ID: {{ pessoa.id }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Nome da Pessoa:</label>
+                    <input type="text" name="nome_pessoa" value="{{ movimentacao.nome_pessoa or '' }}" class="form-control" placeholder="Nome completo da pessoa">
+                </div>
+                
+                <div class="form-group">
+                    <label>Número do Recibo/Nota:</label>
+                    <input type="text" name="numero_recibo" value="{{ movimentacao.numero_recibo or '' }}" class="form-control" placeholder="Ex: REC-001, NF-002">
+                </div>
+                
+                <div class="form-group">
+                    <label>Observações:</label>
+                    <textarea name="observacoes" class="form-control" rows="2" placeholder="Observações adicionais...">{{ movimentacao.observacoes or '' }}</textarea>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">💾 Salvar Alterações</button>
+                    <a href="/caixa" class="btn btn-secondary">❌ Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function preencherNome(select) {
+            const option = select.options[select.selectedIndex];
+            const nomeInput = document.querySelector('input[name="nome_pessoa"]');
+            if (option.dataset.nome) {
+                nomeInput.value = option.dataset.nome;
+            } else if (select.value === '') {
+                // Não limpar o campo se já tem um nome digitado manualmente
+            }
+        }
+    </script>
+</body>
+</html>

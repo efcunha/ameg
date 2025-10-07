@@ -230,6 +230,7 @@
                         <th>Recibo/Nota</th>
                         <th>Comprovantes</th>
                         <th>Usuário</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -255,6 +256,10 @@
                             {% endif %}
                         </td>
                         <td>{{ mov.usuario }}</td>
+                        <td>
+                            <a href="/editar_movimentacao/{{ mov.id }}" class="btn" style="background: #f39c12; color: white; padding: 5px 10px; margin: 2px; text-decoration: none; border-radius: 3px; font-size: 0.8em;">✏️ Editar</a>
+                            <a href="/excluir_movimentacao/{{ mov.id }}" class="btn" style="background: #e74c3c; color: white; padding: 5px 10px; margin: 2px; text-decoration: none; border-radius: 3px; font-size: 0.8em;" onclick="return confirm('Tem certeza que deseja excluir esta movimentação?')">🗑️ Excluir</a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
