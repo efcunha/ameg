@@ -211,6 +211,24 @@
                             <option value="usuario" {{ 'selected' if usuario[2] != 'admin' else '' }}>👤 Usuário Comum</option>
                             <option value="admin" {{ 'selected' if usuario[2] == 'admin' else '' }}>👑 Administrador</option>
                         </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">🔑 Permissões Adicionais</label>
+                        <div style="margin-top: 10px;">
+                            <label style="display: block; margin-bottom: 5px;">
+                                <input type="checkbox" name="permissoes" value="caixa" 
+                                       {% if 'caixa' in permissoes_usuario %}checked{% endif %}
+                                       style="margin-right: 8px;">
+                                💰 Sistema de Caixa
+                            </label>
+                        </div>
+                        <small style="color: #666; font-size: 0.9em;">
+                            Marque as permissões adicionais que o usuário deve ter acesso
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
                         
                         <div id="permission-info" class="permission-info">
                             <h4>Permissões do Tipo Selecionado:</h4>

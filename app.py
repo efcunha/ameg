@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, send_from_directory
 from flask_compress import Compress
-from database import get_db_connection, init_db_tables, create_admin_user, registrar_auditoria, inserir_movimentacao_caixa, inserir_comprovante_caixa, listar_movimentacoes_caixa, obter_saldo_caixa, listar_cadastros_simples, usuario_tem_permissao, adicionar_permissao_usuario
+from database import get_db_connection, init_db_tables, create_admin_user, registrar_auditoria, inserir_movimentacao_caixa, inserir_comprovante_caixa, listar_movimentacoes_caixa, obter_saldo_caixa, listar_cadastros_simples, usuario_tem_permissao, adicionar_permissao_usuario, obter_permissoes_usuario, remover_permissao_usuario
 import os
 import gzip
 
@@ -2546,9 +2546,14 @@ def editar_usuario(usuario_id):
                 conn.close()
                 return redirect(url_for('usuarios'))
             
+            # Buscar permissões do usuário
+            permissoes_usuario = obter_permissoes_usuario(usuario_id)
+            
             cursor.close()
             conn.close()
-            return render_template('editar_usuario.html', usuario=user_data)
+            return render_template('editar_usuario.html', 
+                                 usuario=user_data, 
+                                 permissoes_usuario=permissoes_usuario)
         
         elif request.method == 'POST':
             # Processar edição
@@ -2577,6 +2582,22 @@ def editar_usuario(usuario_id):
             # Atualizar tipo
             cursor.execute('UPDATE usuarios SET tipo = %s WHERE id = %s', (novo_tipo, usuario_id))
             logger.info(f"✅ Tipo do usuário {username} atualizado para {novo_tipo}")
+            
+            # Processar permissões adicionais
+            permissoes_atuais = obter_permissoes_usuario(usuario_id)
+            permissoes_novas = request.form.getlist('permissoes')
+            
+            # Remover permissões que não estão mais selecionadas
+            for permissao in permissoes_atuais:
+                if permissao not in permissoes_novas:
+                    remover_permissao_usuario(usuario_id, permissao)
+                    logger.info(f"Permissão '{permissao}' removida do usuário {username}")
+            
+            # Adicionar novas permissões
+            for permissao in permissoes_novas:
+                if permissao not in permissoes_atuais:
+                    adicionar_permissao_usuario(usuario_id, permissao)
+                    logger.info(f"Permissão '{permissao}' adicionada ao usuário {username}")
             
             # Atualizar senha se fornecida
             if nova_senha:
