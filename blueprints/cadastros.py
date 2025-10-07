@@ -193,3 +193,33 @@ def ficha(cadastro_id):
         logger.error(f"Erro ao exibir ficha: {e}")
         flash('Erro ao carregar ficha', 'error')
         return redirect(url_for('dashboard.dashboard'))
+
+@cadastros_bp.route('/deletar_cadastro/<int:cadastro_id>', methods=['POST'])
+def deletar_cadastro(cadastro_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Deletar arquivos de saúde relacionados primeiro
+        cursor.execute('DELETE FROM arquivos_saude WHERE cadastro_id = %s', (cadastro_id,))
+        
+        # Deletar o cadastro
+        cursor.execute('DELETE FROM cadastros WHERE id = %s', (cadastro_id,))
+        
+        if cursor.rowcount > 0:
+            conn.commit()
+            flash('Cadastro deletado com sucesso!', 'success')
+        else:
+            flash('Cadastro não encontrado!', 'error')
+            
+    except Exception as e:
+        logger.error(f"Erro ao deletar cadastro {cadastro_id}: {e}")
+        flash(f'Erro ao deletar cadastro: {str(e)}', 'error')
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return redirect(url_for('dashboard.dashboard'))

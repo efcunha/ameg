@@ -216,3 +216,199 @@ def exportar_pdf(dados, tipo, filename):
     buffer.seek(0)
     
     return send_file(buffer, as_attachment=True, download_name=f'{filename}.pdf', mimetype='application/pdf')
+
+@relatorios_bp.route('/relatorio_estatistico')
+def relatorio_estatistico():
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Estatísticas básicas
+        cursor.execute('SELECT COUNT(*) FROM cadastros')
+        total_cadastros = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM cadastros WHERE genero = %s', ('Masculino',))
+        masculino = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM cadastros WHERE genero = %s', ('Feminino',))
+        feminino = cursor.fetchone()[0]
+        
+        # Por faixa etária
+        cursor.execute('SELECT COUNT(*) FROM cadastros WHERE idade BETWEEN 0 AND 17')
+        menores = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM cadastros WHERE idade BETWEEN 18 AND 59')
+        adultos = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM cadastros WHERE idade >= 60')
+        idosos = cursor.fetchone()[0]
+        
+        # Por estado civil
+        cursor.execute('SELECT estado_civil, COUNT(*) FROM cadastros GROUP BY estado_civil ORDER BY COUNT(*) DESC')
+        por_estado_civil = cursor.fetchall()
+        
+        # Por escolaridade
+        cursor.execute('SELECT escolaridade, COUNT(*) FROM cadastros GROUP BY escolaridade ORDER BY COUNT(*) DESC')
+        por_escolaridade = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        stats = {
+            'total': total_cadastros,
+            'masculino': masculino,
+            'feminino': feminino,
+            'menores': menores,
+            'adultos': adultos,
+            'idosos': idosos,
+            'por_estado_civil': por_estado_civil,
+            'por_escolaridade': por_escolaridade
+        }
+        
+        return render_template('relatorio_estatistico.html', stats=stats)
+        
+    except Exception as e:
+        logger.error(f"Erro no relatório estatístico: {e}")
+        flash('Erro ao gerar relatório estatístico', 'error')
+        return redirect(url_for('relatorios.relatorios'))
+
+@relatorios_bp.route('/relatorio_por_bairro')
+def relatorio_por_bairro():
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT bairro, COUNT(*) as total, 
+                   COUNT(CASE WHEN genero = 'Masculino' THEN 1 END) as masculino,
+                   COUNT(CASE WHEN genero = 'Feminino' THEN 1 END) as feminino
+            FROM cadastros 
+            GROUP BY bairro 
+            ORDER BY total DESC
+        ''')
+        
+        dados = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return render_template('relatorio_por_bairro.html', dados=dados)
+        
+    except Exception as e:
+        logger.error(f"Erro no relatório por bairro: {e}")
+        flash('Erro ao gerar relatório por bairro', 'error')
+        return redirect(url_for('relatorios.relatorios'))
+
+@relatorios_bp.route('/relatorio_renda')
+def relatorio_renda():
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT 
+                CASE 
+                    WHEN renda_familiar <= 1000 THEN 'Até R$ 1.000'
+                    WHEN renda_familiar <= 2000 THEN 'R$ 1.001 - R$ 2.000'
+                    WHEN renda_familiar <= 3000 THEN 'R$ 2.001 - R$ 3.000'
+                    ELSE 'Acima de R$ 3.000'
+                END as faixa_renda,
+                COUNT(*) as total
+            FROM cadastros 
+            WHERE renda_familiar IS NOT NULL
+            GROUP BY 
+                CASE 
+                    WHEN renda_familiar <= 1000 THEN 'Até R$ 1.000'
+                    WHEN renda_familiar <= 2000 THEN 'R$ 1.001 - R$ 2.000'
+                    WHEN renda_familiar <= 3000 THEN 'R$ 2.001 - R$ 3.000'
+                    ELSE 'Acima de R$ 3.000'
+                END
+            ORDER BY MIN(renda_familiar)
+        ''')
+        
+        dados = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return render_template('relatorio_renda.html', dados=dados)
+        
+    except Exception as e:
+        logger.error(f"Erro no relatório de renda: {e}")
+        flash('Erro ao gerar relatório de renda', 'error')
+        return redirect(url_for('relatorios.relatorios'))
+
+@relatorios_bp.route('/relatorio_saude')
+def relatorio_saude():
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Doenças crônicas
+        cursor.execute('SELECT COUNT(*) FROM cadastros WHERE tem_doenca_cronica = %s', ('Sim',))
+        com_doenca_cronica = cursor.fetchone()[0]
+        
+        # Medicamentos contínuos
+        cursor.execute('SELECT COUNT(*) FROM cadastros WHERE usa_medicamento_continuo = %s', ('Sim',))
+        usa_medicamento = cursor.fetchone()[0]
+        
+        # Deficiências
+        cursor.execute('SELECT COUNT(*) FROM cadastros WHERE tem_deficiencia = %s', ('Sim',))
+        com_deficiencia = cursor.fetchone()[0]
+        
+        # Cuidados especiais
+        cursor.execute('SELECT COUNT(*) FROM cadastros WHERE precisa_cuidados_especiais = %s', ('Sim',))
+        cuidados_especiais = cursor.fetchone()[0]
+        
+        cursor.close()
+        conn.close()
+        
+        dados = {
+            'com_doenca_cronica': com_doenca_cronica,
+            'usa_medicamento': usa_medicamento,
+            'com_deficiencia': com_deficiencia,
+            'cuidados_especiais': cuidados_especiais
+        }
+        
+        return render_template('relatorio_saude.html', dados=dados)
+        
+    except Exception as e:
+        logger.error(f"Erro no relatório de saúde: {e}")
+        flash('Erro ao gerar relatório de saúde', 'error')
+        return redirect(url_for('relatorios.relatorios'))
+
+@relatorios_bp.route('/relatorio_simplificado')
+def relatorio_simplificado():
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT nome_completo, cpf, telefone, bairro, idade, genero
+            FROM cadastros 
+            ORDER BY nome_completo
+        ''')
+        
+        dados = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return render_template('relatorio_simplificado.html', dados=dados)
+        
+    except Exception as e:
+        logger.error(f"Erro no relatório simplificado: {e}")
+        flash('Erro ao gerar relatório simplificado', 'error')
+        return redirect(url_for('relatorios.relatorios'))

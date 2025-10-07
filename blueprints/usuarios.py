@@ -347,3 +347,76 @@ def rebaixar_usuario(usuario_id):
         flash(f'Erro ao rebaixar usuário: {str(e)}', 'error')
     
     return redirect(url_for('usuarios.usuarios'))
+
+@usuarios_bp.route('/admin/reset')
+def admin_reset():
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    # Verificar se é o admin ID 1
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario'],))
+    admin_check = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
+    if not admin_check:
+        flash('Acesso negado! Apenas o admin principal pode acessar esta funcionalidade.', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    return render_template('admin_reset.html')
+
+@usuarios_bp.route('/admin/reset/execute', methods=['POST'])
+def admin_reset_execute():
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    # Verificar se é o admin ID 1
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario'],))
+    admin_check = cursor.fetchone()
+    
+    if not admin_check:
+        cursor.close()
+        conn.close()
+        flash('Acesso negado! Apenas o admin principal pode executar o reset.', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    try:
+        logger.warning(f"🚨 RESET INICIADO pelo admin ID 1: {session['usuario']}")
+        
+        # Zerar tabelas (mantém estrutura)
+        cursor.execute('TRUNCATE TABLE arquivos_saude RESTART IDENTITY CASCADE')
+        cursor.execute('TRUNCATE TABLE auditoria RESTART IDENTITY CASCADE')
+        cursor.execute('TRUNCATE TABLE cadastros RESTART IDENTITY CASCADE')
+        
+        # Resetar sequences manualmente (garantia)
+        cursor.execute('ALTER SEQUENCE arquivos_saude_id_seq RESTART WITH 1')
+        cursor.execute('ALTER SEQUENCE auditoria_id_seq RESTART WITH 1')
+        cursor.execute('ALTER SEQUENCE cadastros_id_seq RESTART WITH 1')
+        
+        conn.commit()
+        
+        # Registrar auditoria do reset
+        registrar_auditoria(
+            usuario=session['usuario'],
+            acao='RESET',
+            tabela='SISTEMA',
+            dados_novos='Reset completo das tabelas: cadastros, arquivos_saude, auditoria',
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent')
+        )
+        
+        logger.warning(f"✅ RESET CONCLUÍDO pelo admin ID 1: {session['usuario']}")
+        flash('Reset executado com sucesso! Todas as tabelas foram zeradas e contadores reiniciados.', 'success')
+        
+    except Exception as e:
+        logger.error(f"❌ Erro durante reset: {e}")
+        flash(f'Erro durante reset: {str(e)}', 'error')
+        conn.rollback()
+    
+    cursor.close()
+    conn.close()
+    return redirect(url_for('usuarios.admin_reset'))
