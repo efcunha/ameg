@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from database import get_db_connection, registrar_auditoria, usuario_tem_permissao, adicionar_permissao_usuario, obter_permissoes_usuario, remover_permissao_usuario
+from .utils import validar_senha
+import psycopg2.extras
 import hashlib
 import logging
 
@@ -420,3 +422,115 @@ def admin_reset_execute():
     cursor.close()
     conn.close()
     return redirect(url_for('usuarios.admin_reset'))
+
+@usuarios_bp.route('/auditoria')
+def auditoria():
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    # Verificar se é admin
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (session['usuario'],))
+    user_type = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
+    if not user_type or user_type[0] != 'admin':
+        flash('Acesso negado. Apenas administradores podem acessar a auditoria.', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        # Parâmetros de filtro
+        usuario_filtro = request.args.get('usuario', '')
+        acao_filtro = request.args.get('acao', '')
+        tabela_filtro = request.args.get('tabela', '')
+        data_inicial = request.args.get('data_inicial', '')
+        data_final = request.args.get('data_final', '')
+        page = int(request.args.get('page', 1))
+        per_page = 50
+        
+        # Construir query com filtros
+        where_conditions = []
+        params = []
+        
+        if usuario_filtro:
+            where_conditions.append("usuario ILIKE %s")
+            params.append(f"%{usuario_filtro}%")
+        
+        if acao_filtro:
+            where_conditions.append("acao = %s")
+            params.append(acao_filtro)
+        
+        if tabela_filtro:
+            where_conditions.append("tabela = %s")
+            params.append(tabela_filtro)
+        
+        if data_inicial:
+            where_conditions.append("DATE(data_acao) >= %s")
+            params.append(data_inicial)
+        
+        if data_final:
+            where_conditions.append("DATE(data_acao) <= %s")
+            params.append(data_final)
+        
+        where_clause = ""
+        if where_conditions:
+            where_clause = "WHERE " + " AND ".join(where_conditions)
+        
+        # Contar total de registros
+        cursor.execute(f"SELECT COUNT(*) as total FROM auditoria {where_clause}", params)
+        total_records = cursor.fetchone()['total']
+        total_pages = (total_records + per_page - 1) // per_page
+        
+        # Buscar registros com paginação
+        offset = (page - 1) * per_page
+        cursor.execute(f"""
+            SELECT * FROM auditoria {where_clause}
+            ORDER BY data_acao DESC
+            LIMIT %s OFFSET %s
+        """, params + [per_page, offset])
+        
+        auditorias = cursor.fetchall()
+        
+        # Estatísticas
+        cursor.execute("SELECT COUNT(*) as total FROM auditoria")
+        stats_total = cursor.fetchone()['total']
+        
+        cursor.execute("SELECT COUNT(*) as hoje FROM auditoria WHERE DATE(data_acao) = CURRENT_DATE")
+        stats_hoje = cursor.fetchone()['hoje']
+        
+        cursor.execute("SELECT COUNT(DISTINCT usuario) as usuarios FROM auditoria WHERE DATE(data_acao) >= CURRENT_DATE - INTERVAL '7 days'")
+        stats_usuarios = cursor.fetchone()['usuarios']
+        
+        cursor.execute("SELECT data_acao FROM auditoria ORDER BY data_acao DESC LIMIT 1")
+        ultima_acao = cursor.fetchone()
+        stats_ultima = ultima_acao['data_acao'].strftime('%H:%M') if ultima_acao else 'N/A'
+        
+        stats = {
+            'total': stats_total,
+            'hoje': stats_hoje,
+            'usuarios_ativos': stats_usuarios,
+            'ultima_acao': stats_ultima
+        }
+        
+        # Parâmetros para paginação
+        query_params = "&".join([f"{k}={v}" for k, v in request.args.items() if k != 'page'])
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template('auditoria.html', 
+                             auditorias=auditorias,
+                             stats=stats,
+                             page=page,
+                             total_pages=total_pages,
+                             query_params=query_params)
+        
+    except Exception as e:
+        logger.error(f"Erro ao carregar auditoria: {e}")
+        flash('Erro ao carregar dados de auditoria.', 'error')
+        return redirect(url_for('dashboard.dashboard'))

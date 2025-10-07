@@ -1,16 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_file
 from database import get_db_connection, registrar_auditoria
+from .utils import allowed_file
 import io
 import logging
 
 logger = logging.getLogger(__name__)
 
 arquivos_bp = Blueprint('arquivos', __name__)
-
-ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @arquivos_bp.route('/arquivos_cadastros')
 def arquivos_cadastros():
