@@ -215,3 +215,99 @@ def excluir_arquivo(arquivo_id):
         logger.error(f"Erro ao excluir arquivo: {e}")
         flash('Erro ao excluir arquivo', 'error')
         return redirect(url_for('arquivos.arquivos_cadastros'))
+
+@arquivos_bp.route('/exportar_arquivos_pdf/<int:cadastro_id>')
+def exportar_arquivos_pdf(cadastro_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Buscar arquivos do cadastro
+        cursor.execute('''
+            SELECT nome_arquivo, tipo_arquivo, arquivo_dados
+            FROM arquivos_saude 
+            WHERE cadastro_id = %s
+        ''', (cadastro_id,))
+        
+        arquivos = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        if not arquivos:
+            flash('Nenhum arquivo encontrado para este cadastro', 'error')
+            return redirect(url_for('arquivos.arquivos_cadastros'))
+        
+        # Se há apenas um arquivo, baixar diretamente
+        if len(arquivos) == 1:
+            arquivo = arquivos[0]
+            return send_file(
+                io.BytesIO(arquivo[2]),
+                as_attachment=True,
+                download_name=arquivo[0],
+                mimetype=arquivo[1]
+            )
+        
+        # Se há múltiplos arquivos, criar ZIP
+        import zipfile
+        
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for arquivo in arquivos:
+                zip_file.writestr(arquivo[0], arquivo[2])
+        
+        zip_buffer.seek(0)
+        
+        return send_file(
+            zip_buffer,
+            as_attachment=True,
+            download_name=f"arquivos_cadastro_{cadastro_id}.zip",
+            mimetype='application/zip'
+        )
+        
+    except Exception as e:
+        logger.error(f"Erro ao exportar arquivos PDF: {e}")
+        flash('Erro ao exportar arquivos', 'error')
+        return redirect(url_for('arquivos.arquivos_cadastros'))
+
+@arquivos_bp.route('/upload_arquivo/<int:cadastro_id>', methods=['POST'])
+def upload_arquivo(cadastro_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    if 'arquivo' not in request.files:
+        flash('Nenhum arquivo selecionado!', 'error')
+        return redirect(url_for('arquivos.arquivos_saude', cadastro_id=cadastro_id))
+    
+    file = request.files['arquivo']
+    if file.filename == '':
+        flash('Nenhum arquivo selecionado!', 'error')
+        return redirect(url_for('arquivos.arquivos_saude', cadastro_id=cadastro_id))
+    
+    if file and allowed_file(file.filename):
+        try:
+            file_data = file.read()
+            
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                INSERT INTO arquivos_saude (cadastro_id, nome_arquivo, tipo_arquivo, arquivo_dados, descricao) 
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (cadastro_id, file.filename, file.content_type, file_data, request.form.get('descricao', '')))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            flash('Arquivo enviado com sucesso!', 'success')
+            
+        except Exception as e:
+            logger.error(f"Erro ao fazer upload do arquivo: {e}")
+            flash('Erro ao enviar arquivo', 'error')
+    else:
+        flash('Tipo de arquivo não permitido! Use: PDF, PNG, JPG, DOC, DOCX', 'error')
+    
+    return redirect(url_for('arquivos.arquivos_saude', cadastro_id=cadastro_id))

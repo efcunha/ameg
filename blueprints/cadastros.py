@@ -223,3 +223,43 @@ def deletar_cadastro(cadastro_id):
         conn.close()
     
     return redirect(url_for('dashboard.dashboard'))
+
+@cadastros_bp.route('/atualizar_cadastro/<int:cadastro_id>', methods=['POST'])
+def atualizar_cadastro(cadastro_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Campos principais do formulário
+        campos = [
+            'nome_completo', 'endereco', 'numero', 'bairro', 'cep', 'cidade', 'estado', 'telefone',
+            'genero', 'idade', 'data_nascimento', 'cpf', 'rg', 'estado_civil', 'escolaridade', 'profissao',
+            'renda_familiar', 'observacoes'
+        ]
+        
+        # Construir query de update dinamicamente
+        set_clause = ', '.join([f"{campo} = %s" for campo in campos])
+        valores = [request.form.get(campo, '') for campo in campos]
+        valores.append(cadastro_id)
+        
+        query = f"UPDATE cadastros SET {set_clause} WHERE id = %s"
+        
+        cursor.execute(query, valores)
+        
+        if cursor.rowcount > 0:
+            conn.commit()
+            flash('Cadastro atualizado com sucesso!', 'success')
+        else:
+            flash('Erro ao atualizar cadastro', 'error')
+        
+        cursor.close()
+        conn.close()
+        
+    except Exception as e:
+        logger.error(f"Erro ao atualizar cadastro {cadastro_id}: {e}")
+        flash(f'Erro ao atualizar cadastro: {str(e)}', 'error')
+    
+    return redirect(url_for('cadastros.editar_cadastro', cadastro_id=cadastro_id))
