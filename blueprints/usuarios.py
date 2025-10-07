@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from database import get_db_connection, registrar_auditoria, usuario_tem_permissao, adicionar_permissao_usuario, obter_permissoes_usuario, remover_permissao_usuario
 from .utils import validar_senha
+from werkzeug.security import generate_password_hash, check_password_hash
 import psycopg2.extras
-import hashlib
 import logging
 
 logger = logging.getLogger(__name__)
@@ -43,13 +43,13 @@ def criar_usuario():
             tipo = request.form['tipo']
             
             # Validações
-            if len(senha) < 8:
-                flash('Senha deve ter pelo menos 8 caracteres', 'error')
+            senha_valida, mensagem = validar_senha(senha)
+            if not senha_valida:
+                flash(f'Erro na senha: {mensagem}', 'error')
                 return render_template('criar_usuario.html')
             
             # Hash da senha
-            senha_hash = hashlib.pbkdf2_hmac('sha256', senha.encode('utf-8'), b'salt_', 100000)
-            senha_hex = senha_hash.hex()
+            senha_hash = generate_password_hash(senha)
             
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -66,7 +66,7 @@ def criar_usuario():
             cursor.execute('''
                 INSERT INTO usuarios (usuario, senha, tipo) 
                 VALUES (%s, %s, %s) RETURNING id
-            ''', (usuario, senha_hex, tipo))
+            ''', (usuario, senha_hash, tipo))
             
             usuario_id = cursor.fetchone()[0]
             conn.commit()
@@ -141,13 +141,13 @@ def editar_usuario(usuario_id):
             # Atualizar senha se fornecida
             if 'nova_senha' in request.form and request.form['nova_senha']:
                 nova_senha = request.form['nova_senha']
-                if len(nova_senha) >= 8:
-                    senha_hash = hashlib.pbkdf2_hmac('sha256', nova_senha.encode('utf-8'), b'salt_', 100000)
-                    senha_hex = senha_hash.hex()
+                senha_valida, mensagem = validar_senha(nova_senha)
+                if senha_valida:
+                    senha_hash = generate_password_hash(nova_senha)
                     cursor.execute('UPDATE usuarios SET senha = %s WHERE id = %s', 
-                                (senha_hex, usuario_id))
+                                (senha_hash, usuario_id))
                 else:
-                    flash('Nova senha deve ter pelo menos 8 caracteres', 'error')
+                    flash(f'Erro na nova senha: {mensagem}', 'error')
             
             # Gerenciar permissões
             if 'permissoes' in request.form:

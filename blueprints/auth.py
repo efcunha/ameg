@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_from_directory
 from database import get_db_connection, registrar_auditoria
-import hashlib
+from werkzeug.security import check_password_hash
 import logging
 
 logger = logging.getLogger(__name__)
@@ -28,25 +28,27 @@ def login():
             conn = get_db_connection()
             cursor = conn.cursor()
             
-            cursor.execute('SELECT senha FROM usuarios WHERE usuario = %s', (usuario,))
-            resultado = cursor.fetchone()
+            cursor.execute('SELECT senha, tipo FROM usuarios WHERE usuario = %s', (usuario,))
+            user = cursor.fetchone()
             
-            if resultado:
-                senha_hash = hashlib.pbkdf2_hmac('sha256', senha.encode('utf-8'), b'salt_', 100000)
-                senha_hex = senha_hash.hex()
+            if user and check_password_hash(user[0], senha):
+                session['usuario'] = usuario
+                session['tipo'] = user[1]  # Definir o tipo na sessão
                 
-                if resultado[0] == senha_hex:
-                    session['usuario'] = usuario
-                    
-                    # Registrar login na auditoria
-                    registrar_auditoria(usuario, 'LOGIN', 'usuarios', None, None, f'Login realizado com sucesso')
-                    
-                    flash('Login realizado com sucesso!', 'success')
-                    cursor.close()
-                    conn.close()
-                    return redirect(url_for('dashboard.dashboard'))
-                else:
-                    flash('Usuário ou senha incorretos', 'error')
+                # Registrar auditoria de login
+                registrar_auditoria(
+                    usuario=usuario,
+                    acao='LOGIN',
+                    tabela='usuarios',
+                    dados_novos=f"Login realizado com sucesso",
+                    ip_address=request.remote_addr,
+                    user_agent=request.headers.get('User-Agent')
+                )
+                
+                flash('Login realizado com sucesso!', 'success')
+                cursor.close()
+                conn.close()
+                return redirect(url_for('dashboard.dashboard'))
             else:
                 flash('Usuário ou senha incorretos', 'error')
             
