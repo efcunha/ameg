@@ -801,6 +801,16 @@ def usuario_tem_permissao(usuario_nome, permissao):
         conn = get_db_connection()
         cursor = conn.cursor()
         
+        # Admin ID 1 tem permissão total
+        cursor.execute('SELECT id FROM usuarios WHERE usuario = %s', (usuario_nome,))
+        usuario_data = cursor.fetchone()
+        
+        if usuario_data and usuario_data[0] == 1:  # Admin ID 1
+            cursor.close()
+            conn.close()
+            return True
+        
+        # Verificar permissão específica para outros usuários
         cursor.execute('''
             SELECT COUNT(*) FROM permissoes_usuario p
             JOIN usuarios u ON p.usuario_id = u.id
