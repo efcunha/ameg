@@ -1,36 +1,54 @@
 # Documentação Técnica Detalhada - Sistema AMEG
 
 ## Visão Geral
-O Sistema AMEG é uma aplicação Flask completa para cadastro familiar da Associação dos Ambulantes e Trabalhadores em Geral da Paraíba, com funcionalidades avançadas de segurança, auditoria e performance.
+O Sistema AMEG é uma aplicação Flask modular para cadastro familiar da Associação dos Ambulantes e Trabalhadores em Geral da Paraíba, com arquitetura de blueprints e funcionalidades avançadas de segurança, auditoria e performance.
 
 ## Arquitetura do Sistema
 
-### 1. Estrutura de Arquivos
+### 1. Estrutura de Arquivos (Arquitetura de Blueprints)
 ```
 ameg/
-├── app.py                    # Aplicação principal Flask + compressão
-├── database.py               # Módulo PostgreSQL + security manager
-├── security.py               # Sistema de segurança avançado
-├── validators.py             # Validações backend centralizadas
+├── app.py                        # 🆕 Orquestrador principal (50 linhas)
+├── app.py.backup                 # Backup da versão monolítica anterior
+├── database.py                   # Módulo PostgreSQL + security manager
+├── security.py                   # Sistema de segurança avançado
 ├── generate_admin_credentials.py # Gerador de credenciais seguras
-├── requirements.txt          # Dependências atualizadas (segurança)
-├── SECURITY.md               # Documentação de segurança
-├── templates/                # Templates HTML otimizados
-├── static/                   # Arquivos estáticos otimizados
-└── data/                     # Uploads e dados
+├── requirements.txt              # Dependências atualizadas (segurança)
+├── SECURITY.md                   # Documentação de segurança
+├── blueprints/                   # 🆕 ARQUITETURA MODULAR
+│   ├── __init__.py               # Inicialização dos blueprints
+│   ├── auth.py                   # Autenticação e login
+│   ├── dashboard.py              # Dashboard e estatísticas
+│   ├── cadastros.py              # CRUD de cadastros
+│   ├── arquivos.py               # Gestão de arquivos de saúde
+│   ├── relatorios.py             # Sistema de relatórios
+│   ├── usuarios.py               # Gestão de usuários e auditoria
+│   ├── caixa.py                  # Sistema financeiro
+│   └── utils.py                  # Funções auxiliares compartilhadas
+├── templates/                    # Templates HTML otimizados
+├── static/                       # Arquivos estáticos otimizados
+└── data/                         # Uploads e dados
 ```
 
 ### 2. Principais Módulos
 
-#### **app.py - Aplicação Principal**
+#### **app.py - Orquestrador Principal (50 linhas)**
 - Framework Flask 3.0.3 com Flask-Compress
-- 58 rotas implementadas
-- Sistema de autenticação e autorização
-- Gestão completa de cadastros
-- Sistema de relatórios e exportação
-- Upload e gestão de arquivos
-- Administração de usuários
-- Sistema de auditoria
+- Registro de 7 blueprints especializados
+- Headers de segurança globais
+- Inicialização automática do banco PostgreSQL
+- Compressão HTTP automática
+- **98.7% redução** de código (3.900+ → 50 linhas)
+
+#### **blueprints/ - Arquitetura Modular (44 rotas)**
+- **auth.py**: Sistema de autenticação e login
+- **dashboard.py**: Dashboard e estatísticas em tempo real
+- **cadastros.py**: CRUD completo de cadastros (58 campos + foto)
+- **arquivos.py**: Upload e gestão de arquivos de saúde
+- **relatorios.py**: 6 tipos de relatórios com exportação
+- **usuarios.py**: Gestão de usuários e sistema de auditoria
+- **caixa.py**: Sistema financeiro completo
+- **utils.py**: Funções auxiliares compartilhadas
 
 #### **database.py - Camada de Dados**
 - Conexão PostgreSQL otimizada
@@ -46,12 +64,6 @@ ameg/
 - Geração de senhas seguras
 - Proteção especial admin ID 1
 - Salt personalizado para senhas
-
-#### **validators.py - Validações Centralizadas**
-- Validações backend unificadas
-- Sanitização de dados
-- Verificação de limites de campos
-- Proteção contra injeção
 
 ### 3. Tecnologias Implementadas
 
@@ -75,40 +87,46 @@ ameg/
 - **Headers de segurança**: XSS, clickjacking, MIME protection
 - **CSRF Protection**: Via Flask sessions
 
-## Funcionalidades Principais
+## Funcionalidades por Blueprint
 
-### 1. Sistema de Autenticação
+### 1. auth.py - Sistema de Autenticação
 - **Login seguro** com hash PBKDF2 + salt personalizado
 - **Proteção admin ID 1** - apenas eles podem modificar própria senha
 - **Sessões Flask** com timeout configurável
 - **Headers de segurança** implementados
 
-### 2. Gestão de Cadastros
+### 2. cadastros.py - Gestão de Cadastros
 - **58 campos** baseados no documento oficial AMEG
 - **Foto 3x4** via webcam (getUserMedia) ou upload
 - **Validação unificada** frontend/backend
 - **Edição completa** de todos os campos
 - **Proteção de dados** com sanitização
 
-### 3. Sistema de Relatórios
+### 3. relatorios.py - Sistema de Relatórios
 - **6 tipos especializados**: Completo, Simplificado, por Bairro, Renda, Saúde, Estatístico
 - **Exportação múltipla**: CSV, PDF, DOC
 - **Paginação otimizada**: 50 registros por página
 - **Filtros avançados**: busca e ordenação
 
-### 4. Gestão de Arquivos de Saúde
+### 4. arquivos.py - Gestão de Arquivos de Saúde
 - **Upload seguro**: laudos, receitas, exames (16MB máximo)
 - **Múltiplos formatos**: PDF, DOC, DOCX, imagens
 - **Download protegido**: controle de acesso
 - **Organização**: arquivos vinculados por cadastro
 
-### 5. Administração Avançada
+### 5. usuarios.py - Administração Avançada
 - **Gestão de usuários**: criação, edição, exclusão
 - **Sistema de auditoria**: log completo de ações
 - **Reset administrativo**: limpeza completa do sistema
 - **Proteções especiais**: admin ID 1 não pode ser removido
 
-### 6. Performance e Otimização
+### 6. caixa.py - Sistema Financeiro
+- **Controle de entradas e saídas**: movimentações completas
+- **Upload de comprovantes**: recibos e notas fiscais
+- **Integração com cadastros**: vinculação de pessoas
+- **Relatórios financeiros**: saldo e movimentações
+
+### 7. dashboard.py - Performance e Otimização
 - **Compressão automática**: CSS/JS minificados + Gzip
 - **Lazy loading**: carregamento inteligente de imagens
 - **Cache de estatísticas**: TTL de 5 minutos
@@ -268,6 +286,7 @@ DATABASE_URL=<configurada_automaticamente>
 
 ---
 
-**Documentação atualizada em:** 2025-10-06
-**Versão do sistema:** Fase 2 - Compressão e Lazy Loading implementadas
+**Documentação atualizada em:** 2025-10-07
+**Versão do sistema:** Arquitetura de Blueprints - 98.7% redução de código
 **Status de segurança:** Vulnerabilidades críticas corrigidas
+**Arquitetura:** 7 blueprints especializados + orquestrador principal

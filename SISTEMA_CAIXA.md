@@ -59,7 +59,7 @@ CREATE TABLE comprovantes_caixa (
 - `templates/caixa.html` - Interface principal do caixa
 - `templates/relatorio_caixa.html` - Relatórios e exportação
 
-### **Rotas Flask (app.py)**
+### **Rotas Flask (blueprints/caixa.py)**
 - `GET /caixa` - Exibe interface do caixa
 - `POST /caixa` - Processa movimentações
 - `GET /relatorio_caixa` - Relatórios com filtros
@@ -148,7 +148,12 @@ http://localhost:5000/caixa
 
 ## 🚀 Deploy
 
-O sistema está integrado ao projeto AMEG e será deployado automaticamente no Railway junto com as outras funcionalidades.
+O sistema está integrado ao projeto AMEG através do blueprint `caixa.py` e será deployado automaticamente no Railway junto com as outras funcionalidades da arquitetura modular.
+
+### **Arquitetura**
+- **Blueprint especializado**: `blueprints/caixa.py`
+- **Integração**: Registrado automaticamente no `app.py` principal
+- **Modularidade**: Isolado dos outros módulos do sistema
 
 ### **Variáveis de Ambiente**
 Nenhuma variável adicional necessária - usa as mesmas do sistema principal.

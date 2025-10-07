@@ -50,6 +50,9 @@ Sistema web completo para cadastro familiar da Associação dos Ambulantes e Tra
 ### **1. Desenvolvimento Local**
 ```bash
 cd /home/efcunha/GitHub/ameg
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 python3 app.py
 ```
 
@@ -81,20 +84,30 @@ git push origin main
 
 ```
 ameg/
-├── app.py                        # Aplicação principal Flask + compressão
+├── app.py                        # 🆕 Orquestrador principal (arquitetura blueprints)
+├── app.py.backup                 # Backup da versão monolítica anterior
 ├── database.py                   # Módulo PostgreSQL + security manager
 ├── security.py                   # Sistema de segurança avançado
-├── validators.py                 # Validações backend centralizadas
-├── config.py                     # Configurações por ambiente
 ├── generate_admin_credentials.py # Gerador de credenciais seguras
 ├── requirements.txt              # Dependências atualizadas (segurança)
 ├── SECURITY.md                   # Documentação de segurança
 ├── DOCUMENTACAO_APP.md           # Documentação técnica detalhada
+├── SISTEMA_CAIXA.md              # Documentação do sistema financeiro
 ├── Dockerfile                    # Container para Railway
 ├── start.sh                      # Script de inicialização
 ├── railway.toml                  # Configuração Railway
 ├── .env.secure                   # Credenciais locais (não commitado)
 ├── .gitignore                    # Arquivos protegidos
+├── blueprints/                   # 🆕 ARQUITETURA MODULAR
+│   ├── __init__.py               # Inicialização dos blueprints
+│   ├── auth.py                   # Autenticação e login
+│   ├── dashboard.py              # Dashboard e estatísticas
+│   ├── cadastros.py              # CRUD de cadastros
+│   ├── arquivos.py               # Gestão de arquivos de saúde
+│   ├── relatorios.py             # Sistema de relatórios
+│   ├── usuarios.py               # Gestão de usuários e auditoria
+│   ├── caixa.py                  # Sistema financeiro
+│   └── utils.py                  # Funções auxiliares compartilhadas
 ├── templates/                    # Templates HTML otimizados
 │   ├── login.html                # Login com validação
 │   ├── dashboard.html            # Dashboard + lazy loading
@@ -120,7 +133,6 @@ ameg/
 │   │   ├── validators.min.js     # Versão minificada
 │   │   ├── lazy-load.js          # Lazy loading inteligente
 │   │   ├── lazy-load.min.js      # Versão minificada
-│   │   ├── compress.py           # Script de compressão
 │   │   └── *.gz                  # Arquivos comprimidos
 │   └── img/
 │       └── logo-ameg.jpeg        # Logo da AMEG
@@ -290,6 +302,13 @@ DATABASE_URL=<configurada_automaticamente>
 
 ## 🔄 Atualizações Recentes
 
+### **Arquitetura de Blueprints**
+- Migração completa para arquitetura modular
+- App.py reduzido de 3.900+ para 50 linhas (98.7% redução)
+- 7 blueprints especializados implementados
+- Preservação de 100% das funcionalidades (42→44 rotas)
+- Limpeza de arquivos não utilizados
+
 ### **Segurança**
 - Correção de vulnerabilidades Jinja2 e Cryptography
 - Implementação de Security Manager
@@ -301,12 +320,6 @@ DATABASE_URL=<configurada_automaticamente>
 - Lazy loading de imagens
 - Cache de estatísticas
 - Índices de banco otimizados
-
-### **Funcionalidades**
-- Validação unificada
-- Sistema de reset administrativo
-- Proteção especial admin ID 1
-- Geração automática de credenciais
 
 ## 🎯 Próximos Passos
 
