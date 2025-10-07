@@ -3558,7 +3558,10 @@ def editar_movimentacao(movimentacao_id):
 
 @app.route('/visualizar_comprovantes/<int:movimentacao_id>')
 def visualizar_comprovantes(movimentacao_id):
+    logger.info(f"🔥 ROTA VISUALIZAR_COMPROVANTES CHAMADA - ID: {movimentacao_id}")
+    
     if 'usuario' not in session:
+        logger.warning("❌ Usuário não logado - redirecionando para login")
         return redirect(url_for('login'))
     
     logger.info(f"📎 === VISUALIZAR COMPROVANTES - INÍCIO ===")
@@ -3569,6 +3572,8 @@ def visualizar_comprovantes(movimentacao_id):
         logger.warning(f"⚠️ Usuário {session['usuario']} sem permissão para visualizar comprovantes")
         flash('Você não tem permissão para visualizar comprovantes', 'error')
         return redirect(url_for('dashboard'))
+    
+    logger.info("✅ Permissão verificada - usuário tem acesso ao caixa")
     
     try:
         logger.info("🔌 Conectando ao banco de dados...")
