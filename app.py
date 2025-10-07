@@ -3797,9 +3797,29 @@ def exportar_comprovantes_pdf(movimentacao_id):
                         elements.append(img)
                         
                     elif comp['tipo_arquivo'] == 'application/pdf':
-                        # Para PDFs, adicionar nota
-                        elements.append(Paragraph(f"📄 Arquivo PDF: {comp['nome_arquivo']}", styles['Normal']))
-                        elements.append(Paragraph("(Conteúdo do PDF não pode ser incorporado)", styles['Italic']))
+                        # Para PDFs, extrair e incorporar conteúdo
+                        try:
+                            import PyPDF2
+                            pdf_buffer = io.BytesIO(arquivo_dados)
+                            pdf_reader = PyPDF2.PdfReader(pdf_buffer)
+                            
+                            elements.append(Paragraph(f"📄 Arquivo PDF: {comp['nome_arquivo']}", styles['Heading4']))
+                            elements.append(Spacer(1, 10))
+                            
+                            # Extrair texto de cada página
+                            for page_num, page in enumerate(pdf_reader.pages, 1):
+                                text = page.extract_text()
+                                if text.strip():
+                                    elements.append(Paragraph(f"Página {page_num}:", styles['Normal']))
+                                    # Limitar texto para evitar PDFs muito grandes
+                                    text_preview = text[:2000] + "..." if len(text) > 2000 else text
+                                    elements.append(Paragraph(text_preview, styles['Normal']))
+                                    elements.append(Spacer(1, 10))
+                            
+                        except Exception as pdf_error:
+                            logger.error(f"Erro ao processar PDF {comp['nome_arquivo']}: {pdf_error}")
+                            elements.append(Paragraph(f"📄 Arquivo PDF: {comp['nome_arquivo']}", styles['Normal']))
+                            elements.append(Paragraph("(Erro ao extrair conteúdo do PDF)", styles['Italic']))
                         
                     else:
                         # Para outros tipos, adicionar informação

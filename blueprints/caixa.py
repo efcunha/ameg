@@ -220,3 +220,163 @@ def download_comprovante(comprovante_id):
         logger.error(f"Erro ao baixar comprovante: {e}")
         flash('Erro ao baixar comprovante', 'error')
         return redirect(url_for('caixa.caixa'))
+
+@caixa_bp.route('/exportar_comprovantes_pdf/<int:movimentacao_id>')
+def exportar_comprovantes_pdf(movimentacao_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    if not usuario_tem_permissao(session['usuario'], 'caixa'):
+        flash('Você não tem permissão para exportar comprovantes', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib import colors
+        from reportlab.lib.units import inch
+        import io
+        from PIL import Image as PILImage
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        # Buscar dados da movimentação
+        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+        movimentacao = cursor.fetchone()
+        
+        if not movimentacao:
+            flash('Movimentação não encontrada', 'error')
+            return redirect(url_for('caixa.caixa'))
+        
+        # Buscar comprovantes
+        comprovantes = obter_comprovantes_movimentacao(movimentacao_id)
+        
+        cursor.close()
+        conn.close()
+        
+        # Criar PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        styles = getSampleStyleSheet()
+        elements = []
+        
+        # Título
+        title = Paragraph(f"AMEG - Comprovantes da Movimentação #{movimentacao_id}", styles['Title'])
+        elements.append(title)
+        elements.append(Spacer(1, 20))
+        
+        # Dados da movimentação
+        mov_data = [
+            ['Tipo:', movimentacao['tipo'].title()],
+            ['Valor:', f"R$ {movimentacao['valor']:.2f}"],
+            ['Descrição:', movimentacao['descricao']],
+            ['Data:', movimentacao['data_movimentacao'].strftime('%d/%m/%Y %H:%M')],
+            ['Usuário:', movimentacao['usuario']]
+        ]
+        
+        mov_table = Table(mov_data, colWidths=[2*inch, 4*inch])
+        mov_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        elements.append(mov_table)
+        elements.append(Spacer(1, 30))
+        
+        # Incluir os comprovantes reais
+        if comprovantes:
+            elements.append(Paragraph("Comprovantes Anexados:", styles['Heading2']))
+            elements.append(Spacer(1, 20))
+            
+            for i, comp in enumerate(comprovantes, 1):
+                # Título do comprovante
+                elements.append(Paragraph(f"{i}. {comp['nome_arquivo']}", styles['Heading3']))
+                elements.append(Spacer(1, 10))
+                
+                # Buscar dados do arquivo
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute('SELECT arquivo_dados FROM comprovantes_caixa WHERE id = %s', (comp['id'],))
+                arquivo_dados = cursor.fetchone()[0]
+                cursor.close()
+                conn.close()
+                
+                try:
+                    if comp['tipo_arquivo'].startswith('image/'):
+                        # Para imagens, incluir no PDF
+                        img_buffer = io.BytesIO(arquivo_dados)
+                        pil_img = PILImage.open(img_buffer)
+                        
+                        # Redimensionar se necessário
+                        max_width, max_height = 400, 300
+                        pil_img.thumbnail((max_width, max_height), PILImage.Resampling.LANCZOS)
+                        
+                        # Converter para ReportLab
+                        img_buffer2 = io.BytesIO()
+                        pil_img.save(img_buffer2, format='PNG')
+                        img_buffer2.seek(0)
+                        
+                        img = Image(img_buffer2, width=pil_img.width, height=pil_img.height)
+                        elements.append(img)
+                        
+                    elif comp['tipo_arquivo'] == 'application/pdf':
+                        # Para PDFs, extrair e incorporar conteúdo
+                        try:
+                            import PyPDF2
+                            pdf_buffer = io.BytesIO(arquivo_dados)
+                            pdf_reader = PyPDF2.PdfReader(pdf_buffer)
+                            
+                            elements.append(Paragraph(f"📄 Arquivo PDF: {comp['nome_arquivo']}", styles['Heading4']))
+                            elements.append(Spacer(1, 10))
+                            
+                            # Extrair texto de cada página
+                            for page_num, page in enumerate(pdf_reader.pages, 1):
+                                text = page.extract_text()
+                                if text.strip():
+                                    elements.append(Paragraph(f"Página {page_num}:", styles['Normal']))
+                                    # Limitar texto para evitar PDFs muito grandes
+                                    text_preview = text[:2000] + "..." if len(text) > 2000 else text
+                                    elements.append(Paragraph(text_preview, styles['Normal']))
+                                    elements.append(Spacer(1, 10))
+                            
+                        except Exception as pdf_error:
+                            logger.error(f"Erro ao processar PDF {comp['nome_arquivo']}: {pdf_error}")
+                            elements.append(Paragraph(f"📄 Arquivo PDF: {comp['nome_arquivo']}", styles['Normal']))
+                            elements.append(Paragraph("(Erro ao extrair conteúdo do PDF)", styles['Italic']))
+                        
+                    else:
+                        # Para outros tipos, adicionar informação
+                        elements.append(Paragraph(f"📎 Arquivo: {comp['nome_arquivo']}", styles['Normal']))
+                        elements.append(Paragraph(f"Tipo: {comp['tipo_arquivo']}", styles['Normal']))
+                        
+                except Exception as file_error:
+                    logger.error(f"Erro ao processar arquivo {comp['nome_arquivo']}: {file_error}")
+                    elements.append(Paragraph(f"❌ Erro ao processar arquivo: {comp['nome_arquivo']}", styles['Normal']))
+                
+                elements.append(Spacer(1, 20))
+        else:
+            elements.append(Paragraph("Nenhum comprovante anexado.", styles['Normal']))
+        
+        doc.build(elements)
+        buffer.seek(0)
+        
+        filename = f"comprovantes_movimentacao_{movimentacao_id}.pdf"
+        
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        logger.error(f"Erro ao exportar comprovantes PDF: {e}")
+        flash('Erro ao exportar comprovantes em PDF', 'error')
+        return redirect(url_for('caixa.caixa'))
