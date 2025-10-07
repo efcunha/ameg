@@ -2968,6 +2968,128 @@ def deletar_cadastro(cadastro_id):
     
     return redirect(url_for('dashboard'))
 
+# Rotas do Sistema de Caixa
+@app.route('/caixa')
+def caixa():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        # Obter saldo atual
+        saldo = database.obter_saldo_caixa()
+        
+        # Obter pessoas cadastradas para o select
+        pessoas = database.listar_cadastros_simples()
+        
+        # Obter últimas movimentações
+        movimentacoes = database.listar_movimentacoes_caixa(limit=20)
+        
+        return render_template('caixa.html', 
+                             saldo=saldo, 
+                             pessoas=pessoas, 
+                             movimentacoes=movimentacoes)
+    
+    except Exception as e:
+        logger.error(f"Erro ao carregar caixa: {e}")
+        flash('Erro ao carregar sistema de caixa', 'error')
+        return redirect(url_for('dashboard'))
+
+@app.route('/caixa', methods=['POST'])
+def processar_movimentacao_caixa():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        tipo = request.form.get('tipo')
+        valor = float(request.form.get('valor', 0))
+        descricao = request.form.get('descricao', '').strip()
+        cadastro_id = request.form.get('cadastro_id') or None
+        nome_pessoa = request.form.get('nome_pessoa', '').strip()
+        numero_recibo = request.form.get('numero_recibo', '').strip()
+        observacoes = request.form.get('observacoes', '').strip()
+        
+        if not descricao:
+            flash('Descrição é obrigatória', 'error')
+            return redirect(url_for('caixa'))
+        
+        if valor <= 0:
+            flash('Valor deve ser maior que zero', 'error')
+            return redirect(url_for('caixa'))
+        
+        # Inserir movimentação
+        movimentacao_id = database.inserir_movimentacao_caixa(
+            tipo, valor, descricao, cadastro_id, nome_pessoa, 
+            numero_recibo, observacoes, session['usuario']
+        )
+        
+        # Processar comprovantes se houver
+        comprovantes = request.files.getlist('comprovantes')
+        for comprovante in comprovantes:
+            if comprovante and comprovante.filename:
+                # Validar tipo de arquivo
+                if not allowed_file(comprovante.filename):
+                    flash(f'Tipo de arquivo não permitido: {comprovante.filename}', 'error')
+                    continue
+                
+                # Validar tamanho (16MB máximo)
+                comprovante.seek(0, 2)  # Ir para o final
+                size = comprovante.tell()
+                comprovante.seek(0)  # Voltar ao início
+                
+                if size > 16 * 1024 * 1024:  # 16MB
+                    flash(f'Arquivo muito grande: {comprovante.filename}', 'error')
+                    continue
+                
+                # Salvar comprovante
+                arquivo_dados = comprovante.read()
+                database.inserir_comprovante_caixa(
+                    movimentacao_id, 
+                    comprovante.filename,
+                    comprovante.content_type,
+                    arquivo_dados
+                )
+        
+        flash(f'Movimentação de {tipo} registrada com sucesso!', 'success')
+        return redirect(url_for('caixa'))
+    
+    except Exception as e:
+        logger.error(f"Erro ao processar movimentação: {e}")
+        flash('Erro ao registrar movimentação', 'error')
+        return redirect(url_for('caixa'))
+
+@app.route('/relatorio_caixa')
+def relatorio_caixa():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        # Obter parâmetros de filtro
+        tipo = request.args.get('tipo', '')
+        data_inicio = request.args.get('data_inicio', '')
+        data_fim = request.args.get('data_fim', '')
+        
+        # Obter todas as movimentações (sem limite para relatório)
+        movimentacoes = database.listar_movimentacoes_caixa(limit=1000, tipo=tipo if tipo else None)
+        
+        # Calcular totais
+        total_entradas = sum(m['valor'] for m in movimentacoes if m['tipo'] == 'entrada')
+        total_saidas = sum(m['valor'] for m in movimentacoes if m['tipo'] == 'saida')
+        saldo_total = total_entradas - total_saidas
+        
+        return render_template('relatorio_caixa.html',
+                             movimentacoes=movimentacoes,
+                             total_entradas=total_entradas,
+                             total_saidas=total_saidas,
+                             saldo_total=saldo_total,
+                             filtro_tipo=tipo,
+                             filtro_data_inicio=data_inicio,
+                             filtro_data_fim=data_fim)
+    
+    except Exception as e:
+        logger.error(f"Erro ao gerar relatório de caixa: {e}")
+        flash('Erro ao gerar relatório', 'error')
+        return redirect(url_for('caixa'))
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     logger.info(f"🚀 Iniciando AMEG na porta {port}")

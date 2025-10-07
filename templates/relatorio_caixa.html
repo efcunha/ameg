@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Caixa - AMEG</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.min.css') }}">
+    <style>
+        .relatorio-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .resumo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .resumo-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
+        .resumo-card.entrada { border-left: 4px solid #4CAF50; }
+        .resumo-card.saida { border-left: 4px solid #f44336; }
+        .resumo-card.saldo { border-left: 4px solid #2196F3; }
+        .filtros-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .filtros-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
+        .tabela-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow-x: auto; }
+        .movimentacoes-table { width: 100%; border-collapse: collapse; }
+        .movimentacoes-table th, .movimentacoes-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .movimentacoes-table th { background-color: #f5f5f5; font-weight: bold; position: sticky; top: 0; }
+        .entrada-row { background-color: #f8fff8; }
+        .saida-row { background-color: #fff8f8; }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #2196F3; color: white; }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .valor-positivo { color: #4CAF50; font-weight: bold; }
+        .valor-negativo { color: #f44336; font-weight: bold; }
+        .valor-neutro { color: #2196F3; font-weight: bold; }
+        @media print {
+            .btn-group, .filtros-card { display: none; }
+            .relatorio-container { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="relatorio-container">
+        <h1>📊 Relatório de Caixa AMEG</h1>
+        
+        <!-- Resumo Financeiro -->
+        <div class="resumo-grid">
+            <div class="resumo-card entrada">
+                <h3>Total Entradas</h3>
+                <div style="font-size: 1.5em;" class="valor-positivo">
+                    R$ {{ "%.2f"|format(total_entradas) }}
+                </div>
+            </div>
+            <div class="resumo-card saida">
+                <h3>Total Saídas</h3>
+                <div style="font-size: 1.5em;" class="valor-negativo">
+                    R$ {{ "%.2f"|format(total_saidas) }}
+                </div>
+            </div>
+            <div class="resumo-card saldo">
+                <h3>Saldo Total</h3>
+                <div style="font-size: 1.5em;" class="{% if saldo_total >= 0 %}valor-positivo{% else %}valor-negativo{% endif %}">
+                    R$ {{ "%.2f"|format(saldo_total) }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filtros -->
+        <div class="filtros-card">
+            <h3>🔍 Filtros</h3>
+            <form method="GET" class="filtros-form">
+                <div class="form-group">
+                    <label>Tipo de Movimentação:</label>
+                    <select name="tipo" class="form-control">
+                        <option value="">Todas</option>
+                        <option value="entrada" {% if filtro_tipo == 'entrada' %}selected{% endif %}>Entradas</option>
+                        <option value="saida" {% if filtro_tipo == 'saida' %}selected{% endif %}>Saídas</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Data Início:</label>
+                    <input type="date" name="data_inicio" value="{{ filtro_data_inicio }}" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label>Data Fim:</label>
+                    <input type="date" name="data_fim" value="{{ filtro_data_fim }}" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Botões de Ação -->
+        <div class="btn-group">
+            <a href="/caixa" class="btn btn-secondary">⬅️ Voltar ao Caixa</a>
+            <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimir</button>
+            <button onclick="exportarCSV()" class="btn btn-success">📊 Exportar CSV</button>
+        </div>
+        
+        <!-- Tabela de Movimentações -->
+        <div class="tabela-container">
+            <h3>📋 Movimentações ({{ movimentacoes|length }} registros)</h3>
+            <table class="movimentacoes-table" id="tabela-movimentacoes">
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Tipo</th>
+                        <th>Valor</th>
+                        <th>Descrição</th>
+                        <th>Pessoa</th>
+                        <th>Recibo/Nota</th>
+                        <th>Observações</th>
+                        <th>Usuário</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimentacoes %}
+                    <tr class="{{ mov.tipo }}-row">
+                        <td>{{ mov.data_movimentacao.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            {% if mov.tipo == 'entrada' %}
+                                <span class="valor-positivo">➕ Entrada</span>
+                            {% else %}
+                                <span class="valor-negativo">➖ Saída</span>
+                            {% endif %}
+                        </td>
+                        <td class="{% if mov.tipo == 'entrada' %}valor-positivo{% else %}valor-negativo{% endif %}">
+                            {% if mov.tipo == 'entrada' %}+{% else %}-{% endif %}R$ {{ "%.2f"|format(mov.valor) }}
+                        </td>
+                        <td>{{ mov.descricao }}</td>
+                        <td>{{ mov.nome_pessoa or mov.nome_cadastro or '-' }}</td>
+                        <td>{{ mov.numero_recibo or '-' }}</td>
+                        <td>{{ mov.observacoes or '-' }}</td>
+                        <td>{{ mov.usuario }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            {% if not movimentacoes %}
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <p>📭 Nenhuma movimentação encontrada com os filtros aplicados.</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Rodapé do Relatório -->
+        <div style="margin-top: 30px; padding: 20px; background: #f5f5f5; border-radius: 8px; text-align: center;">
+            <p><strong>Relatório gerado em:</strong> {{ moment().format('DD/MM/YYYY HH:mm') }}</p>
+            <p><strong>Sistema AMEG</strong> - Associação dos Ambulantes e Trabalhadores em Geral da Paraíba</p>
+        </div>
+    </div>
+    
+    <script>
+        function exportarCSV() {
+            const tabela = document.getElementById('tabela-movimentacoes');
+            let csv = [];
+            
+            // Cabeçalhos
+            const headers = [];
+            tabela.querySelectorAll('thead th').forEach(th => {
+                headers.push('"' + th.textContent.trim() + '"');
+            });
+            csv.push(headers.join(','));
+            
+            // Dados
+            tabela.querySelectorAll('tbody tr').forEach(tr => {
+                const row = [];
+                tr.querySelectorAll('td').forEach(td => {
+                    row.push('"' + td.textContent.trim().replace(/"/g, '""') + '"');
+                });
+                csv.push(row.join(','));
+            });
+            
+            // Download
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'relatorio_caixa_' + new Date().toISOString().split('T')[0] + '.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

@@ -394,7 +394,44 @@ def init_db_tables():
         
         logger.debug("✅ Índices de otimização criados")
         
+        # Tabela movimentacoes_caixa
+        logger.debug("Criando tabela movimentacoes_caixa...")
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS movimentacoes_caixa (
+                id SERIAL PRIMARY KEY,
+                tipo VARCHAR(10) NOT NULL CHECK (tipo IN ('entrada', 'saida')),
+                valor DECIMAL(10,2) NOT NULL,
+                descricao TEXT NOT NULL,
+                cadastro_id INTEGER REFERENCES cadastros(id),
+                nome_pessoa VARCHAR(255),
+                numero_recibo VARCHAR(50),
+                observacoes TEXT,
+                data_movimentacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                usuario VARCHAR(100) NOT NULL
+            )
+        ''')
+        logger.debug("✅ Tabela movimentacoes_caixa criada")
         
+        # Tabela comprovantes_caixa
+        logger.debug("Criando tabela comprovantes_caixa...")
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS comprovantes_caixa (
+                id SERIAL PRIMARY KEY,
+                movimentacao_id INTEGER REFERENCES movimentacoes_caixa(id) ON DELETE CASCADE,
+                nome_arquivo VARCHAR(255) NOT NULL,
+                tipo_arquivo VARCHAR(50),
+                arquivo_dados BYTEA,
+                data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        logger.debug("✅ Tabela comprovantes_caixa criada")
+        
+        # Índices para tabelas de caixa
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_caixa_tipo ON movimentacoes_caixa(tipo)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_caixa_data ON movimentacoes_caixa(data_movimentacao)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_caixa_cadastro ON movimentacoes_caixa(cadastro_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_caixa_usuario ON movimentacoes_caixa(usuario)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_comprovantes_movimentacao ON comprovantes_caixa(movimentacao_id)')
         
         conn.commit()
         logger.debug("✅ Commit realizado")
@@ -474,3 +511,168 @@ def registrar_auditoria(usuario, acao, tabela, registro_id=None, dados_anteriore
         
     except Exception as e:
         logger.error(f"❌ Erro ao registrar auditoria: {e}")
+
+# Funções para sistema de caixa
+def inserir_movimentacao_caixa(tipo, valor, descricao, cadastro_id, nome_pessoa, numero_recibo, observacoes, usuario):
+    """Insere uma nova movimentação no caixa"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO movimentacoes_caixa (tipo, valor, descricao, cadastro_id, nome_pessoa, numero_recibo, observacoes, usuario)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        ''', (tipo, valor, descricao, cadastro_id, nome_pessoa, numero_recibo, observacoes, usuario))
+        
+        movimentacao_id = cursor.fetchone()[0]
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        # Registrar auditoria
+        registrar_auditoria(usuario, 'INSERT', 'movimentacoes_caixa', movimentacao_id, 
+                          None, f"Tipo: {tipo}, Valor: {valor}, Descrição: {descricao}")
+        
+        return movimentacao_id
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao inserir movimentação: {e}")
+        raise
+
+def inserir_comprovante_caixa(movimentacao_id, nome_arquivo, tipo_arquivo, arquivo_dados):
+    """Insere um comprovante para uma movimentação"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO comprovantes_caixa (movimentacao_id, nome_arquivo, tipo_arquivo, arquivo_dados)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+        ''', (movimentacao_id, nome_arquivo, tipo_arquivo, arquivo_dados))
+        
+        comprovante_id = cursor.fetchone()[0]
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return comprovante_id
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao inserir comprovante: {e}")
+        raise
+
+def listar_movimentacoes_caixa(limit=50, offset=0, tipo=None):
+    """Lista movimentações do caixa com paginação"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        where_clause = ""
+        params = []
+        
+        if tipo:
+            where_clause = "WHERE m.tipo = %s"
+            params.append(tipo)
+        
+        query = f'''
+            SELECT m.*, c.nome_completo as nome_cadastro,
+                   COUNT(comp.id) as total_comprovantes
+            FROM movimentacoes_caixa m
+            LEFT JOIN cadastros c ON m.cadastro_id = c.id
+            LEFT JOIN comprovantes_caixa comp ON m.id = comp.movimentacao_id
+            {where_clause}
+            GROUP BY m.id, c.nome_completo
+            ORDER BY m.data_movimentacao DESC
+            LIMIT %s OFFSET %s
+        '''
+        
+        params.extend([limit, offset])
+        cursor.execute(query, params)
+        movimentacoes = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return movimentacoes
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao listar movimentações: {e}")
+        raise
+
+def obter_saldo_caixa():
+    """Calcula o saldo atual do caixa"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT 
+                COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) as total_entradas,
+                COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) as total_saidas
+            FROM movimentacoes_caixa
+        ''')
+        
+        resultado = cursor.fetchone()
+        total_entradas = float(resultado[0])
+        total_saidas = float(resultado[1])
+        saldo = total_entradas - total_saidas
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            'total_entradas': total_entradas,
+            'total_saidas': total_saidas,
+            'saldo': saldo
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao calcular saldo: {e}")
+        raise
+
+def obter_comprovantes_movimentacao(movimentacao_id):
+    """Obtém os comprovantes de uma movimentação"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute('''
+            SELECT id, nome_arquivo, tipo_arquivo, data_upload
+            FROM comprovantes_caixa
+            WHERE movimentacao_id = %s
+            ORDER BY data_upload DESC
+        ''', (movimentacao_id,))
+        
+        comprovantes = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return comprovantes
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter comprovantes: {e}")
+        raise
+
+def listar_cadastros_simples():
+    """Lista cadastros com apenas ID e nome para selects"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute('''
+            SELECT id, nome_completo
+            FROM cadastros
+            ORDER BY nome_completo
+        ''')
+        
+        cadastros = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return cadastros
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao listar cadastros simples: {e}")
+        raise
