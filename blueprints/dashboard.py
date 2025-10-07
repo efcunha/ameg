@@ -8,6 +8,32 @@ logger = logging.getLogger(__name__)
 dashboard_bp = Blueprint('dashboard', __name__)
 
 # Cache simples para estatísticas
+def get_cached_stats():
+    """Função local para obter estatísticas"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT COUNT(*) FROM cadastros')
+        total_cadastros = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM arquivos_saude')
+        total_arquivos = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM usuarios WHERE tipo = %s', ('admin',))
+        total_admins = cursor.fetchone()[0]
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            'total': total_cadastros,
+            'arquivos': total_arquivos,
+            'admins': total_admins
+        }
+    except Exception as e:
+        logger.error(f"Erro ao buscar estatísticas: {e}")
+        return {'total': 0, 'arquivos': 0, 'admins': 0}
 stats_cache = {'data': None, 'timestamp': None}
 
 def get_cached_stats():
