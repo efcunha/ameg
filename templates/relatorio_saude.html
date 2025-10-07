@@ -166,8 +166,8 @@
                         </td>
                         {% if loop.first %}
                         <td class="actions-cell" rowspan="{{ item.pessoas_saude|length }}">
-                            <a href="/arquivos_saude/{{ item.cadastro.id }}" style="color: #3498db;" title="Ver arquivos de saúde">📁 Arquivos</a>
-                            <a href="/exportar?tipo=saude&formato=pdf&cadastro_id={{ item.cadastro.id }}" style="color: #e74c3c;" title="Exportar PDF individual">📋 PDF Individual</a>
+                            <a href="/arquivos_saude/{{ item.cadastro.id }}" style="color: #3498db; display: block; margin-bottom: 5px;" title="Ver arquivos de saúde">📁 Arquivos</a>
+                            <a href="/exportar?tipo=saude&formato=pdf&cadastro_id={{ item.cadastro.id }}" style="color: #e74c3c; background: #f8f9fa; padding: 4px 8px; border-radius: 4px; display: block; font-weight: bold;" title="Exportar PDF individual">📋 PDF Individual</a>
                         </td>
                         {% endif %}
                     </tr>
