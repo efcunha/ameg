@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_compress import Compress
-from database import init_db_tables, create_admin_user
+from database import init_db_tables, create_admin_user, get_db_connection
 import os
 import logging
 
@@ -15,6 +15,30 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 # Configurar compressão
 Compress(app)
+
+# Função helper para verificar se usuário é admin
+def is_admin_user(username):
+    """Verifica se o usuário tem privilégios de administrador"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (username,))
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if result:
+            tipo = result[0] if isinstance(result, tuple) else result.get('tipo', 'usuario')
+            return tipo == 'admin'
+        return username == 'admin'  # Fallback para compatibilidade
+    except Exception as e:
+        logger.error(f"Erro ao verificar admin: {e}")
+        return username == 'admin'  # Fallback em caso de erro
+
+# Registrar função como global do Jinja2
+@app.context_processor
+def inject_template_vars():
+    return dict(is_admin_user=is_admin_user)
 
 # Importar e registrar blueprints
 from blueprints.auth import auth_bp
