@@ -115,7 +115,9 @@
         <div class="btn-group">
             <a href="/caixa" class="btn btn-secondary">⬅️ Voltar ao Caixa</a>
             <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimir</button>
-            <a href="/exportar?tipo=caixa&formato=pdf" class="btn btn-danger">📄 Exportar PDF</a>
+            <a href="/exportar?tipo=caixa&formato=pdf" class="btn btn-danger">📄 Exportar PDF Geral</a>
+            <a href="/exportar?tipo=caixa&formato=pdf&filtro_tipo=entrada" class="btn" style="background: #27ae60; color: white;">📈 PDF Entradas</a>
+            <a href="/exportar?tipo=caixa&formato=pdf&filtro_tipo=saida" class="btn" style="background: #e74c3c; color: white;">📉 PDF Saídas</a>
             <button onclick="exportarCSV()" class="btn btn-success">📊 Exportar CSV</button>
         </div>
         

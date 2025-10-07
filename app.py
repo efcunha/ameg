@@ -1329,15 +1329,27 @@ def exportar():
         filename = 'relatorio_renda'
     elif tipo == 'caixa':
         logger.info("💰 Buscando dados do caixa para exportação")
-        # Buscar todas as movimentações do caixa
-        cursor.execute('''SELECT mc.id, mc.tipo, mc.valor, mc.descricao, mc.cadastro_id, 
-                         mc.nome_pessoa, mc.numero_recibo, mc.observacoes, mc.data_movimentacao, 
-                         mc.usuario, c.nome_completo as titular_cadastro
-                         FROM movimentacoes_caixa mc
-                         LEFT JOIN cadastros c ON mc.cadastro_id = c.id
-                         ORDER BY mc.data_movimentacao DESC''')
+        filtro_tipo = request.args.get('filtro_tipo')  # 'entrada' ou 'saida'
+        
+        # Query base
+        query = '''SELECT mc.id, mc.tipo, mc.valor, mc.descricao, mc.cadastro_id, 
+                   mc.nome_pessoa, mc.numero_recibo, mc.observacoes, mc.data_movimentacao, 
+                   mc.usuario, c.nome_completo as titular_cadastro
+                   FROM movimentacoes_caixa mc
+                   LEFT JOIN cadastros c ON mc.cadastro_id = c.id'''
+        
+        # Adicionar filtro se especificado
+        if filtro_tipo in ['entrada', 'saida']:
+            query += f" WHERE mc.tipo = '{filtro_tipo}'"
+            filename = f'relatorio_caixa_{filtro_tipo}'
+        else:
+            filename = 'relatorio_caixa'
+            
+        query += ' ORDER BY mc.data_movimentacao DESC'
+        
+        cursor.execute(query)
         dados = cursor.fetchall()
-        filename = 'relatorio_caixa'
+        logger.info(f"📊 Encontradas {len(dados)} movimentações para exportação")
     else:
         cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
         dados = cursor.fetchall()
@@ -1504,7 +1516,13 @@ def exportar():
         elif tipo == 'renda':
             title = Paragraph("AMEG - Análise de Renda Familiar", styles['Title'])
         elif tipo == 'caixa':
-            title = Paragraph("AMEG - Relatório de Movimentações do Caixa", styles['Title'])
+            filtro_tipo = request.args.get('filtro_tipo')
+            if filtro_tipo == 'entrada':
+                title = Paragraph("AMEG - Relatório de Entradas do Caixa", styles['Title'])
+            elif filtro_tipo == 'saida':
+                title = Paragraph("AMEG - Relatório de Saídas do Caixa", styles['Title'])
+            else:
+                title = Paragraph("AMEG - Relatório de Movimentações do Caixa", styles['Title'])
         else:
             title = Paragraph("AMEG - Relatório Geral", styles['Title'])
         
@@ -1880,22 +1898,52 @@ def exportar():
             elements.append(table)
         elif tipo == 'caixa':
             logger.info("💰 Processando dados do caixa para PDF")
+            filtro_tipo = request.args.get('filtro_tipo')
             
-            # Calcular totais
-            total_entradas = sum(row['valor'] for row in dados if row['tipo'] == 'entrada')
-            total_saidas = sum(row['valor'] for row in dados if row['tipo'] == 'saida')
-            saldo_total = total_entradas - total_saidas
+            # Calcular totais baseado no filtro
+            if filtro_tipo == 'entrada':
+                total_filtrado = sum(row['valor'] for row in dados)
+                total_entradas = total_filtrado
+                total_saidas = 0
+                saldo_total = total_entradas
+            elif filtro_tipo == 'saida':
+                total_filtrado = sum(row['valor'] for row in dados)
+                total_entradas = 0
+                total_saidas = total_filtrado
+                saldo_total = -total_saidas
+            else:
+                total_entradas = sum(row['valor'] for row in dados if row['tipo'] == 'entrada')
+                total_saidas = sum(row['valor'] for row in dados if row['tipo'] == 'saida')
+                saldo_total = total_entradas - total_saidas
             
             # Resumo financeiro
-            resumo_para = Paragraph("<b>💰 Resumo Financeiro</b>", styles['Heading3'])
+            if filtro_tipo == 'entrada':
+                resumo_para = Paragraph("<b>💰 Resumo de Entradas</b>", styles['Heading3'])
+            elif filtro_tipo == 'saida':
+                resumo_para = Paragraph("<b>💰 Resumo de Saídas</b>", styles['Heading3'])
+            else:
+                resumo_para = Paragraph("<b>💰 Resumo Financeiro</b>", styles['Heading3'])
+            
             elements.append(resumo_para)
             elements.append(Spacer(1, 6))
             
-            resumo_data = [
-                ['Total de Entradas:', f"R$ {total_entradas:.2f}"],
-                ['Total de Saídas:', f"R$ {total_saidas:.2f}"],
-                ['Saldo Atual:', f"R$ {saldo_total:.2f}"]
-            ]
+            # Dados do resumo baseado no filtro
+            if filtro_tipo == 'entrada':
+                resumo_data = [
+                    ['Total de Entradas:', f"R$ {total_entradas:.2f}"],
+                    ['Quantidade de Registros:', str(len(dados))]
+                ]
+            elif filtro_tipo == 'saida':
+                resumo_data = [
+                    ['Total de Saídas:', f"R$ {total_saidas:.2f}"],
+                    ['Quantidade de Registros:', str(len(dados))]
+                ]
+            else:
+                resumo_data = [
+                    ['Total de Entradas:', f"R$ {total_entradas:.2f}"],
+                    ['Total de Saídas:', f"R$ {total_saidas:.2f}"],
+                    ['Saldo Atual:', f"R$ {saldo_total:.2f}"]
+                ]
             
             resumo_table = Table(resumo_data, colWidths=[3*inch, 2*inch])
             resumo_table.setStyle(TableStyle([
@@ -1910,7 +1958,12 @@ def exportar():
             elements.append(Spacer(1, 20))
             
             # Movimentações detalhadas
-            movimentacoes_para = Paragraph("<b>📋 Movimentações Detalhadas</b>", styles['Heading3'])
+            if filtro_tipo == 'entrada':
+                movimentacoes_para = Paragraph("<b>📈 Entradas Detalhadas</b>", styles['Heading3'])
+            elif filtro_tipo == 'saida':
+                movimentacoes_para = Paragraph("<b>📉 Saídas Detalhadas</b>", styles['Heading3'])
+            else:
+                movimentacoes_para = Paragraph("<b>📋 Movimentações Detalhadas</b>", styles['Heading3'])
             elements.append(movimentacoes_para)
             elements.append(Spacer(1, 6))
             
