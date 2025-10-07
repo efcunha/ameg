@@ -124,11 +124,15 @@ def editar_cadastro_por_id(cadastro_id):
         if request.method == 'GET':
             # Buscar dados do cadastro
             cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
-            cadastro = cursor.fetchone()
+            resultado = cursor.fetchone()
             
-            if not cadastro:
+            if not resultado:
                 flash('Cadastro não encontrado', 'error')
                 return redirect(url_for('dashboard.dashboard'))
+            
+            # Converter tupla em dicionário
+            colunas = [desc[0] for desc in cursor.description]
+            cadastro = dict(zip(colunas, resultado))
             
             cursor.close()
             conn.close()
