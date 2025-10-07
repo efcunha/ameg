@@ -1,0 +1,223 @@
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from database import get_db_connection, registrar_auditoria, usuario_tem_permissao, adicionar_permissao_usuario, obter_permissoes_usuario, remover_permissao_usuario
+import hashlib
+import logging
+
+logger = logging.getLogger(__name__)
+
+usuarios_bp = Blueprint('usuarios', __name__)
+
+@usuarios_bp.route('/usuarios')
+def usuarios():
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT id, usuario, tipo FROM usuarios ORDER BY usuario')
+        usuarios_lista = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template('usuarios.html', usuarios=usuarios_lista)
+    
+    except Exception as e:
+        logger.error(f"Erro ao listar usuários: {e}")
+        flash('Erro ao carregar usuários', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+
+@usuarios_bp.route('/criar_usuario', methods=['GET', 'POST'])
+def criar_usuario():
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    if request.method == 'POST':
+        try:
+            usuario = request.form['usuario'].strip()
+            senha = request.form['senha']
+            tipo = request.form['tipo']
+            
+            # Validações
+            if len(senha) < 8:
+                flash('Senha deve ter pelo menos 8 caracteres', 'error')
+                return render_template('criar_usuario.html')
+            
+            # Hash da senha
+            senha_hash = hashlib.pbkdf2_hmac('sha256', senha.encode('utf-8'), b'salt_', 100000)
+            senha_hex = senha_hash.hex()
+            
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Verificar se usuário já existe
+            cursor.execute('SELECT id FROM usuarios WHERE usuario = %s', (usuario,))
+            if cursor.fetchone():
+                flash('Usuário já existe', 'error')
+                cursor.close()
+                conn.close()
+                return render_template('criar_usuario.html')
+            
+            # Inserir usuário
+            cursor.execute('''
+                INSERT INTO usuarios (usuario, senha, tipo) 
+                VALUES (%s, %s, %s) RETURNING id
+            ''', (usuario, senha_hex, tipo))
+            
+            usuario_id = cursor.fetchone()[0]
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            # Registrar auditoria
+            registrar_auditoria(
+                session['usuario'], 'INSERT', 'usuarios', usuario_id,
+                None, f"Usuário criado: {usuario} (tipo: {tipo})"
+            )
+            
+            flash('Usuário criado com sucesso!', 'success')
+            return redirect(url_for('usuarios.usuarios'))
+            
+        except Exception as e:
+            logger.error(f"Erro ao criar usuário: {e}")
+            flash('Erro ao criar usuário', 'error')
+    
+    return render_template('criar_usuario.html')
+
+@usuarios_bp.route('/editar_usuario/<int:usuario_id>', methods=['GET', 'POST'])
+def editar_usuario(usuario_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        if request.method == 'GET':
+            # Buscar dados do usuário
+            cursor.execute('SELECT id, usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
+            usuario_data = cursor.fetchone()
+            
+            if not usuario_data:
+                flash('Usuário não encontrado', 'error')
+                return redirect(url_for('usuarios.usuarios'))
+            
+            # Buscar permissões
+            permissoes = obter_permissoes_usuario(usuario_data[1])
+            
+            cursor.close()
+            conn.close()
+            
+            return render_template('editar_usuario.html', 
+                                 usuario_data=usuario_data, 
+                                 permissoes=permissoes)
+        
+        elif request.method == 'POST':
+            # Buscar dados atuais
+            cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
+            dados_anteriores = cursor.fetchone()
+            
+            if not dados_anteriores:
+                flash('Usuário não encontrado', 'error')
+                return redirect(url_for('usuarios.usuarios'))
+            
+            # Proteção especial para admin ID 1
+            if usuario_id == 1 and session['usuario'] != dados_anteriores[0]:
+                flash('Apenas o próprio admin pode modificar sua conta', 'error')
+                return redirect(url_for('usuarios.usuarios'))
+            
+            # Atualizar dados básicos se fornecidos
+            if 'tipo' in request.form and dados_anteriores[1] != request.form['tipo']:
+                if usuario_id == 1:
+                    flash('Não é possível alterar o tipo do admin principal', 'error')
+                else:
+                    cursor.execute('UPDATE usuarios SET tipo = %s WHERE id = %s', 
+                                 (request.form['tipo'], usuario_id))
+            
+            # Atualizar senha se fornecida
+            if 'nova_senha' in request.form and request.form['nova_senha']:
+                nova_senha = request.form['nova_senha']
+                if len(nova_senha) >= 8:
+                    senha_hash = hashlib.pbkdf2_hmac('sha256', nova_senha.encode('utf-8'), b'salt_', 100000)
+                    senha_hex = senha_hash.hex()
+                    cursor.execute('UPDATE usuarios SET senha = %s WHERE id = %s', 
+                                 (senha_hex, usuario_id))
+                else:
+                    flash('Nova senha deve ter pelo menos 8 caracteres', 'error')
+            
+            # Gerenciar permissões
+            if 'permissoes' in request.form:
+                permissoes_atuais = obter_permissoes_usuario(dados_anteriores[0])
+                permissoes_novas = request.form.getlist('permissoes')
+                
+                # Remover permissões que não estão mais selecionadas
+                for perm in permissoes_atuais:
+                    if perm not in permissoes_novas:
+                        remover_permissao_usuario(dados_anteriores[0], perm)
+                
+                # Adicionar novas permissões
+                for perm in permissoes_novas:
+                    if perm not in permissoes_atuais:
+                        adicionar_permissao_usuario(dados_anteriores[0], perm)
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            # Registrar auditoria
+            registrar_auditoria(
+                session['usuario'], 'UPDATE', 'usuarios', usuario_id,
+                str(dados_anteriores), f"Usuário atualizado: {dados_anteriores[0]}"
+            )
+            
+            flash('Usuário atualizado com sucesso!', 'success')
+            return redirect(url_for('usuarios.usuarios'))
+    
+    except Exception as e:
+        logger.error(f"Erro ao editar usuário: {e}")
+        flash('Erro ao editar usuário', 'error')
+        return redirect(url_for('usuarios.usuarios'))
+
+@usuarios_bp.route('/excluir_usuario/<int:usuario_id>')
+def excluir_usuario(usuario_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    # Proteção: não permitir exclusão do admin ID 1
+    if usuario_id == 1:
+        flash('Não é possível excluir o usuário admin principal', 'error')
+        return redirect(url_for('usuarios.usuarios'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Buscar dados do usuário para auditoria
+        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
+        usuario_data = cursor.fetchone()
+        
+        if not usuario_data:
+            flash('Usuário não encontrado', 'error')
+            return redirect(url_for('usuarios.usuarios'))
+        
+        # Excluir usuário
+        cursor.execute('DELETE FROM usuarios WHERE id = %s', (usuario_id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        # Registrar auditoria
+        registrar_auditoria(
+            session['usuario'], 'DELETE', 'usuarios', usuario_id,
+            str(usuario_data), f"Usuário excluído: {usuario_data[0]}"
+        )
+        
+        flash('Usuário excluído com sucesso!', 'success')
+        
+    except Exception as e:
+        logger.error(f"Erro ao excluir usuário: {e}")
+        flash('Erro ao excluir usuário', 'error')
+    
+    return redirect(url_for('usuarios.usuarios'))
