@@ -3219,23 +3219,36 @@ def processar_movimentacao_caixa():
         
         # Processar comprovantes se houver
         comprovantes = request.files.getlist('comprovantes')
-        for comprovante in comprovantes:
+        logger.info(f"📎 Total de comprovantes recebidos: {len(comprovantes)}")
+        
+        for i, comprovante in enumerate(comprovantes):
+            logger.info(f"📎 Processando comprovante {i+1}: {comprovante.filename if comprovante else 'None'}")
+            
             if comprovante and comprovante.filename:
+                logger.info(f"  ✅ Arquivo válido: {comprovante.filename}")
+                
                 # Validar tipo de arquivo
                 if not allowed_file(comprovante.filename):
+                    logger.warning(f"  ❌ Tipo não permitido: {comprovante.filename}")
                     flash(f'Tipo de arquivo não permitido: {comprovante.filename}', 'error')
                     continue
+                
+                logger.info(f"  ✅ Tipo permitido: {comprovante.filename}")
                 
                 # Validar tamanho (16MB máximo)
                 comprovante.seek(0, 2)  # Ir para o final
                 size = comprovante.tell()
                 comprovante.seek(0)  # Voltar ao início
                 
+                logger.info(f"  📏 Tamanho do arquivo: {size} bytes ({size/1024/1024:.2f} MB)")
+                
                 if size > 16 * 1024 * 1024:  # 16MB
+                    logger.warning(f"  ❌ Arquivo muito grande: {comprovante.filename}")
                     flash(f'Arquivo muito grande: {comprovante.filename}', 'error')
                     continue
                 
                 # Salvar comprovante
+                logger.info(f"  💾 Salvando comprovante: {comprovante.filename}")
                 arquivo_dados = comprovante.read()
                 inserir_comprovante_caixa(
                     movimentacao_id, 
@@ -3243,6 +3256,9 @@ def processar_movimentacao_caixa():
                     comprovante.content_type,
                     arquivo_dados
                 )
+                logger.info(f"  ✅ Comprovante salvo: {comprovante.filename}")
+            else:
+                logger.info(f"  ⚠️ Comprovante {i+1} vazio ou sem nome")
         
         flash(f'Movimentação de {tipo} registrada com sucesso!', 'success')
         return redirect(url_for('caixa'))
