@@ -1990,7 +1990,8 @@ def exportar():
                 ('GRID', (0, 0), (-1, -1), 1, colors.black),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP')
             ]))
-            elements.append(table)        else:  # completo
+            elements.append(table)
+        else:  # completo
             if cadastro_id:
                 # PDF detalhado para um cadastro específico com TODOS os campos
                 for row in dados:
