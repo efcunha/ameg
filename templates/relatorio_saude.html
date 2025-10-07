@@ -27,14 +27,16 @@
         th:nth-child(8) { width: 10%; } /* Saúde Mental */
         th:nth-child(9) { width: 10%; } /* Deficiência */
         th:nth-child(10) { width: 10%; } /* Cuidados Especiais */
-        th:nth-child(11) { width: 15%; } /* Ações */
+        th:nth-child(11) { width: 15%; min-width: 120px; } /* Ações */
         th { background: #e74c3c; color: white; }
         .logout { float: right; color: white; text-decoration: none; }
         .export-btn { background: #27ae60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px; display: inline-block; }
         .health-tag { background: #e74c3c; color: white; padding: 2px 4px; border-radius: 3px; font-size: 10px; margin: 1px; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .actions-cell { white-space: nowrap; }
-        .actions-cell a { font-size: 16px; margin-right: 8px; text-decoration: none; padding: 4px; border-radius: 3px; display: inline-block; }
-        .actions-cell a:hover { background: #f8f9fa; }
+        .actions-cell { white-space: nowrap; min-width: 120px; }
+        .actions-cell a { font-size: 12px; margin-bottom: 3px; text-decoration: none; padding: 3px 6px; border-radius: 3px; display: block; text-align: center; }
+        .actions-cell a:hover { opacity: 0.8; }
+        table { overflow-x: auto; }
+        .container { overflow-x: auto; }
         @media (max-width: 768px) {
             .container { padding: 10px; }
             th, td { font-size: 9px; padding: 4px; }
@@ -100,6 +102,8 @@
                 <a href="/relatorio_saude" style="background: #95a5a6; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px;">Limpar</a>
             </form>
         </div>
+        
+        <div style="overflow-x: auto; margin-top: 20px;">
         <table>
             <thead>
                 <tr>
@@ -175,6 +179,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
         
         {% if not cadastros %}
         <div style="text-align: center; padding: 40px; background: white; border-radius: 10px; margin-top: 20px;">
