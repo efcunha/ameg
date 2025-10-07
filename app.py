@@ -3550,7 +3550,7 @@ def visualizar_comprovantes(movimentacao_id):
         return redirect(url_for('dashboard'))
     
     try:
-        from database import obter_comprovantes_caixa
+        from database import obter_comprovantes_movimentacao
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
@@ -3563,7 +3563,7 @@ def visualizar_comprovantes(movimentacao_id):
             return redirect(url_for('caixa'))
         
         # Buscar comprovantes
-        comprovantes = obter_comprovantes_caixa(movimentacao_id)
+        comprovantes = obter_comprovantes_movimentacao(movimentacao_id)
         
         cursor.close()
         conn.close()
@@ -3627,7 +3627,7 @@ def exportar_comprovantes_pdf(movimentacao_id):
         return redirect(url_for('dashboard'))
     
     try:
-        from database import obter_comprovantes_caixa
+        from database import obter_comprovantes_movimentacao
         from reportlab.lib.pagesizes import A4
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
         from reportlab.lib.styles import getSampleStyleSheet
@@ -3647,7 +3647,7 @@ def exportar_comprovantes_pdf(movimentacao_id):
             return redirect(url_for('caixa'))
         
         # Buscar comprovantes
-        comprovantes = obter_comprovantes_caixa(movimentacao_id)
+        comprovantes = obter_comprovantes_movimentacao(movimentacao_id)
         
         cursor.close()
         conn.close()
