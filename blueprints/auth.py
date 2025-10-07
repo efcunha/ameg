@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_from_directory
 from database import get_db_connection, registrar_auditoria
 import hashlib
 import logging
@@ -6,6 +6,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 auth_bp = Blueprint('auth', __name__)
+
+@auth_bp.route('/logo')
+def logo():
+    """Rota específica para o logo"""
+    return send_from_directory('static/img', 'logo-ameg.jpeg')
 
 @auth_bp.route('/')
 def index():

@@ -286,3 +286,122 @@ def exportar_comprovantes_pdf(movimentacao_id):
         logger.error(f"Erro ao exportar comprovantes: {e}")
         flash('Erro ao exportar comprovantes', 'error')
         return redirect(url_for('caixa.caixa'))
+
+@caixa_bp.route('/editar_movimentacao/<int:movimentacao_id>', methods=['GET', 'POST'])
+def editar_movimentacao(movimentacao_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    if not usuario_tem_permissao(session['usuario'], 'caixa'):
+        flash('Você não tem permissão para editar movimentações', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    if request.method == 'GET':
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            
+            # Buscar movimentação
+            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+            movimentacao = cursor.fetchone()
+            
+            if not movimentacao:
+                flash('Movimentação não encontrada', 'error')
+                return redirect(url_for('caixa.caixa'))
+            
+            # Buscar pessoas para o select
+            pessoas = listar_cadastros_simples()
+            
+            cursor.close()
+            conn.close()
+            
+            return render_template('editar_movimentacao.html', 
+                                 movimentacao=movimentacao, 
+                                 pessoas=pessoas)
+        
+        except Exception as e:
+            logger.error(f"Erro ao carregar movimentação: {e}")
+            flash('Erro ao carregar movimentação', 'error')
+            return redirect(url_for('caixa.caixa'))
+    
+    # POST - Atualizar movimentação
+    try:
+        tipo = request.form.get('tipo')
+        valor_str = request.form.get('valor', '').replace(',', '.')
+        descricao = request.form.get('descricao', '').strip()
+        cadastro_id = request.form.get('cadastro_id')
+        
+        if not descricao:
+            flash('Descrição é obrigatória', 'error')
+            return redirect(url_for('caixa.editar_movimentacao', movimentacao_id=movimentacao_id))
+        
+        try:
+            valor = float(valor_str)
+        except ValueError:
+            flash('Valor deve ser um número válido', 'error')
+            return redirect(url_for('caixa.editar_movimentacao', movimentacao_id=movimentacao_id))
+        
+        if valor <= 0:
+            flash('Valor deve ser maior que zero', 'error')
+            return redirect(url_for('caixa.editar_movimentacao', movimentacao_id=movimentacao_id))
+        
+        cadastro_id = int(cadastro_id) if cadastro_id and cadastro_id != '' else None
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE movimentacoes_caixa 
+            SET tipo = %s, valor = %s, descricao = %s, cadastro_id = %s
+            WHERE id = %s
+        ''', (tipo, valor, descricao, cadastro_id, movimentacao_id))
+        
+        if cursor.rowcount == 0:
+            flash('Erro ao atualizar movimentação', 'error')
+            return redirect(url_for('caixa.editar_movimentacao', movimentacao_id=movimentacao_id))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        flash('Movimentação atualizada com sucesso!', 'success')
+        return redirect(url_for('caixa.caixa'))
+        
+    except Exception as e:
+        logger.error(f"Erro ao atualizar movimentação: {e}")
+        flash('Erro ao atualizar movimentação', 'error')
+        return redirect(url_for('caixa.caixa'))
+
+@caixa_bp.route('/excluir_movimentacao/<int:movimentacao_id>')
+def excluir_movimentacao(movimentacao_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    if not usuario_tem_permissao(session['usuario'], 'caixa'):
+        flash('Você não tem permissão para excluir movimentações', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Excluir comprovantes primeiro
+        cursor.execute('DELETE FROM comprovantes_caixa WHERE movimentacao_id = %s', (movimentacao_id,))
+        
+        # Excluir movimentação
+        cursor.execute('DELETE FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+        
+        if cursor.rowcount == 0:
+            flash('Movimentação não encontrada', 'error')
+        else:
+            conn.commit()
+            flash('Movimentação excluída com sucesso!', 'success')
+        
+        cursor.close()
+        conn.close()
+        
+    except Exception as e:
+        logger.error(f"Erro ao excluir movimentação: {e}")
+        flash('Erro ao excluir movimentação', 'error')
+    
+    return redirect(url_for('caixa.caixa'))

@@ -221,3 +221,129 @@ def excluir_usuario(usuario_id):
         flash('Erro ao excluir usuário', 'error')
     
     return redirect(url_for('usuarios.usuarios'))
+
+@usuarios_bp.route('/promover_usuario/<int:usuario_id>')
+def promover_usuario(usuario_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    # Verificar se é admin
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (session['usuario'],))
+    user_type = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
+    if not user_type or user_type[0] != 'admin':
+        flash('Acesso negado! Apenas administradores podem promover usuários.', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    # Proteção especial para admin ID 1
+    if usuario_id == 1:
+        flash('O usuário admin principal (ID 1) já possui privilégios máximos.', 'warning')
+        return redirect(url_for('usuarios.usuarios'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Verificar se usuário existe
+        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
+        user_data = cursor.fetchone()
+        
+        if not user_data:
+            flash('Usuário não encontrado!', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios.usuarios'))
+        
+        username = user_data[0]
+        tipo_atual = user_data[1] if len(user_data) > 1 else 'usuario'
+        
+        if tipo_atual == 'admin':
+            flash(f'Usuário "{username}" já é administrador!', 'warning')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios.usuarios'))
+        
+        # Promover usuário a admin
+        cursor.execute('UPDATE usuarios SET tipo = %s WHERE id = %s', ('admin', usuario_id))
+        conn.commit()
+        
+        flash(f'Usuário "{username}" promovido a administrador com sucesso!', 'success')
+        
+        cursor.close()
+        conn.close()
+        
+    except Exception as e:
+        logger.error(f"Erro ao promover usuário ID {usuario_id}: {e}")
+        flash(f'Erro ao promover usuário: {str(e)}', 'error')
+    
+    return redirect(url_for('usuarios.usuarios'))
+
+@usuarios_bp.route('/rebaixar_usuario/<int:usuario_id>')
+def rebaixar_usuario(usuario_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    # Verificar se é admin
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (session['usuario'],))
+    user_type = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
+    if not user_type or user_type[0] != 'admin':
+        flash('Acesso negado! Apenas administradores podem rebaixar usuários.', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    # Proteção especial para admin ID 1
+    if usuario_id == 1:
+        flash('Erro! O usuário admin principal (ID 1) não pode ser rebaixado.', 'error')
+        return redirect(url_for('usuarios.usuarios'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Verificar se usuário existe
+        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
+        user_data = cursor.fetchone()
+        
+        if not user_data:
+            flash('Usuário não encontrado!', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios.usuarios'))
+        
+        username = user_data[0]
+        tipo_atual = user_data[1] if len(user_data) > 1 else 'usuario'
+        
+        if username == 'admin':
+            flash('Não é possível rebaixar o usuário admin principal!', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios.usuarios'))
+        
+        if tipo_atual == 'usuario':
+            flash(f'Usuário "{username}" já é usuário comum!', 'warning')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios.usuarios'))
+        
+        # Rebaixar usuário
+        cursor.execute('UPDATE usuarios SET tipo = %s WHERE id = %s', ('usuario', usuario_id))
+        conn.commit()
+        
+        flash(f'Usuário "{username}" rebaixado para usuário comum com sucesso!', 'success')
+        
+        cursor.close()
+        conn.close()
+        
+    except Exception as e:
+        logger.error(f"Erro ao rebaixar usuário ID {usuario_id}: {e}")
+        flash(f'Erro ao rebaixar usuário: {str(e)}', 'error')
+    
+    return redirect(url_for('usuarios.usuarios'))

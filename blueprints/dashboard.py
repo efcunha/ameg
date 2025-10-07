@@ -103,3 +103,31 @@ def dashboard():
     except Exception as e:
         logger.error(f"Erro no dashboard: {e}")
         return render_template('dashboard.html', total=0, ultimos=[])
+
+@dashboard_bp.route('/api/stats')
+def api_stats():
+    if 'usuario' not in session:
+        return {"error": "Não autorizado"}, 401
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT COUNT(*) FROM cadastros')
+        total_cadastros = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM arquivos_saude')
+        total_arquivos = cursor.fetchone()[0]
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            "cadastros": total_cadastros,
+            "arquivos": total_arquivos,
+            "auditoria": 0
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro na API stats: {e}")
+        return {"error": str(e)}, 500
