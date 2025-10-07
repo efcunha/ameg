@@ -3561,34 +3561,87 @@ def visualizar_comprovantes(movimentacao_id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
     
+    logger.info(f"📎 === VISUALIZAR COMPROVANTES - INÍCIO ===")
+    logger.info(f"👤 Usuário: {session['usuario']}")
+    logger.info(f"🆔 Movimentação ID: {movimentacao_id}")
+    
     if not usuario_tem_permissao(session['usuario'], 'caixa'):
+        logger.warning(f"⚠️ Usuário {session['usuario']} sem permissão para visualizar comprovantes")
         flash('Você não tem permissão para visualizar comprovantes', 'error')
         return redirect(url_for('dashboard'))
     
     try:
+        logger.info("🔌 Conectando ao banco de dados...")
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        logger.info("✅ Conexão estabelecida com RealDictCursor")
         
         # Buscar dados da movimentação
+        logger.info(f"🔍 Buscando dados da movimentação ID {movimentacao_id}...")
         cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
         movimentacao = cursor.fetchone()
         
         if not movimentacao:
+            logger.warning(f"❌ Movimentação ID {movimentacao_id} não encontrada")
             flash('Movimentação não encontrada', 'error')
             return redirect(url_for('caixa'))
         
+        logger.info(f"✅ Movimentação encontrada:")
+        logger.info(f"  📊 Tipo: {movimentacao['tipo']}")
+        logger.info(f"  💰 Valor: R$ {movimentacao['valor']}")
+        logger.info(f"  📝 Descrição: {movimentacao['descricao']}")
+        
         # Buscar comprovantes
-        comprovantes = obter_comprovantes_movimentacao(movimentacao_id)
+        logger.info(f"📎 Chamando obter_comprovantes_movimentacao({movimentacao_id})...")
+        try:
+            comprovantes = obter_comprovantes_movimentacao(movimentacao_id)
+            logger.info(f"✅ Comprovantes obtidos: {len(comprovantes)} arquivos")
+            
+            if comprovantes:
+                for i, comp in enumerate(comprovantes):
+                    logger.info(f"  📎 Comprovante {i+1}: {comp['nome_arquivo']} ({comp['tipo_arquivo']})")
+            else:
+                logger.info("  ℹ️ Nenhum comprovante encontrado")
+                
+        except Exception as comp_error:
+            logger.error(f"❌ ERRO ao obter comprovantes: {comp_error}")
+            logger.error(f"❌ Tipo do erro: {type(comp_error).__name__}")
+            import traceback
+            logger.error(f"❌ Traceback:")
+            for line in traceback.format_exc().split('\n'):
+                if line.strip():
+                    logger.error(f"   {line}")
+            raise comp_error
         
         cursor.close()
         conn.close()
+        logger.info("🔌 Conexão fechada")
         
+        logger.info("🎨 Renderizando template visualizar_comprovantes.html...")
         return render_template('visualizar_comprovantes.html', 
                              movimentacao=movimentacao, 
                              comprovantes=comprovantes)
     
     except Exception as e:
-        logger.error(f"Erro ao visualizar comprovantes: {e}")
+        logger.error(f"💥 ERRO CRÍTICO ao visualizar comprovantes:")
+        logger.error(f"❌ Erro: {str(e)}")
+        logger.error(f"❌ Tipo do erro: {type(e).__name__}")
+        import traceback
+        logger.error(f"❌ Traceback completo:")
+        for line in traceback.format_exc().split('\n'):
+            if line.strip():
+                logger.error(f"   {line}")
+        
+        # Tentar fechar conexões se existirem
+        try:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+            logger.info("🔌 Conexões fechadas após erro")
+        except:
+            pass
+            
         flash('Erro ao carregar comprovantes', 'error')
         return redirect(url_for('caixa'))
 
