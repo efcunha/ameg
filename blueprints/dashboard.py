@@ -122,9 +122,9 @@ def dashboard():
         conn.close()
         
         return render_template('dashboard.html', 
-                             total=stats['total'], 
-                             ultimos=ultimos,
-                             tem_permissao_caixa=tem_permissao_caixa)
+                            total=stats['total'], 
+                            ultimos=ultimos,
+                            tem_permissao_caixa=tem_permissao_caixa)
     
     except Exception as e:
         logger.error(f"Erro no dashboard: {e}")

@@ -113,8 +113,8 @@ def editar_usuario(usuario_id):
             conn.close()
             
             return render_template('editar_usuario.html', 
-                                 usuario_data=usuario_data, 
-                                 permissoes=permissoes)
+                                usuario_data=usuario_data, 
+                                permissoes=permissoes)
         
         elif request.method == 'POST':
             # Buscar dados atuais
@@ -136,7 +136,7 @@ def editar_usuario(usuario_id):
                     flash('Não é possível alterar o tipo do admin principal', 'error')
                 else:
                     cursor.execute('UPDATE usuarios SET tipo = %s WHERE id = %s', 
-                                 (request.form['tipo'], usuario_id))
+                                (request.form['tipo'], usuario_id))
             
             # Atualizar senha se fornecida
             if 'nova_senha' in request.form and request.form['nova_senha']:
@@ -145,7 +145,7 @@ def editar_usuario(usuario_id):
                     senha_hash = hashlib.pbkdf2_hmac('sha256', nova_senha.encode('utf-8'), b'salt_', 100000)
                     senha_hex = senha_hash.hex()
                     cursor.execute('UPDATE usuarios SET senha = %s WHERE id = %s', 
-                                 (senha_hex, usuario_id))
+                                (senha_hex, usuario_id))
                 else:
                     flash('Nova senha deve ter pelo menos 8 caracteres', 'error')
             
@@ -524,11 +524,11 @@ def auditoria():
         conn.close()
         
         return render_template('auditoria.html', 
-                             auditorias=auditorias,
-                             stats=stats,
-                             page=page,
-                             total_pages=total_pages,
-                             query_params=query_params)
+                            auditorias=auditorias,
+                            stats=stats,
+                            page=page,
+                            total_pages=total_pages,
+                            query_params=query_params)
         
     except Exception as e:
         logger.error(f"Erro ao carregar auditoria: {e}")

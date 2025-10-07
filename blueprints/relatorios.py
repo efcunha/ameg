@@ -45,17 +45,17 @@ def relatorio_completo():
         
         # Buscar cadastros paginados
         cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo LIMIT %s OFFSET %s', 
-                      (per_page, offset))
+                        (per_page, offset))
         cadastros = cursor.fetchall()
         
         cursor.close()
         conn.close()
         
         return render_template('relatorio_completo.html', 
-                             cadastros=cadastros,
-                             page=page,
-                             total_pages=total_pages,
-                             total_records=total_records)
+                            cadastros=cadastros,
+                            page=page,
+                            total_pages=total_pages,
+                            total_records=total_records)
         
     except Exception as e:
         logger.error(f"Erro em relatorio_completo: {e}")
@@ -80,11 +80,11 @@ def relatorio_caixa():
         saldo_total = total_entradas - total_saidas
         
         return render_template('relatorio_caixa.html',
-                             movimentacoes=movimentacoes,
-                             total_entradas=total_entradas,
-                             total_saidas=total_saidas,
-                             saldo_total=saldo_total,
-                             tipo_filtro=tipo)
+                            movimentacoes=movimentacoes,
+                            total_entradas=total_entradas,
+                            total_saidas=total_saidas,
+                            saldo_total=saldo_total,
+                            tipo_filtro=tipo)
     
     except Exception as e:
         logger.error(f"Erro ao gerar relatório de caixa: {e}")
@@ -109,10 +109,10 @@ def exportar(tipo):
         elif tipo == 'caixa':
             filtro_tipo = request.args.get('filtro_tipo')
             query = '''SELECT mc.id, mc.tipo, mc.valor, mc.descricao, 
-                       mc.nome_pessoa, mc.numero_recibo, mc.observacoes, mc.data_movimentacao, 
-                       mc.usuario, c.nome_completo as titular_cadastro
-                       FROM movimentacoes_caixa mc
-                       LEFT JOIN cadastros c ON mc.cadastro_id = c.id'''
+                        mc.nome_pessoa, mc.numero_recibo, mc.observacoes, mc.data_movimentacao, 
+                        mc.usuario, c.nome_completo as titular_cadastro
+                        FROM movimentacoes_caixa mc
+                        LEFT JOIN cadastros c ON mc.cadastro_id = c.id'''
             
             if filtro_tipo in ['entrada', 'saida']:
                 query += f" WHERE mc.tipo = '{filtro_tipo}'"
@@ -150,7 +150,7 @@ def exportar_csv(dados, tipo, filename):
     elif tipo == 'caixa':
         # Cabeçalho para caixa
         writer.writerow(['ID', 'Tipo', 'Valor', 'Descrição', 'Titular Cadastro', 'Nome Pessoa', 
-                       'Número Recibo', 'Observações', 'Data', 'Usuário'])
+                        'Número Recibo', 'Observações', 'Data', 'Usuário'])
         for row in dados:
             writer.writerow(row)
     
@@ -286,8 +286,8 @@ def relatorio_por_bairro():
         
         cursor.execute('''
             SELECT bairro, COUNT(*) as total, 
-                   COUNT(CASE WHEN genero = 'Masculino' THEN 1 END) as masculino,
-                   COUNT(CASE WHEN genero = 'Feminino' THEN 1 END) as feminino
+                    COUNT(CASE WHEN genero = 'Masculino' THEN 1 END) as masculino,
+                    COUNT(CASE WHEN genero = 'Feminino' THEN 1 END) as feminino
             FROM cadastros 
             GROUP BY bairro 
             ORDER BY total DESC

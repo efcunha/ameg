@@ -93,3 +93,15 @@ def validar_senha(senha):
         return False, "A senha deve conter pelo menos um número"
     
     return True, "Senha válida"
+
+def login_required(f):
+    """Decorador para verificar se usuário está logado"""
+    from functools import wraps
+    from flask import session, redirect, url_for
+    
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'usuario' not in session:
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return decorated_function

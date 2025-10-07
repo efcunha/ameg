@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_file
 from database import (get_db_connection, inserir_movimentacao_caixa, inserir_comprovante_caixa, 
-                     listar_movimentacoes_caixa, obter_saldo_caixa, listar_cadastros_simples, 
-                     usuario_tem_permissao, registrar_auditoria, obter_comprovantes_movimentacao)
+                    listar_movimentacoes_caixa, obter_saldo_caixa, listar_cadastros_simples, 
+                    usuario_tem_permissao, registrar_auditoria, obter_comprovantes_movimentacao)
 import psycopg2.extras
 import logging
 import io
@@ -47,9 +47,9 @@ def caixa():
         
         logger.info("Renderizando template caixa.html...")
         return render_template('caixa.html', 
-                             saldo=saldo, 
-                             pessoas=pessoas, 
-                             movimentacoes=movimentacoes)
+                            saldo=saldo, 
+                            pessoas=pessoas, 
+                            movimentacoes=movimentacoes)
     
     except Exception as e:
         logger.error(f"Erro ao carregar caixa: {e}")
@@ -174,8 +174,8 @@ def visualizar_comprovantes(movimentacao_id):
         conn.close()
         
         return render_template('visualizar_comprovantes.html', 
-                             movimentacao=movimentacao, 
-                             comprovantes=comprovantes)
+                            movimentacao=movimentacao, 
+                            comprovantes=comprovantes)
     
     except Exception as e:
         logger.error(f"Erro ao visualizar comprovantes: {e}")
@@ -316,8 +316,8 @@ def editar_movimentacao(movimentacao_id):
             conn.close()
             
             return render_template('editar_movimentacao.html', 
-                                 movimentacao=movimentacao, 
-                                 pessoas=pessoas)
+                                movimentacao=movimentacao, 
+                                pessoas=pessoas)
         
         except Exception as e:
             logger.error(f"Erro ao carregar movimentação: {e}")

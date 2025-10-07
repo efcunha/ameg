@@ -3757,6 +3757,7 @@ def exportar_comprovantes_pdf(movimentacao_id):
         flash('Erro ao exportar comprovantes', 'error')
         return redirect(url_for('caixa'))
 
+@app.route('/auditoria')
 def auditoria():
     logger.info("🔍 Acessando rota de auditoria")
     

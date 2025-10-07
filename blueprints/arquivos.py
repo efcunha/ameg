@@ -68,9 +68,9 @@ def arquivos_saude(cadastro_id):
         conn.close()
         
         return render_template('arquivos_saude.html', 
-                             cadastro=cadastro, 
-                             arquivos=arquivos, 
-                             cadastro_id=cadastro_id)
+                            cadastro=cadastro, 
+                            arquivos=arquivos, 
+                            cadastro_id=cadastro_id)
     
     except Exception as e:
         logger.error(f"Erro ao listar arquivos de saúde: {e}")
