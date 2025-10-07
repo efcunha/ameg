@@ -1508,15 +1508,19 @@ def exportar():
             for i, row in enumerate(dados):
                 logger.info(f"📋 Registro {i+1}: {dict(row) if hasattr(row, 'keys') else row}")
                 
+                # Extrair dados do cadastro
+                cadastro = row['cadastro']
+                pessoas_saude = row['pessoas_saude']
+                
                 # Tabela 1: Dados Pessoais
-                pessoais_title = Paragraph(f"<b>👤 {row['nome_completo'] or 'Não informado'}</b>", styles['Heading3'])
+                pessoais_title = Paragraph(f"<b>👤 {cadastro['nome_completo'] or 'Não informado'}</b>", styles['Heading3'])
                 elements.append(pessoais_title)
                 elements.append(Spacer(1, 6))
                 
                 pessoais_data = [
-                    ['Idade', f"{row['idade']} anos" if row['idade'] else 'Não informado'],
-                    ['Telefone', str(row['telefone'] or 'Não informado')],
-                    ['Bairro', str(row['bairro'] or 'Não informado')]
+                    ['Idade', f"{cadastro['idade']} anos" if cadastro['idade'] else 'Não informado'],
+                    ['Telefone', str(cadastro['telefone'] or 'Não informado')],
+                    ['Bairro', str(cadastro['bairro'] or 'Não informado')]
                 ]
                 
                 pessoais_table = Table(pessoais_data, colWidths=[2*inch, 4*inch])
@@ -1535,59 +1539,57 @@ def exportar():
                 elements.append(pessoais_table)
                 elements.append(Spacer(1, 12))
                 
-                # Tabela 2: Condições de Saúde
-                saude_title = Paragraph("<b>🏥 Condições de Saúde</b>", styles['Heading3'])
+                # Tabela 2: Condições de Saúde por Pessoa
+                saude_title = Paragraph("<b>🏥 Condições de Saúde por Pessoa</b>", styles['Heading3'])
                 elements.append(saude_title)
                 elements.append(Spacer(1, 6))
                 
-                # Doenças Crônicas
-                doencas_cronicas = 'Não possui'
-                if row['tem_doenca_cronica'] == 'Sim':
-                    doencas_cronicas = str(row['doencas_cronicas'] or 'Não especificado')
-                
-                # Medicamentos
-                medicamentos = 'Não usa medicamentos contínuos'
-                if row['usa_medicamento_continuo'] == 'Sim':
-                    medicamentos = str(row['medicamentos_continuos'] or 'Não especificado')
-                
-                # Doenças Mentais
-                doencas_mentais = 'Não possui'
-                if row['tem_doenca_mental'] == 'Sim':
-                    doencas_mentais = str(row['doencas_mentais'] or 'Não especificado')
-                
-                # Deficiências
-                deficiencias = 'Não possui'
-                if row['tem_deficiencia'] == 'Sim':
-                    deficiencias = str(row['tipo_deficiencia'] or 'Não especificado')
-                
-                # Cuidados Especiais
-                cuidados = 'Não precisa de cuidados especiais'
-                if row['precisa_cuidados_especiais'] == 'Sim':
-                    cuidados = str(row['cuidados_especiais'] or 'Não especificado')
-                
-                saude_data = [
-                    ['Doenças Crônicas', doencas_cronicas],
-                    ['Medicamentos Contínuos', medicamentos],
-                    ['Condições Mentais', doencas_mentais],
-                    ['Deficiências', deficiencias],
-                    ['Cuidados Especiais', cuidados]
-                ]
-                
-                saude_table = Table(saude_data, colWidths=[2.5*inch, 4.5*inch])
-                saude_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (0, -1), colors.lightcoral),
-                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                    ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 9),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 8),
-                    ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-                    ('TOPPADDING', (0, 0), (-1, -1), 8),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-                    ('WORDWRAP', (1, 0), (1, -1), True)
-                ]))
-                elements.append(saude_table)
+                # Para cada pessoa com condições de saúde
+                for j, pessoa in enumerate(pessoas_saude):
+                    # Nome da pessoa
+                    pessoa_title = Paragraph(f"<b>Pessoa {j+1}: {pessoa['nome_pessoa']}</b>", styles['Heading4'])
+                    elements.append(pessoa_title)
+                    elements.append(Spacer(1, 4))
+                    
+                    # Dados de saúde da pessoa
+                    pessoa_saude_data = []
+                    
+                    # Doenças Crônicas
+                    if pessoa['tem_doenca_cronica'] == 'Sim':
+                        pessoa_saude_data.append(['Doenças Crônicas', str(pessoa['doencas_cronicas'] or 'Não especificado')])
+                    
+                    # Medicamentos
+                    if pessoa['usa_medicamento_continuo'] == 'Sim':
+                        pessoa_saude_data.append(['Medicamentos Contínuos', str(pessoa['medicamentos'] or 'Não especificado')])
+                    
+                    # Doenças Mentais
+                    if pessoa['tem_doenca_mental'] == 'Sim':
+                        pessoa_saude_data.append(['Condições Mentais', str(pessoa['doencas_mentais'] or 'Não especificado')])
+                    
+                    # Deficiências
+                    if pessoa['tem_deficiencia'] == 'Sim':
+                        pessoa_saude_data.append(['Deficiências', str(pessoa['deficiencias'] or 'Não especificado')])
+                    
+                    # Cuidados Especiais
+                    if pessoa['precisa_cuidados_especiais'] == 'Sim':
+                        pessoa_saude_data.append(['Cuidados Especiais', str(pessoa['cuidados_especiais'] or 'Não especificado')])
+                    
+                    if pessoa_saude_data:
+                        pessoa_table = Table(pessoa_saude_data, colWidths=[2.5*inch, 4.5*inch])
+                        pessoa_table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (0, -1), colors.lightcoral),
+                            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+                            ('FONTSIZE', (0, 0), (-1, -1), 9),
+                            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+                            ('TOPPADDING', (0, 0), (-1, -1), 6),
+                            ('BOTTOMPADDING', (0, 0), (-1, -1), 6)
+                        ]))
+                        elements.append(pessoa_table)
+                        elements.append(Spacer(1, 8))
                 
                 # Adicionar espaço entre registros se houver mais de um
                 if i < len(dados) - 1:
