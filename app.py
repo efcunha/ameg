@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, send_from_directory
 from flask_compress import Compress
 from database import get_db_connection, init_db_tables, create_admin_user, registrar_auditoria, inserir_movimentacao_caixa, inserir_comprovante_caixa, listar_movimentacoes_caixa, obter_saldo_caixa, listar_cadastros_simples, usuario_tem_permissao, adicionar_permissao_usuario, obter_permissoes_usuario, remover_permissao_usuario, obter_comprovantes_movimentacao
+import psycopg2.extras
 import os
 import gzip
 
