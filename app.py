@@ -3702,11 +3702,12 @@ def exportar_comprovantes_pdf(movimentacao_id):
     
     try:
         from reportlab.lib.pagesizes import A4
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
         from reportlab.lib.styles import getSampleStyleSheet
         from reportlab.lib import colors
         from reportlab.lib.units import inch
         import io
+        from PIL import Image as PILImage
         
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -3757,35 +3758,59 @@ def exportar_comprovantes_pdf(movimentacao_id):
         ]))
         
         elements.append(mov_table)
-        elements.append(Spacer(1, 20))
+        elements.append(Spacer(1, 30))
         
-        # Lista de comprovantes
-        elements.append(Paragraph("Comprovantes Anexados:", styles['Heading2']))
-        elements.append(Spacer(1, 10))
-        
+        # Incluir os comprovantes reais
         if comprovantes:
-            comp_data = [['#', 'Nome do Arquivo', 'Tipo', 'Data Upload']]
+            elements.append(Paragraph("Comprovantes Anexados:", styles['Heading2']))
+            elements.append(Spacer(1, 20))
+            
             for i, comp in enumerate(comprovantes, 1):
-                comp_data.append([
-                    str(i),
-                    comp['nome_arquivo'],
-                    comp['tipo_arquivo'],
-                    comp['data_upload'].strftime('%d/%m/%Y %H:%M')
-                ])
-            
-            comp_table = Table(comp_data, colWidths=[0.5*inch, 3*inch, 1.5*inch, 1.5*inch])
-            comp_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            
-            elements.append(comp_table)
+                # Título do comprovante
+                elements.append(Paragraph(f"{i}. {comp['nome_arquivo']}", styles['Heading3']))
+                elements.append(Spacer(1, 10))
+                
+                # Buscar dados do arquivo
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute('SELECT arquivo_dados FROM comprovantes_caixa WHERE id = %s', (comp['id'],))
+                arquivo_dados = cursor.fetchone()[0]
+                cursor.close()
+                conn.close()
+                
+                try:
+                    if comp['tipo_arquivo'].startswith('image/'):
+                        # Para imagens, incluir no PDF
+                        img_buffer = io.BytesIO(arquivo_dados)
+                        pil_img = PILImage.open(img_buffer)
+                        
+                        # Redimensionar se necessário
+                        max_width, max_height = 400, 300
+                        pil_img.thumbnail((max_width, max_height), PILImage.Resampling.LANCZOS)
+                        
+                        # Converter para ReportLab
+                        img_buffer2 = io.BytesIO()
+                        pil_img.save(img_buffer2, format='PNG')
+                        img_buffer2.seek(0)
+                        
+                        img = Image(img_buffer2, width=pil_img.width, height=pil_img.height)
+                        elements.append(img)
+                        
+                    elif comp['tipo_arquivo'] == 'application/pdf':
+                        # Para PDFs, adicionar nota
+                        elements.append(Paragraph(f"📄 Arquivo PDF: {comp['nome_arquivo']}", styles['Normal']))
+                        elements.append(Paragraph("(Conteúdo do PDF não pode ser incorporado)", styles['Italic']))
+                        
+                    else:
+                        # Para outros tipos, adicionar informação
+                        elements.append(Paragraph(f"📎 Arquivo: {comp['nome_arquivo']}", styles['Normal']))
+                        elements.append(Paragraph(f"Tipo: {comp['tipo_arquivo']}", styles['Normal']))
+                        
+                except Exception as file_error:
+                    logger.error(f"Erro ao processar arquivo {comp['nome_arquivo']}: {file_error}")
+                    elements.append(Paragraph(f"❌ Erro ao processar arquivo: {comp['nome_arquivo']}", styles['Normal']))
+                
+                elements.append(Spacer(1, 20))
         else:
             elements.append(Paragraph("Nenhum comprovante anexado.", styles['Normal']))
         
