@@ -1985,6 +1985,9 @@ def exportar():
                 ('VALIGN', (0, 0), (-1, -1), 'TOP')
             ]))
             elements.append(table)
+            
+            # Não criar tabela adicional, pois já criamos as tabelas acima
+            table_data = None
         else:  # completo
             if cadastro_id:
                 # PDF detalhado para um cadastro específico com TODOS os campos
