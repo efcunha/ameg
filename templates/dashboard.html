@@ -33,7 +33,9 @@
         <a href="/dashboard">Dashboard</a>
         <a href="/cadastrar">Novo Cadastro</a>
         <a href="/relatorios">Relatórios</a>
+        {% if tem_permissao_caixa %}
         <a href="/caixa">💰 Caixa</a>
+        {% endif %}
         <a href="/arquivos_cadastros">📁 Arquivos</a>
         {% if is_admin_user(session.usuario) %}
         <a href="/usuarios">👥 Usuários</a>

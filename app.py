@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, send_from_directory
 from flask_compress import Compress
-from database import get_db_connection, init_db_tables, create_admin_user, registrar_auditoria, inserir_movimentacao_caixa, inserir_comprovante_caixa, listar_movimentacoes_caixa, obter_saldo_caixa, listar_cadastros_simples
+from database import get_db_connection, init_db_tables, create_admin_user, registrar_auditoria, inserir_movimentacao_caixa, inserir_comprovante_caixa, listar_movimentacoes_caixa, obter_saldo_caixa, listar_cadastros_simples, usuario_tem_permissao, adicionar_permissao_usuario
 import os
 import gzip
 
@@ -309,6 +309,9 @@ def dashboard():
     # Usar cache para estatísticas
     stats = get_cached_stats()
     
+    # Verificar permissão de caixa
+    tem_permissao_caixa = usuario_tem_permissao(session['usuario'], 'caixa')
+    
     # Buscar últimos cadastros (não cachear pois muda frequentemente)
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -317,7 +320,10 @@ def dashboard():
     cursor.close()
     conn.close()
     
-    return render_template('dashboard.html', total=stats['total'], ultimos=ultimos)
+    return render_template('dashboard.html', 
+                         total=stats['total'], 
+                         ultimos=ultimos,
+                         tem_permissao_caixa=tem_permissao_caixa)
 
 @app.route('/arquivos_cadastros')
 def arquivos_cadastros():
@@ -2285,8 +2291,17 @@ def salvar_usuario():
         logger.debug("Hash da senha gerado")
         
         # No Railway sempre será PostgreSQL
-        cursor.execute('INSERT INTO usuarios (usuario, senha, tipo) VALUES (%s, %s, %s)', (novo_usuario, senha_hash, tipo_usuario))
+        cursor.execute('INSERT INTO usuarios (usuario, senha, tipo) VALUES (%s, %s, %s) RETURNING id', (novo_usuario, senha_hash, tipo_usuario))
+        usuario_id = cursor.fetchone()[0]
         logger.debug("Query INSERT executada")
+        
+        # Processar permissões adicionais
+        permissoes = request.form.getlist('permissoes')
+        logger.info(f"Permissões selecionadas: {permissoes}")
+        
+        for permissao in permissoes:
+            adicionar_permissao_usuario(usuario_id, permissao)
+            logger.info(f"Permissão '{permissao}' adicionada ao usuário {novo_usuario}")
         
         conn.commit()
         logger.info(f"✅ Usuário {novo_usuario} criado com sucesso!")
@@ -2973,6 +2988,11 @@ def deletar_cadastro(cadastro_id):
 def caixa():
     if 'usuario' not in session:
         return redirect(url_for('login'))
+    
+    # Verificar permissão de caixa
+    if not usuario_tem_permissao(session['usuario'], 'caixa'):
+        flash('Você não tem permissão para acessar o sistema de caixa', 'error')
+        return redirect(url_for('dashboard'))
     
     try:
         logger.info("=== INICIANDO CAIXA ===")

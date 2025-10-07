@@ -426,12 +426,28 @@ def init_db_tables():
         ''')
         logger.debug("✅ Tabela comprovantes_caixa criada")
         
+        # Tabela permissoes_usuario
+        logger.debug("Criando tabela permissoes_usuario...")
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS permissoes_usuario (
+                id SERIAL PRIMARY KEY,
+                usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+                permissao VARCHAR(50) NOT NULL,
+                UNIQUE(usuario_id, permissao)
+            )
+        ''')
+        logger.debug("✅ Tabela permissoes_usuario criada")
+        
         # Índices para tabelas de caixa
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_caixa_tipo ON movimentacoes_caixa(tipo)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_caixa_data ON movimentacoes_caixa(data_movimentacao)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_caixa_cadastro ON movimentacoes_caixa(cadastro_id)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_caixa_usuario ON movimentacoes_caixa(usuario)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_comprovantes_movimentacao ON comprovantes_caixa(movimentacao_id)')
+        
+        # Índices para tabela permissoes_usuario
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_permissoes_usuario ON permissoes_usuario(usuario_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_permissoes_permissao ON permissoes_usuario(permissao)')
         
         conn.commit()
         logger.debug("✅ Commit realizado")
@@ -713,3 +729,90 @@ def listar_cadastros_simples():
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise
+
+# Funções para sistema de permissões
+def obter_permissoes_usuario(usuario_id):
+    """Obtém todas as permissões de um usuário"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT permissao FROM permissoes_usuario 
+            WHERE usuario_id = %s
+        ''', (usuario_id,))
+        
+        permissoes = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+        conn.close()
+        
+        return permissoes
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter permissões: {e}")
+        return []
+
+def adicionar_permissao_usuario(usuario_id, permissao):
+    """Adiciona uma permissão a um usuário"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO permissoes_usuario (usuario_id, permissao)
+            VALUES (%s, %s)
+            ON CONFLICT (usuario_id, permissao) DO NOTHING
+        ''', (usuario_id, permissao))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao adicionar permissão: {e}")
+        return False
+
+def remover_permissao_usuario(usuario_id, permissao):
+    """Remove uma permissão de um usuário"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            DELETE FROM permissoes_usuario 
+            WHERE usuario_id = %s AND permissao = %s
+        ''', (usuario_id, permissao))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao remover permissão: {e}")
+        return False
+
+def usuario_tem_permissao(usuario_nome, permissao):
+    """Verifica se um usuário tem uma permissão específica"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT COUNT(*) FROM permissoes_usuario p
+            JOIN usuarios u ON p.usuario_id = u.id
+            WHERE u.usuario = %s AND p.permissao = %s
+        ''', (usuario_nome, permissao))
+        
+        tem_permissao = cursor.fetchone()[0] > 0
+        cursor.close()
+        conn.close()
+        
+        return tem_permissao
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao verificar permissão: {e}")
+        return False
