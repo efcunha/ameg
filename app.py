@@ -1327,6 +1327,17 @@ def exportar():
             'renda_bairro': renda_bairro
         }
         filename = 'relatorio_renda'
+    elif tipo == 'caixa':
+        logger.info("💰 Buscando dados do caixa para exportação")
+        # Buscar todas as movimentações do caixa
+        cursor.execute('''SELECT mc.id, mc.tipo, mc.valor, mc.descricao, mc.cadastro_id, 
+                         mc.nome_pessoa, mc.numero_recibo, mc.observacoes, mc.data_movimentacao, 
+                         mc.usuario, c.nome_completo as titular_cadastro
+                         FROM movimentacoes_caixa mc
+                         LEFT JOIN cadastros c ON mc.cadastro_id = c.id
+                         ORDER BY mc.data_movimentacao DESC''')
+        dados = cursor.fetchall()
+        filename = 'relatorio_caixa'
     else:
         cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
         dados = cursor.fetchall()
@@ -1399,6 +1410,22 @@ def exportar():
             writer.writerow(['Bairro', 'Renda Média', 'Total de Cadastros'])
             for row in dados['renda_bairro']:
                 writer.writerow([row[0] or 'Não informado', f"R$ {row[1]:.2f}" if row[1] else 'Não informado', row[2]])
+        elif tipo == 'caixa':
+            writer.writerow(['ID', 'Tipo', 'Valor', 'Descrição', 'Titular Cadastro', 'Nome Pessoa', 
+                           'Número Recibo', 'Observações', 'Data', 'Usuário'])
+            for row in dados:
+                writer.writerow([
+                    row['id'],
+                    row['tipo'].title(),
+                    f"R$ {row['valor']:.2f}",
+                    row['descricao'] or '',
+                    row['titular_cadastro'] or '',
+                    row['nome_pessoa'] or '',
+                    row['numero_recibo'] or '',
+                    row['observacoes'] or '',
+                    row['data_movimentacao'].strftime('%d/%m/%Y %H:%M') if row['data_movimentacao'] else '',
+                    row['usuario'] or ''
+                ])
         else:
             # Cabeçalhos completos 
             writer.writerow(['Nome', 'Telefone', 'Endereço', 'Número', 'Bairro', 'CEP', 'Gênero', 'Idade', 'CPF', 'RG', 'Estado Civil', 'Escolaridade', 'Renda Familiar'])
@@ -1476,6 +1503,8 @@ def exportar():
             title = Paragraph("AMEG - Relatório por Bairro", styles['Title'])
         elif tipo == 'renda':
             title = Paragraph("AMEG - Análise de Renda Familiar", styles['Title'])
+        elif tipo == 'caixa':
+            title = Paragraph("AMEG - Relatório de Movimentações do Caixa", styles['Title'])
         else:
             title = Paragraph("AMEG - Relatório Geral", styles['Title'])
         
@@ -1849,7 +1878,66 @@ def exportar():
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
             elements.append(table)
-        else:  # completo
+        elif tipo == 'caixa':
+            logger.info("💰 Processando dados do caixa para PDF")
+            
+            # Calcular totais
+            total_entradas = sum(row['valor'] for row in dados if row['tipo'] == 'entrada')
+            total_saidas = sum(row['valor'] for row in dados if row['tipo'] == 'saida')
+            saldo_total = total_entradas - total_saidas
+            
+            # Resumo financeiro
+            resumo_para = Paragraph("<b>💰 Resumo Financeiro</b>", styles['Heading3'])
+            elements.append(resumo_para)
+            elements.append(Spacer(1, 6))
+            
+            resumo_data = [
+                ['Total de Entradas:', f"R$ {total_entradas:.2f}"],
+                ['Total de Saídas:', f"R$ {total_saidas:.2f}"],
+                ['Saldo Atual:', f"R$ {saldo_total:.2f}"]
+            ]
+            
+            resumo_table = Table(resumo_data, colWidths=[3*inch, 2*inch])
+            resumo_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), colors.lightblue),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('ALIGN', (1, 0), (1, -1), 'RIGHT')
+            ]))
+            elements.append(resumo_table)
+            elements.append(Spacer(1, 20))
+            
+            # Movimentações detalhadas
+            movimentacoes_para = Paragraph("<b>📋 Movimentações Detalhadas</b>", styles['Heading3'])
+            elements.append(movimentacoes_para)
+            elements.append(Spacer(1, 6))
+            
+            table_data = [['Data', 'Tipo', 'Valor', 'Descrição', 'Pessoa', 'Usuário']]
+            for row in dados:
+                table_data.append([
+                    row['data_movimentacao'].strftime('%d/%m/%Y') if row['data_movimentacao'] else '',
+                    row['tipo'].title(),
+                    f"R$ {row['valor']:.2f}",
+                    str(row['descricao'] or '')[:30] + ('...' if len(str(row['descricao'] or '')) > 30 else ''),
+                    str(row['nome_pessoa'] or row['titular_cadastro'] or '')[:20] + ('...' if len(str(row['nome_pessoa'] or row['titular_cadastro'] or '')) > 20 else ''),
+                    str(row['usuario'] or '')
+                ])
+            
+            table = Table(table_data, colWidths=[1*inch, 0.8*inch, 1*inch, 2*inch, 1.5*inch, 0.7*inch])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('FONTSIZE', (0, 1), (-1, -1), 7),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP')
+            ]))
+            elements.append(table)        else:  # completo
             if cadastro_id:
                 # PDF detalhado para um cadastro específico com TODOS os campos
                 for row in dados:
