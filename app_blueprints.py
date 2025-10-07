@@ -74,17 +74,16 @@ def after_request(response):
         response.cache_control.public = True
     return response
 
-logger.info("🚀 Iniciando aplicação AMEG com arquitetura de blueprints")
+logger.info("🚀 Iniciando aplicação AMEG com arquitetura de blueprints (LOCAL)")
 
-# Inicializar banco no Railway
-if os.environ.get('RAILWAY_ENVIRONMENT'):
-    logger.info("🔧 Inicializando banco PostgreSQL...")
-    try:
-        init_db_tables()
-        create_admin_user()
-        logger.info("✅ Banco inicializado no Railway")
-    except Exception as e:
-        logger.error(f"❌ Erro na inicialização: {e}")
+# Inicializar banco sempre em desenvolvimento
+logger.info("🔧 Inicializando banco PostgreSQL local...")
+try:
+    init_db_tables()
+    create_admin_user()
+    logger.info("✅ Banco inicializado localmente")
+except Exception as e:
+    logger.error(f"❌ Erro na inicialização: {e}")
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
