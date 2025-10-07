@@ -3540,6 +3540,193 @@ def editar_movimentacao(movimentacao_id):
         flash('Erro ao editar movimentação', 'error')
         return redirect(url_for('caixa'))
 
+@app.route('/visualizar_comprovantes/<int:movimentacao_id>')
+def visualizar_comprovantes(movimentacao_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    if not usuario_tem_permissao(session['usuario'], 'caixa'):
+        flash('Você não tem permissão para visualizar comprovantes', 'error')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        from database import obter_comprovantes_caixa
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        # Buscar dados da movimentação
+        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+        movimentacao = cursor.fetchone()
+        
+        if not movimentacao:
+            flash('Movimentação não encontrada', 'error')
+            return redirect(url_for('caixa'))
+        
+        # Buscar comprovantes
+        comprovantes = obter_comprovantes_caixa(movimentacao_id)
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template('visualizar_comprovantes.html', 
+                             movimentacao=movimentacao, 
+                             comprovantes=comprovantes)
+    
+    except Exception as e:
+        logger.error(f"Erro ao visualizar comprovantes: {e}")
+        flash('Erro ao carregar comprovantes', 'error')
+        return redirect(url_for('caixa'))
+
+@app.route('/download_comprovante/<int:comprovante_id>')
+def download_comprovante(comprovante_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    if not usuario_tem_permissao(session['usuario'], 'caixa'):
+        flash('Você não tem permissão para baixar comprovantes', 'error')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT nome_arquivo, tipo_arquivo, arquivo_dados
+            FROM comprovantes_caixa
+            WHERE id = %s
+        ''', (comprovante_id,))
+        
+        comprovante = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if not comprovante:
+            flash('Comprovante não encontrado', 'error')
+            return redirect(url_for('caixa'))
+        
+        import io
+        return send_file(
+            io.BytesIO(comprovante[2]),
+            as_attachment=True,
+            download_name=comprovante[0],
+            mimetype=comprovante[1]
+        )
+    
+    except Exception as e:
+        logger.error(f"Erro ao baixar comprovante: {e}")
+        flash('Erro ao baixar comprovante', 'error')
+        return redirect(url_for('caixa'))
+
+@app.route('/exportar_comprovantes_pdf/<int:movimentacao_id>')
+def exportar_comprovantes_pdf(movimentacao_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    
+    if not usuario_tem_permissao(session['usuario'], 'caixa'):
+        flash('Você não tem permissão para exportar comprovantes', 'error')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        from database import obter_comprovantes_caixa
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib import colors
+        from reportlab.lib.units import inch
+        import io
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        # Buscar dados da movimentação
+        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+        movimentacao = cursor.fetchone()
+        
+        if not movimentacao:
+            flash('Movimentação não encontrada', 'error')
+            return redirect(url_for('caixa'))
+        
+        # Buscar comprovantes
+        comprovantes = obter_comprovantes_caixa(movimentacao_id)
+        
+        cursor.close()
+        conn.close()
+        
+        # Criar PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        styles = getSampleStyleSheet()
+        elements = []
+        
+        # Título
+        title = Paragraph(f"AMEG - Comprovantes da Movimentação #{movimentacao_id}", styles['Title'])
+        elements.append(title)
+        elements.append(Spacer(1, 20))
+        
+        # Dados da movimentação
+        mov_data = [
+            ['Tipo:', movimentacao['tipo'].title()],
+            ['Valor:', f"R$ {movimentacao['valor']:.2f}"],
+            ['Descrição:', movimentacao['descricao']],
+            ['Data:', movimentacao['data_movimentacao'].strftime('%d/%m/%Y %H:%M')],
+            ['Usuário:', movimentacao['usuario']]
+        ]
+        
+        mov_table = Table(mov_data, colWidths=[2*inch, 4*inch])
+        mov_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        elements.append(mov_table)
+        elements.append(Spacer(1, 20))
+        
+        # Lista de comprovantes
+        elements.append(Paragraph("Comprovantes Anexados:", styles['Heading2']))
+        elements.append(Spacer(1, 10))
+        
+        if comprovantes:
+            comp_data = [['#', 'Nome do Arquivo', 'Tipo', 'Data Upload']]
+            for i, comp in enumerate(comprovantes, 1):
+                comp_data.append([
+                    str(i),
+                    comp['nome_arquivo'],
+                    comp['tipo_arquivo'],
+                    comp['data_upload'].strftime('%d/%m/%Y %H:%M')
+                ])
+            
+            comp_table = Table(comp_data, colWidths=[0.5*inch, 3*inch, 1.5*inch, 1.5*inch])
+            comp_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            
+            elements.append(comp_table)
+        else:
+            elements.append(Paragraph("Nenhum comprovante anexado.", styles['Normal']))
+        
+        doc.build(elements)
+        buffer.seek(0)
+        
+        filename = f"comprovantes_movimentacao_{movimentacao_id}.pdf"
+        return send_file(buffer, as_attachment=True, download_name=filename, mimetype='application/pdf')
+    
+    except Exception as e:
+        logger.error(f"Erro ao exportar comprovantes PDF: {e}")
+        flash('Erro ao gerar PDF dos comprovantes', 'error')
+        return redirect(url_for('caixa'))
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     logger.info(f"🚀 Iniciando AMEG na porta {port}")

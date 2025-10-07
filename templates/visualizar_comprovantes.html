@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AMEG - Comprovantes da Movimentação</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/mobile.min.css">
+    <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .nav a:hover { background: #2980b9; }
+        .container { padding: 20px; }
+        .logout { float: right; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .mov-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .info-item { padding: 10px; background: #f8f9fa; border-radius: 5px; }
+        .info-label { font-weight: bold; color: #666; font-size: 0.9em; }
+        .info-value { margin-top: 5px; }
+        .comprovantes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+        .comprovante-item { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 15px; text-align: center; }
+        .comprovante-item:hover { background: #e9ecef; }
+        .file-icon { font-size: 2em; margin-bottom: 10px; }
+        .file-name { font-weight: bold; margin-bottom: 5px; word-break: break-all; }
+        .file-info { font-size: 0.9em; color: #666; margin-bottom: 10px; }
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block; margin: 2px; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-secondary { background: #95a5a6; color: white; }
+        .alert { padding: 15px; margin: 20px 0; border-radius: 5px; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+        .empty-state { text-align: center; padding: 40px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AMEG - Comprovantes da Movimentação</h1>
+        <span>Bem-vindo, {{ session.usuario }}!</span>
+        <a href="/logout" class="logout" style="color: white; text-decoration: none;">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/caixa">💰 Caixa</a>
+    </div>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="card">
+            <h3 style="color: {% if movimentacao.tipo == 'entrada' %}#27ae60{% else %}#e74c3c{% endif %};">
+                {% if movimentacao.tipo == 'entrada' %}💰 Entrada{% else %}💸 Saída{% endif %} - Movimentação #{{ movimentacao.id }}
+            </h3>
+            
+            <div class="mov-info">
+                <div class="info-item">
+                    <div class="info-label">Valor</div>
+                    <div class="info-value">R$ {{ "%.2f"|format(movimentacao.valor) }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Descrição</div>
+                    <div class="info-value">{{ movimentacao.descricao }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Data</div>
+                    <div class="info-value">{{ movimentacao.data_movimentacao.strftime('%d/%m/%Y %H:%M') }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Usuário</div>
+                    <div class="info-value">{{ movimentacao.usuario }}</div>
+                </div>
+                {% if movimentacao.nome_pessoa %}
+                <div class="info-item">
+                    <div class="info-label">Pessoa</div>
+                    <div class="info-value">{{ movimentacao.nome_pessoa }}</div>
+                </div>
+                {% endif %}
+                {% if movimentacao.numero_recibo %}
+                <div class="info-item">
+                    <div class="info-label">Recibo/Nota</div>
+                    <div class="info-value">{{ movimentacao.numero_recibo }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <h4>📎 Comprovantes Anexados ({{ comprovantes|length }})</h4>
+            
+            {% if comprovantes %}
+                <div style="margin-bottom: 15px;">
+                    <a href="/exportar_comprovantes_pdf/{{ movimentacao.id }}" class="btn btn-success">📄 Exportar PDF</a>
+                </div>
+                
+                <div class="comprovantes-grid">
+                    {% for comp in comprovantes %}
+                    <div class="comprovante-item">
+                        <div class="file-icon">
+                            {% if comp.tipo_arquivo.startswith('image/') %}📷
+                            {% elif comp.tipo_arquivo == 'application/pdf' %}📄
+                            {% elif comp.tipo_arquivo.startswith('application/') %}📋
+                            {% else %}📎{% endif %}
+                        </div>
+                        <div class="file-name">{{ comp.nome_arquivo }}</div>
+                        <div class="file-info">
+                            Tipo: {{ comp.tipo_arquivo }}<br>
+                            Upload: {{ comp.data_upload.strftime('%d/%m/%Y %H:%M') }}
+                        </div>
+                        <a href="/download_comprovante/{{ comp.id }}" class="btn btn-primary">⬇️ Baixar</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div style="font-size: 3em; margin-bottom: 15px;">📎</div>
+                    <p>Nenhum comprovante anexado a esta movimentação.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="/caixa" class="btn btn-secondary">⬅️ Voltar ao Caixa</a>
+        </div>
+    </div>
+</body>
+</html>

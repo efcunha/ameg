@@ -258,6 +258,10 @@
                         <td>{{ mov.usuario }}</td>
                         <td>
                             <a href="/editar_movimentacao/{{ mov.id }}" class="btn" style="background: #f39c12; color: white; padding: 5px 10px; margin: 2px; text-decoration: none; border-radius: 3px; font-size: 0.8em;">✏️ Editar</a>
+                            {% if mov.total_comprovantes > 0 %}
+                                <a href="/visualizar_comprovantes/{{ mov.id }}" class="btn" style="background: #3498db; color: white; padding: 5px 10px; margin: 2px; text-decoration: none; border-radius: 3px; font-size: 0.8em;">📎 Anexos</a>
+                                <a href="/exportar_comprovantes_pdf/{{ mov.id }}" class="btn" style="background: #9b59b6; color: white; padding: 5px 10px; margin: 2px; text-decoration: none; border-radius: 3px; font-size: 0.8em;">📄 PDF</a>
+                            {% endif %}
                             <a href="/excluir_movimentacao/{{ mov.id }}" class="btn" style="background: #e74c3c; color: white; padding: 5px 10px; margin: 2px; text-decoration: none; border-radius: 3px; font-size: 0.8em;" onclick="return confirm('Tem certeza que deseja excluir esta movimentação?')">🗑️ Excluir</a>
                         </td>
                     </tr>
