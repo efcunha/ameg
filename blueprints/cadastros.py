@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from database import get_db_connection, registrar_auditoria
 import base64
 import logging
+import urllib.parse
 
 logger = logging.getLogger(__name__)
 
@@ -79,8 +80,40 @@ def cadastrar():
     
     return render_template('cadastrar.html')
 
+@cadastros_bp.route('/editar_cadastro/<nome>')
+def editar_cadastro_por_nome(nome):
+    """Rota de compatibilidade - redireciona nome para ID"""
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        # Decodificar nome da URL
+        nome_decodificado = urllib.parse.unquote(nome)
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Buscar cadastro pelo nome
+        cursor.execute('SELECT id FROM cadastros WHERE nome_completo ILIKE %s', (f'%{nome_decodificado}%',))
+        resultado = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+        
+        if resultado:
+            cadastro_id = resultado[0]
+            return redirect(url_for('cadastros.editar_cadastro_por_id', cadastro_id=cadastro_id))
+        else:
+            flash('Cadastro não encontrado', 'error')
+            return redirect(url_for('dashboard.dashboard'))
+            
+    except Exception as e:
+        logger.error(f"Erro ao buscar cadastro por nome: {e}")
+        flash('Erro ao buscar cadastro', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+
 @cadastros_bp.route('/editar_cadastro/<int:cadastro_id>', methods=['GET', 'POST'])
-def editar_cadastro(cadastro_id):
+def editar_cadastro_por_id(cadastro_id):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
     
@@ -262,4 +295,4 @@ def atualizar_cadastro(cadastro_id):
         logger.error(f"Erro ao atualizar cadastro {cadastro_id}: {e}")
         flash(f'Erro ao atualizar cadastro: {str(e)}', 'error')
     
-    return redirect(url_for('cadastros.editar_cadastro', cadastro_id=cadastro_id))
+    return redirect(url_for('cadastros.editar_cadastro_por_id', cadastro_id=cadastro_id))
