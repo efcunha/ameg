@@ -16,7 +16,7 @@ relatorios_bp = Blueprint('relatorios', __name__)
 def relatorios():
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
-    return render_template('relatorios.html')
+    return render_template('tipos_relatorios.html')
 
 @relatorios_bp.route('/tipos_relatorios')
 def tipos_relatorios():
