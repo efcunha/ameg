@@ -566,8 +566,12 @@ def inserir_comprovante_caixa(movimentacao_id, nome_arquivo, tipo_arquivo, arqui
 def listar_movimentacoes_caixa(limit=50, offset=0, tipo=None):
     """Lista movimentações do caixa com paginação"""
     try:
+        logger.info("=== INICIANDO listar_movimentacoes_caixa ===")
+        logger.info(f"Parâmetros: limit={limit}, offset={offset}, tipo={tipo}")
+        
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
+        logger.info("Conexão estabelecida para listar_movimentacoes_caixa")
         
         where_clause = ""
         params = []
@@ -575,6 +579,7 @@ def listar_movimentacoes_caixa(limit=50, offset=0, tipo=None):
         if tipo:
             where_clause = "WHERE m.tipo = %s"
             params.append(tipo)
+            logger.info(f"Filtro por tipo aplicado: {tipo}")
         
         query = f'''
             SELECT m.*, c.nome_completo as nome_cadastro,
@@ -589,24 +594,35 @@ def listar_movimentacoes_caixa(limit=50, offset=0, tipo=None):
         '''
         
         params.extend([limit, offset])
+        logger.info(f"Executando query: {query}")
+        logger.info(f"Parâmetros: {params}")
+        
         cursor.execute(query, params)
         movimentacoes = cursor.fetchall()
+        logger.info(f"Movimentações encontradas: {len(movimentacoes)}")
         
         cursor.close()
         conn.close()
+        logger.info("Conexão fechada para listar_movimentacoes_caixa")
         
         return movimentacoes
         
     except Exception as e:
         logger.error(f"❌ Erro ao listar movimentações: {e}")
+        logger.error(f"Tipo do erro: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise
 
 def obter_saldo_caixa():
     """Calcula o saldo atual do caixa"""
     try:
+        logger.info("=== INICIANDO obter_saldo_caixa ===")
         conn = get_db_connection()
         cursor = conn.cursor()
+        logger.info("Conexão estabelecida para obter_saldo_caixa")
         
+        logger.info("Executando query para calcular saldo...")
         cursor.execute('''
             SELECT 
                 COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) as total_entradas,
@@ -615,21 +631,33 @@ def obter_saldo_caixa():
         ''')
         
         resultado = cursor.fetchone()
-        total_entradas = float(resultado[0])
-        total_saidas = float(resultado[1])
-        saldo = total_entradas - total_saidas
+        logger.info(f"Resultado da query: {resultado}")
+        
+        if resultado:
+            total_entradas = float(resultado[0])
+            total_saidas = float(resultado[1])
+            saldo = total_entradas - total_saidas
+        else:
+            logger.warning("Nenhum resultado encontrado, usando valores padrão")
+            total_entradas = total_saidas = saldo = 0.0
         
         cursor.close()
         conn.close()
+        logger.info("Conexão fechada para obter_saldo_caixa")
         
-        return {
+        resultado_final = {
             'total_entradas': total_entradas,
             'total_saidas': total_saidas,
             'saldo': saldo
         }
+        logger.info(f"Saldo calculado com sucesso: {resultado_final}")
+        return resultado_final
         
     except Exception as e:
         logger.error(f"❌ Erro ao calcular saldo: {e}")
+        logger.error(f"Tipo do erro: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise
 
 def obter_comprovantes_movimentacao(movimentacao_id):
@@ -658,9 +686,12 @@ def obter_comprovantes_movimentacao(movimentacao_id):
 def listar_cadastros_simples():
     """Lista cadastros com apenas ID e nome para selects"""
     try:
+        logger.info("=== INICIANDO listar_cadastros_simples ===")
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
+        logger.info("Conexão estabelecida para listar_cadastros_simples")
         
+        logger.info("Executando query para listar cadastros...")
         cursor.execute('''
             SELECT id, nome_completo
             FROM cadastros
@@ -668,11 +699,17 @@ def listar_cadastros_simples():
         ''')
         
         cadastros = cursor.fetchall()
+        logger.info(f"Cadastros encontrados: {len(cadastros)}")
+        
         cursor.close()
         conn.close()
+        logger.info("Conexão fechada para listar_cadastros_simples")
         
         return cadastros
         
     except Exception as e:
         logger.error(f"❌ Erro ao listar cadastros simples: {e}")
+        logger.error(f"Tipo do erro: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise

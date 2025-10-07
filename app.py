@@ -2975,15 +2975,25 @@ def caixa():
         return redirect(url_for('login'))
     
     try:
+        logger.info("=== INICIANDO CAIXA ===")
+        logger.info(f"Usuário autenticado: {session['usuario']}")
+        
         # Obter saldo atual
+        logger.info("Tentando obter saldo do caixa...")
         saldo = obter_saldo_caixa()
+        logger.info(f"Saldo obtido com sucesso: {saldo}")
         
         # Obter pessoas cadastradas para o select
+        logger.info("Tentando obter lista de pessoas cadastradas...")
         pessoas = listar_cadastros_simples()
+        logger.info(f"Pessoas obtidas com sucesso: {len(pessoas)} registros")
         
         # Obter últimas movimentações
+        logger.info("Tentando obter últimas movimentações...")
         movimentacoes = listar_movimentacoes_caixa(limit=20)
+        logger.info(f"Movimentações obtidas com sucesso: {len(movimentacoes)} registros")
         
+        logger.info("Renderizando template caixa.html...")
         return render_template('caixa.html', 
                              saldo=saldo, 
                              pessoas=pessoas, 
@@ -2991,6 +3001,9 @@ def caixa():
     
     except Exception as e:
         logger.error(f"Erro ao carregar caixa: {e}")
+        logger.error(f"Tipo do erro: {type(e)}")
+        import traceback
+        logger.error(f"Traceback completo: {traceback.format_exc()}")
         flash('Erro ao carregar sistema de caixa', 'error')
         return redirect(url_for('dashboard'))
 
