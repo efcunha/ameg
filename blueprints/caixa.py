@@ -145,3 +145,78 @@ def processar_movimentacao_caixa():
         return redirect(url_for('caixa.caixa'))
 
 # Adicionar outras rotas do caixa aqui...
+
+@caixa_bp.route('/visualizar_comprovantes/<int:movimentacao_id>')
+def visualizar_comprovantes(movimentacao_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    if not usuario_tem_permissao(session['usuario'], 'caixa'):
+        flash('Você não tem permissão para visualizar comprovantes', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        # Buscar dados da movimentação
+        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+        movimentacao = cursor.fetchone()
+        
+        if not movimentacao:
+            flash('Movimentação não encontrada', 'error')
+            return redirect(url_for('caixa.caixa'))
+        
+        # Buscar comprovantes
+        comprovantes = obter_comprovantes_movimentacao(movimentacao_id)
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template('visualizar_comprovantes.html', 
+                             movimentacao=movimentacao, 
+                             comprovantes=comprovantes)
+    
+    except Exception as e:
+        logger.error(f"Erro ao visualizar comprovantes: {e}")
+        flash('Erro ao carregar comprovantes', 'error')
+        return redirect(url_for('caixa.caixa'))
+
+@caixa_bp.route('/download_comprovante/<int:comprovante_id>')
+def download_comprovante(comprovante_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    if not usuario_tem_permissao(session['usuario'], 'caixa'):
+        flash('Você não tem permissão para baixar comprovantes', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT nome_arquivo, tipo_arquivo, arquivo_dados
+            FROM comprovantes_caixa
+            WHERE id = %s
+        ''', (comprovante_id,))
+        
+        comprovante = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if not comprovante:
+            flash('Comprovante não encontrado', 'error')
+            return redirect(url_for('caixa.caixa'))
+        
+        return send_file(
+            io.BytesIO(comprovante[2]),
+            as_attachment=True,
+            download_name=comprovante[0],
+            mimetype=comprovante[1]
+        )
+    
+    except Exception as e:
+        logger.error(f"Erro ao baixar comprovante: {e}")
+        flash('Erro ao baixar comprovante', 'error')
+        return redirect(url_for('caixa.caixa'))
