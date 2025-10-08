@@ -995,7 +995,7 @@ def exportar():
                         condicoes_data.append([nome_pessoa, condicoes_texto])
                     
                     # Criar tabela de condições
-                    condicoes_table = Table(condicoes_data, colWidths=[150, 400])
+                    condicoes_table = Table(condicoes_data, colWidths=[200, 350])
                     condicoes_table.setStyle(TableStyle([
                         ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
                         ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
