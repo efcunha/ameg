@@ -35,6 +35,7 @@
         {% endwith %}
         
         <form method="POST" action="/login">
+            {{ csrf_token() }}
             <div class="form-group">
                 <label>Usuário:</label>
                 <input type="text" name="usuario" required>
