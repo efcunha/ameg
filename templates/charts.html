@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/mobile.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         body { font-family: Arial; margin: 0; background: #f4f4f4; }
         .header { background: #2c3e50; color: white; padding: 20px; }
@@ -136,6 +136,7 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/charts-final.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts-modern.js') }}"></script>
     <script src="{{ url_for('static', filename='js/nav-active.js') }}"></script>
 </body>
 </html>
