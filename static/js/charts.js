@@ -17,35 +17,84 @@ let charts = {};
 // Inicializar gráficos ao carregar a página
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Iniciando carregamento dos gráficos...');
+    loadFilterOptions();
     loadAllCharts();
 });
+
+async function loadFilterOptions() {
+    try {
+        const response = await fetch('/api/charts/filters');
+        const data = await response.json();
+        
+        // Preencher dropdown de bairros
+        const bairroSelect = document.getElementById('filtro-bairro');
+        if (bairroSelect && data.bairros) {
+            // Limpar opções existentes (exceto "Todos")
+            while (bairroSelect.children.length > 1) {
+                bairroSelect.removeChild(bairroSelect.lastChild);
+            }
+            
+            // Adicionar opções de bairros
+            data.bairros.forEach(bairro => {
+                const option = document.createElement('option');
+                option.value = bairro.value;
+                option.textContent = bairro.label;
+                bairroSelect.appendChild(option);
+            });
+        }
+        
+        console.log('Opções de filtros carregadas:', data);
+    } catch (error) {
+        console.error('Erro ao carregar opções de filtros:', error);
+    }
+}
 
 async function loadAllCharts() {
     try {
         showLoading();
         console.log('Carregando dados dos gráficos...');
         
+        // Obter valores dos filtros
+        const periodo = document.getElementById('filtro-periodo')?.value || 'todos';
+        const bairro = document.getElementById('filtro-bairro')?.value || 'todos';
+        
+        // Construir query string com filtros
+        const params = new URLSearchParams();
+        if (periodo !== 'todos') params.append('periodo', periodo);
+        if (bairro !== 'todos') params.append('bairro', bairro);
+        
+        const queryString = params.toString();
+        const urlSuffix = queryString ? `?${queryString}` : '';
+        
+        console.log('Aplicando filtros:', { periodo, bairro, queryString });
+        
         // Carregar dados em paralelo
         const [demografiaData, saudeData, socioeconomicoData, trabalhoData] = await Promise.all([
-            fetch('/api/charts/demografia').then(r => {
+            fetch(`/api/charts/demografia${urlSuffix}`).then(r => {
                 console.log('Demografia response:', r.status);
                 return r.json();
             }),
-            fetch('/api/charts/saude').then(r => {
+            fetch(`/api/charts/saude${urlSuffix}`).then(r => {
                 console.log('Saude response:', r.status);
                 return r.json();
             }),
-            fetch('/api/charts/socioeconomico').then(r => {
+            fetch(`/api/charts/socioeconomico${urlSuffix}`).then(r => {
                 console.log('Socioeconomico response:', r.status);
                 return r.json();
             }),
-            fetch('/api/charts/trabalho').then(r => {
+            fetch(`/api/charts/trabalho${urlSuffix}`).then(r => {
                 console.log('Trabalho response:', r.status);
                 return r.json();
             })
         ]);
 
         console.log('Dados carregados:', {demografiaData, saudeData, socioeconomicoData, trabalhoData});
+
+        // Destruir gráficos existentes antes de criar novos
+        Object.values(charts).forEach(chart => {
+            if (chart) chart.destroy();
+        });
+        charts = {};
 
         // Criar gráficos de demografia
         if (demografiaData.idade) createIdadeChart(demografiaData.idade);
@@ -461,6 +510,14 @@ function showError(message) {
 
 function aplicarFiltros() {
     console.log('Aplicando filtros...');
+    
+    // Obter valores dos filtros
+    const periodo = document.getElementById('filtro-periodo')?.value || 'todos';
+    const bairro = document.getElementById('filtro-bairro')?.value || 'todos';
+    
+    console.log('Filtros selecionados:', { periodo, bairro });
+    
+    // Recarregar gráficos com filtros
     loadAllCharts();
 }
 

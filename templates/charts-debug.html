@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AMEG - Gráficos Interativos</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/mobile.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .nav a:hover { background: #2980b9; }
+        .nav a.active { background: #e74c3c; }
+        .container { padding: 20px; }
+        .logout { float: right; }
+        .chart-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .chart-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            text-align: center;
+        }
+        canvas {
+            max-height: 400px;
+            width: 100% !important;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AMEG - Sistema de Cadastro</h1>
+        <span>Bem-vindo, {{ session.usuario }}!</span>
+        <a href="/logout" class="logout" style="color: white; text-decoration: none;">Sair</a>
+    </div>
+    
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/cadastrar">Novo Cadastro</a>
+        <a href="/relatorios">Relatórios</a>
+        <a href="/charts" class="active">📊 Gráficos</a>
+        <a href="/arquivos_cadastros">📁 Arquivos</a>
+        <a href="/usuarios">👥 Usuários</a>
+    </div>
+
+    <div class="container">
+        <h2>📊 Gráficos de Demografia</h2>
+        
+        <div id="debug-info" class="debug-info">
+            Carregando informações de debug...
+        </div>
+        
+        <div class="chart-card">
+            <div class="chart-title">Distribuição por Faixa Etária</div>
+            <canvas id="idadeChart"></canvas>
+        </div>
+        
+        <div class="chart-card">
+            <div class="chart-title">Top Bairros</div>
+            <canvas id="bairrosChart"></canvas>
+        </div>
+        
+        <div class="chart-card">
+            <div class="chart-title">Evolução Mensal</div>
+            <canvas id="evolucaoChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        console.log('🚀 INICIANDO DEBUG DOS GRÁFICOS');
+        
+        // Verificar se Chart.js carregou
+        if (typeof Chart === 'undefined') {
+            document.getElementById('debug-info').innerHTML = '❌ Chart.js não carregou do CDN';
+            console.error('❌ Chart.js não disponível');
+        } else {
+            document.getElementById('debug-info').innerHTML = '✅ Chart.js carregado com sucesso';
+            console.log('✅ Chart.js disponível');
+        }
+        
+        // Aguardar DOM carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📋 DOM carregado');
+            
+            setTimeout(function() {
+                console.log('⏰ Iniciando carregamento após timeout');
+                loadChartsDebug();
+            }, 2000);
+        });
+        
+        async function loadChartsDebug() {
+            console.log('📊 Carregando dados...');
+            
+            try {
+                const response = await fetch('/api/charts/demografia');
+                console.log('📡 Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('📦 Dados recebidos:', data);
+                
+                document.getElementById('debug-info').innerHTML = 
+                    '✅ Dados carregados: ' + JSON.stringify(data, null, 2);
+                
+                // Criar gráficos
+                if (data.idade && data.idade.length > 0) {
+                    createChart('idadeChart', 'doughnut', data.idade, 'faixa');
+                }
+                
+                if (data.bairros && data.bairros.length > 0) {
+                    createChart('bairrosChart', 'bar', data.bairros, 'bairro');
+                }
+                
+                if (data.evolucao && data.evolucao.length > 0) {
+                    createChart('evolucaoChart', 'line', data.evolucao, 'mes');
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                document.getElementById('debug-info').innerHTML = '❌ Erro: ' + error.message;
+            }
+        }
+        
+        function createChart(canvasId, type, data, labelKey) {
+            console.log(`🎨 Criando gráfico ${canvasId}`);
+            
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                console.error(`❌ Canvas ${canvasId} não encontrado`);
+                return;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            
+            new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: data.map(d => d[labelKey]),
+                    datasets: [{
+                        data: data.map(d => d.total),
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+            
+            console.log(`✅ Gráfico ${canvasId} criado`);
+        }
+    </script>
+</body>
+</html>
