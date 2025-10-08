@@ -217,11 +217,17 @@ function createMedicamentosChart(data) {
         return;
     }
     
-    const ctx = document.getElementById('medicamentosChart').getContext('2d');
+    const canvasElement = document.getElementById('medicamentosChart');
+    if (!canvasElement) {
+        console.error('Elemento medicamentosChart não encontrado');
+        return;
+    }
+    
+    const ctx = canvasElement.getContext('2d');
     charts.medicamentos = new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: data.map(d => d.medicamentos_uso),
+            labels: data.map(d => d.medicamentos_continuos),
             datasets: [{
                 data: data.map(d => d.total),
                 backgroundColor: colors.primary
@@ -242,11 +248,17 @@ function createDeficienciasChart(data) {
         return;
     }
     
-    const ctx = document.getElementById('deficienciasChart').getContext('2d');
+    const canvasElement = document.getElementById('deficienciasChart');
+    if (!canvasElement) {
+        console.error('Elemento deficienciasChart não encontrado');
+        return;
+    }
+    
+    const ctx = canvasElement.getContext('2d');
     charts.deficiencias = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: data.map(d => d.deficiencia_tipo),
+            labels: data.map(d => d.tipo_deficiencia),
             datasets: [{
                 data: data.map(d => d.total),
                 backgroundColor: colors.primary

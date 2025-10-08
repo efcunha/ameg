@@ -153,12 +153,12 @@ def saude_data():
     """Dados de saúde para gráficos"""
     logger.info("🏥 INICIANDO API SAÚDE")
     try:
-        # Doenças crônicas
+        # Doenças crônicas - CORRIGIDO: tem_doenca_cronica é VARCHAR, não BOOLEAN
         logger.info("💊 Executando query de doenças crônicas...")
         doencas_query = """
         SELECT doencas_cronicas, COUNT(*) as total
         FROM cadastros 
-        WHERE tem_doenca_cronica = true AND doencas_cronicas IS NOT NULL AND doencas_cronicas != ''
+        WHERE tem_doenca_cronica = 'Sim' AND doencas_cronicas IS NOT NULL AND doencas_cronicas != ''
         GROUP BY doencas_cronicas
         ORDER BY total DESC
         LIMIT 10
@@ -166,30 +166,38 @@ def saude_data():
         doencas_data = execute_query(doencas_query)
         logger.info(f"✅ Dados de doenças obtidos: {len(doencas_data)} registros")
         
-        # Medicamentos
+        # Medicamentos - CORRIGIDO: campo é medicamentos_continuos, não medicamentos_uso
         logger.info("💉 Executando query de medicamentos...")
         medicamentos_query = """
-        SELECT medicamentos_uso, COUNT(*) as total
+        SELECT medicamentos_continuos, COUNT(*) as total
         FROM cadastros 
-        WHERE medicamentos_uso IS NOT NULL AND medicamentos_uso != ''
-        GROUP BY medicamentos_uso
+        WHERE usa_medicamento_continuo = 'Sim' AND medicamentos_continuos IS NOT NULL AND medicamentos_continuos != ''
+        GROUP BY medicamentos_continuos
         ORDER BY total DESC
         LIMIT 10
         """
         medicamentos_data = execute_query(medicamentos_query)
         logger.info(f"✅ Dados de medicamentos obtidos: {len(medicamentos_data)} registros")
         
-        # Deficiências
+        # Deficiências - CORRIGIDO: campo é tipo_deficiencia, não deficiencia_tipo
         logger.info("♿ Executando query de deficiências...")
         deficiencias_query = """
-        SELECT deficiencia_tipo, COUNT(*) as total
+        SELECT tipo_deficiencia, COUNT(*) as total
         FROM cadastros 
-        WHERE tem_deficiencia = true AND deficiencia_tipo IS NOT NULL AND deficiencia_tipo != ''
-        GROUP BY deficiencia_tipo
+        WHERE tem_deficiencia = 'Sim' AND tipo_deficiencia IS NOT NULL AND tipo_deficiencia != ''
+        GROUP BY tipo_deficiencia
         ORDER BY total DESC
         """
         deficiencias_data = execute_query(deficiencias_query)
         logger.info(f"✅ Dados de deficiências obtidos: {len(deficiencias_data)} registros")
+        
+        # Se não há dados, criar alternativos
+        if not doencas_data:
+            doencas_data = [{'doencas_cronicas': 'Nenhuma informação', 'total': 0}]
+        if not medicamentos_data:
+            medicamentos_data = [{'medicamentos_continuos': 'Nenhuma informação', 'total': 0}]
+        if not deficiencias_data:
+            deficiencias_data = [{'tipo_deficiencia': 'Nenhuma informação', 'total': 0}]
         
         result = {
             'doencas': doencas_data,
@@ -210,7 +218,7 @@ def socioeconomico_data():
     """Dados socioeconômicos para gráficos"""
     logger.info("💰 INICIANDO API SOCIOECONÔMICO")
     try:
-        # Renda familiar
+        # Renda familiar - CORRIGIDO: usar ::text para regex
         logger.info("💵 Executando query de renda familiar...")
         renda_query = """
         SELECT 
