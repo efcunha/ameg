@@ -1,14 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_file
-from database import (get_db_connection, inserir_movimentacao_caixa, inserir_comprovante_caixa, 
-                    listar_movimentacoes_caixa, obter_saldo_caixa, listar_cadastros_simples, 
-                    usuario_tem_permissao, registrar_auditoria, obter_comprovantes_movimentacao)
+from database import get_db_connection, registrar_auditoria, usuario_tem_permissao, inserir_movimentacao_caixa, inserir_comprovante_caixa, listar_movimentacoes_caixa, obter_saldo_caixa, listar_cadastros_simples, obter_comprovantes_movimentacao
 import psycopg2.extras
-import logging
 import io
+import logging
 
 logger = logging.getLogger(__name__)
 
-# Criar blueprint
 caixa_bp = Blueprint('caixa', __name__)
 
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
@@ -16,7 +13,7 @@ ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@caixa_bp.route('/caixa')
+@caixa_bp.route('/caixa', methods=['GET', 'POST'])
 def caixa():
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
@@ -26,125 +23,268 @@ def caixa():
         flash('Você não tem permissão para acessar o sistema de caixa', 'error')
         return redirect(url_for('dashboard.dashboard'))
     
+    if request.method == 'POST':
+        try:
+            tipo = request.form.get('tipo')
+            valor = float(request.form.get('valor', 0))
+            descricao = request.form.get('descricao', '').strip()
+            cadastro_id = request.form.get('cadastro_id') or None
+            nome_pessoa = request.form.get('nome_pessoa', '').strip()
+            numero_recibo = request.form.get('numero_recibo', '').strip()
+            observacoes = request.form.get('observacoes', '').strip()
+            
+            if not descricao:
+                flash('Descrição é obrigatória', 'error')
+                return redirect(url_for('caixa.caixa'))
+            
+            if valor <= 0:
+                flash('Valor deve ser maior que zero', 'error')
+                return redirect(url_for('caixa.caixa'))
+            
+            # Inserir movimentação
+            movimentacao_id = inserir_movimentacao_caixa(
+                tipo, valor, descricao, cadastro_id, nome_pessoa, 
+                numero_recibo, observacoes, session['usuario']
+            )
+            
+            # Processar comprovantes se houver
+            comprovantes = request.files.getlist('comprovantes')
+            
+            for comprovante in comprovantes:
+                if comprovante and comprovante.filename:
+                    # Validar tipo de arquivo
+                    if not allowed_file(comprovante.filename):
+                        flash(f'Tipo de arquivo não permitido: {comprovante.filename}', 'error')
+                        continue
+                    
+                    # Validar tamanho (16MB máximo)
+                    comprovante.seek(0, 2)  # Ir para o final
+                    size = comprovante.tell()
+                    comprovante.seek(0)  # Voltar ao início
+                    
+                    if size > 16 * 1024 * 1024:  # 16MB
+                        flash(f'Arquivo muito grande: {comprovante.filename}', 'error')
+                        continue
+                    
+                    # Salvar comprovante
+                    arquivo_dados = comprovante.read()
+                    inserir_comprovante_caixa(
+                        movimentacao_id, 
+                        comprovante.filename,
+                        comprovante.content_type,
+                        arquivo_dados
+                    )
+            
+            flash(f'Movimentação de {tipo} registrada com sucesso!', 'success')
+            return redirect(url_for('caixa.caixa'))
+        
+        except Exception as e:
+            logger.error(f"Erro ao processar movimentação: {e}")
+            flash('Erro ao registrar movimentação', 'error')
+            return redirect(url_for('caixa.caixa'))
+    
     try:
-        logger.info("=== INICIANDO CAIXA ===")
-        logger.info(f"Usuário autenticado: {session['usuario']}")
-        
         # Obter saldo atual
-        logger.info("Tentando obter saldo do caixa...")
         saldo = obter_saldo_caixa()
-        logger.info(f"Saldo obtido com sucesso: {saldo}")
         
-        # Obter lista de pessoas cadastradas
-        logger.info("Tentando obter lista de pessoas cadastradas...")
+        # Obter pessoas cadastradas para o select
         pessoas = listar_cadastros_simples()
-        logger.info(f"Pessoas obtidas com sucesso: {len(pessoas)} registros")
         
         # Obter últimas movimentações
-        logger.info("Tentando obter últimas movimentações...")
         movimentacoes = listar_movimentacoes_caixa(limit=20)
-        logger.info(f"Movimentações obtidas com sucesso: {len(movimentacoes)} registros")
         
-        logger.info("Renderizando template caixa.html...")
         return render_template('caixa.html', 
-                            saldo=saldo, 
-                            pessoas=pessoas, 
-                            movimentacoes=movimentacoes)
+                             saldo=saldo, 
+                             pessoas=pessoas, 
+                             movimentacoes=movimentacoes)
     
     except Exception as e:
         logger.error(f"Erro ao carregar caixa: {e}")
-        logger.error(f"Tipo do erro: {type(e)}")
-        import traceback
-        logger.error(f"Traceback completo: {traceback.format_exc()}")
         flash('Erro ao carregar sistema de caixa', 'error')
         return redirect(url_for('dashboard.dashboard'))
 
-@caixa_bp.route('/caixa', methods=['POST'])
-def processar_movimentacao_caixa():
+@caixa_bp.route('/relatorio_caixa')
+def relatorio_caixa():
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        # Obter parâmetros de filtro
+        tipo = request.args.get('tipo', '')
+        data_inicio = request.args.get('data_inicio', '')
+        data_fim = request.args.get('data_fim', '')
+        
+        # Obter todas as movimentações (sem limite para relatório)
+        movimentacoes = listar_movimentacoes_caixa(limit=1000, tipo=tipo if tipo else None)
+        
+        # Calcular totais
+        total_entradas = sum(m['valor'] for m in movimentacoes if m['tipo'] == 'entrada')
+        total_saidas = sum(m['valor'] for m in movimentacoes if m['tipo'] == 'saida')
+        saldo_total = total_entradas - total_saidas
+        
+        return render_template('relatorio_caixa.html',
+                             movimentacoes=movimentacoes,
+                             total_entradas=total_entradas,
+                             total_saidas=total_saidas,
+                             saldo_total=saldo_total,
+                             filtro_tipo=tipo,
+                             filtro_data_inicio=data_inicio,
+                             filtro_data_fim=data_fim)
+    
+    except Exception as e:
+        logger.error(f"Erro ao gerar relatório de caixa: {e}")
+        flash('Erro ao gerar relatório', 'error')
+        return redirect(url_for('caixa.caixa'))
+
+@caixa_bp.route('/excluir_movimentacao/<int:movimentacao_id>')
+def excluir_movimentacao(movimentacao_id):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
     
     if not usuario_tem_permissao(session['usuario'], 'caixa'):
-        flash('Você não tem permissão para usar o sistema de caixa', 'error')
+        flash('Você não tem permissão para excluir movimentações', 'error')
         return redirect(url_for('dashboard.dashboard'))
     
     try:
-        # Obter dados do formulário
-        tipo = request.form.get('tipo')
-        valor = float(request.form.get('valor', 0))
-        descricao = request.form.get('descricao', '').strip()
-        cadastro_id = request.form.get('cadastro_id') or None
-        nome_pessoa = request.form.get('nome_pessoa', '').strip()
-        numero_recibo = request.form.get('numero_recibo', '').strip()
-        observacoes = request.form.get('observacoes', '').strip()
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
-        # Validações
-        if not descricao:
-            flash('Descrição é obrigatória', 'error')
+        # Buscar dados da movimentação para auditoria
+        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+        movimentacao = cursor.fetchone()
+        
+        if not movimentacao:
+            flash('Movimentação não encontrada', 'error')
             return redirect(url_for('caixa.caixa'))
         
-        if valor <= 0:
-            flash('Valor deve ser maior que zero', 'error')
-            return redirect(url_for('caixa.caixa'))
+        # Excluir movimentação (comprovantes são excluídos automaticamente por CASCADE)
+        cursor.execute('DELETE FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
         
-        # Inserir movimentação
-        movimentacao_id = inserir_movimentacao_caixa(
-            tipo, valor, descricao, cadastro_id, nome_pessoa, 
-            numero_recibo, observacoes, session['usuario']
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        # Registrar auditoria
+        registrar_auditoria(
+            session['usuario'], 'DELETE', 'movimentacoes_caixa', 
+            movimentacao_id, str(movimentacao), None
         )
         
-        # Processar comprovantes se houver
-        comprovantes = request.files.getlist('comprovantes')
-        logger.info(f"📎 Total de comprovantes recebidos: {len(comprovantes)}")
-        
-        for i, comprovante in enumerate(comprovantes):
-            logger.info(f"📎 Processando comprovante {i+1}: {comprovante.filename if comprovante else 'None'}")
-            
-            if comprovante and comprovante.filename:
-                logger.info(f"  ✅ Arquivo válido: {comprovante.filename}")
-                
-                # Validar tipo de arquivo
-                if not allowed_file(comprovante.filename):
-                    logger.warning(f"  ❌ Tipo não permitido: {comprovante.filename}")
-                    flash(f'Tipo de arquivo não permitido: {comprovante.filename}', 'error')
-                    continue
-                
-                logger.info(f"  ✅ Tipo permitido: {comprovante.filename}")
-                
-                # Validar tamanho (16MB máximo)
-                comprovante.seek(0, 2)  # Ir para o final
-                size = comprovante.tell()
-                comprovante.seek(0)  # Voltar ao início
-                
-                logger.info(f"  📏 Tamanho do arquivo: {size} bytes ({size/1024/1024:.2f} MB)")
-                
-                if size > 16 * 1024 * 1024:  # 16MB
-                    logger.warning(f"  ❌ Arquivo muito grande: {comprovante.filename}")
-                    flash(f'Arquivo muito grande: {comprovante.filename}', 'error')
-                    continue
-                
-                # Salvar comprovante
-                logger.info(f"  💾 Salvando comprovante: {comprovante.filename}")
-                arquivo_dados = comprovante.read()
-                inserir_comprovante_caixa(
-                    movimentacao_id, 
-                    comprovante.filename,
-                    comprovante.content_type,
-                    arquivo_dados
-                )
-                logger.info(f"  ✅ Comprovante salvo: {comprovante.filename}")
-            else:
-                logger.info(f"  ⚠️ Comprovante {i+1} vazio ou sem nome")
-        
-        flash(f'Movimentação de {tipo} registrada com sucesso!', 'success')
+        flash('Movimentação excluída com sucesso!', 'success')
         return redirect(url_for('caixa.caixa'))
     
     except Exception as e:
-        logger.error(f"Erro ao processar movimentação: {e}")
-        flash('Erro ao registrar movimentação', 'error')
+        logger.error(f"Erro ao excluir movimentação: {e}")
+        flash('Erro ao excluir movimentação', 'error')
         return redirect(url_for('caixa.caixa'))
 
-# Adicionar outras rotas do caixa aqui...
+@caixa_bp.route('/editar_movimentacao/<int:movimentacao_id>', methods=['GET', 'POST'])
+def editar_movimentacao(movimentacao_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    if not usuario_tem_permissao(session['usuario'], 'caixa'):
+        flash('Você não tem permissão para editar movimentações', 'error')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        if request.method == 'GET':
+            # Buscar dados da movimentação
+            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+            movimentacao = cursor.fetchone()
+            
+            if not movimentacao:
+                flash('Movimentação não encontrada', 'error')
+                return redirect(url_for('caixa.caixa'))
+            
+            # Buscar pessoas cadastradas
+            pessoas = listar_cadastros_simples()
+            
+            cursor.close()
+            conn.close()
+            
+            return render_template('editar_movimentacao.html', 
+                                 movimentacao=movimentacao, 
+                                 pessoas=pessoas)
+        
+        elif request.method == 'POST':
+            # Buscar dados atuais para auditoria
+            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+            dados_anteriores = cursor.fetchone()
+            
+            if not dados_anteriores:
+                flash('Movimentação não encontrada', 'error')
+                return redirect(url_for('caixa.caixa'))
+            
+            # Processar dados do formulário
+            tipo = request.form.get('tipo')
+            valor_str = request.form.get('valor', '0')
+            descricao = request.form.get('descricao', '').strip()
+            cadastro_id = request.form.get('cadastro_id')
+            nome_pessoa = request.form.get('nome_pessoa', '').strip()
+            numero_recibo = request.form.get('numero_recibo', '').strip()
+            observacoes = request.form.get('observacoes', '').strip()
+            
+            # Validações
+            if not descricao:
+                flash('Descrição é obrigatória', 'error')
+                return redirect(url_for('caixa.editar_movimentacao', movimentacao_id=movimentacao_id))
+            
+            try:
+                valor = float(valor_str)
+            except ValueError:
+                flash('Valor deve ser um número válido', 'error')
+                return redirect(url_for('caixa.editar_movimentacao', movimentacao_id=movimentacao_id))
+            
+            if valor <= 0:
+                flash('Valor deve ser maior que zero', 'error')
+                return redirect(url_for('caixa.editar_movimentacao', movimentacao_id=movimentacao_id))
+            
+            # Converter cadastro_id
+            if cadastro_id == '' or cadastro_id is None:
+                cadastro_id = None
+            else:
+                try:
+                    cadastro_id = int(cadastro_id)
+                except ValueError:
+                    cadastro_id = None
+            
+            # Atualizar movimentação
+            cursor.execute('''
+                UPDATE movimentacoes_caixa 
+                SET tipo = %s, valor = %s, descricao = %s, cadastro_id = %s, 
+                    nome_pessoa = %s, numero_recibo = %s, observacoes = %s
+                WHERE id = %s
+            ''', (tipo, valor, descricao, cadastro_id, nome_pessoa, 
+                  numero_recibo, observacoes, movimentacao_id))
+            
+            linhas_afetadas = cursor.rowcount
+            
+            if linhas_afetadas == 0:
+                flash('Erro ao atualizar movimentação', 'error')
+                return redirect(url_for('caixa.editar_movimentacao', movimentacao_id=movimentacao_id))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            # Registrar auditoria
+            registrar_auditoria(
+                session['usuario'], 'UPDATE', 'movimentacoes_caixa', 
+                movimentacao_id, str(dados_anteriores), 
+                f"Tipo: {tipo}, Valor: {valor}, Descrição: {descricao}"
+            )
+            
+            flash('Movimentação atualizada com sucesso!', 'success')
+            return redirect(url_for('caixa.caixa'))
+    
+    except Exception as e:
+        logger.error(f"Erro ao editar movimentação: {e}")
+        flash('Erro ao editar movimentação', 'error')
+        return redirect(url_for('caixa.caixa'))
 
 @caixa_bp.route('/visualizar_comprovantes/<int:movimentacao_id>')
 def visualizar_comprovantes(movimentacao_id):
@@ -174,8 +314,8 @@ def visualizar_comprovantes(movimentacao_id):
         conn.close()
         
         return render_template('visualizar_comprovantes.html', 
-                            movimentacao=movimentacao, 
-                            comprovantes=comprovantes)
+                             movimentacao=movimentacao, 
+                             comprovantes=comprovantes)
     
     except Exception as e:
         logger.error(f"Erro ao visualizar comprovantes: {e}")
@@ -286,122 +426,3 @@ def exportar_comprovantes_pdf(movimentacao_id):
         logger.error(f"Erro ao exportar comprovantes: {e}")
         flash('Erro ao exportar comprovantes', 'error')
         return redirect(url_for('caixa.caixa'))
-
-@caixa_bp.route('/editar_movimentacao/<int:movimentacao_id>', methods=['GET', 'POST'])
-def editar_movimentacao(movimentacao_id):
-    if 'usuario' not in session:
-        return redirect(url_for('auth.login'))
-    
-    if not usuario_tem_permissao(session['usuario'], 'caixa'):
-        flash('Você não tem permissão para editar movimentações', 'error')
-        return redirect(url_for('dashboard.dashboard'))
-    
-    if request.method == 'GET':
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            
-            # Buscar movimentação
-            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
-            movimentacao = cursor.fetchone()
-            
-            if not movimentacao:
-                flash('Movimentação não encontrada', 'error')
-                return redirect(url_for('caixa.caixa'))
-            
-            # Buscar pessoas para o select
-            pessoas = listar_cadastros_simples()
-            
-            cursor.close()
-            conn.close()
-            
-            return render_template('editar_movimentacao.html', 
-                                movimentacao=movimentacao, 
-                                pessoas=pessoas)
-        
-        except Exception as e:
-            logger.error(f"Erro ao carregar movimentação: {e}")
-            flash('Erro ao carregar movimentação', 'error')
-            return redirect(url_for('caixa.caixa'))
-    
-    # POST - Atualizar movimentação
-    try:
-        tipo = request.form.get('tipo')
-        valor_str = request.form.get('valor', '').replace(',', '.')
-        descricao = request.form.get('descricao', '').strip()
-        cadastro_id = request.form.get('cadastro_id')
-        
-        if not descricao:
-            flash('Descrição é obrigatória', 'error')
-            return redirect(url_for('caixa.editar_movimentacao', movimentacao_id=movimentacao_id))
-        
-        try:
-            valor = float(valor_str)
-        except ValueError:
-            flash('Valor deve ser um número válido', 'error')
-            return redirect(url_for('caixa.editar_movimentacao', movimentacao_id=movimentacao_id))
-        
-        if valor <= 0:
-            flash('Valor deve ser maior que zero', 'error')
-            return redirect(url_for('caixa.editar_movimentacao', movimentacao_id=movimentacao_id))
-        
-        cadastro_id = int(cadastro_id) if cadastro_id and cadastro_id != '' else None
-        
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE movimentacoes_caixa 
-            SET tipo = %s, valor = %s, descricao = %s, cadastro_id = %s
-            WHERE id = %s
-        ''', (tipo, valor, descricao, cadastro_id, movimentacao_id))
-        
-        if cursor.rowcount == 0:
-            flash('Erro ao atualizar movimentação', 'error')
-            return redirect(url_for('caixa.editar_movimentacao', movimentacao_id=movimentacao_id))
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        flash('Movimentação atualizada com sucesso!', 'success')
-        return redirect(url_for('caixa.caixa'))
-        
-    except Exception as e:
-        logger.error(f"Erro ao atualizar movimentação: {e}")
-        flash('Erro ao atualizar movimentação', 'error')
-        return redirect(url_for('caixa.caixa'))
-
-@caixa_bp.route('/excluir_movimentacao/<int:movimentacao_id>')
-def excluir_movimentacao(movimentacao_id):
-    if 'usuario' not in session:
-        return redirect(url_for('auth.login'))
-    
-    if not usuario_tem_permissao(session['usuario'], 'caixa'):
-        flash('Você não tem permissão para excluir movimentações', 'error')
-        return redirect(url_for('dashboard.dashboard'))
-    
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Excluir comprovantes primeiro
-        cursor.execute('DELETE FROM comprovantes_caixa WHERE movimentacao_id = %s', (movimentacao_id,))
-        
-        # Excluir movimentação
-        cursor.execute('DELETE FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
-        
-        if cursor.rowcount == 0:
-            flash('Movimentação não encontrada', 'error')
-        else:
-            conn.commit()
-            flash('Movimentação excluída com sucesso!', 'success')
-        
-        cursor.close()
-        conn.close()
-        
-    except Exception as e:
-        logger.error(f"Erro ao excluir movimentação: {e}")
-        flash('Erro ao excluir movimentação', 'error')
-    
-    return redirect(url_for('caixa.caixa'))

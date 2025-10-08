@@ -1,226 +1,183 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from database import get_db_connection, registrar_auditoria, usuario_tem_permissao, adicionar_permissao_usuario, obter_permissoes_usuario, remover_permissao_usuario
-from .utils import validar_senha
 from werkzeug.security import generate_password_hash, check_password_hash
 import psycopg2.extras
 import logging
+import traceback
+import re
 
 logger = logging.getLogger(__name__)
 
 usuarios_bp = Blueprint('usuarios', __name__)
 
+def is_admin_user(username):
+    """Verifica se o usuário tem privilégios de administrador"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (username,))
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if result:
+            tipo = result[0] if isinstance(result, tuple) else result.get('tipo', 'usuario')
+            return tipo == 'admin'
+        return username == 'admin'  # Fallback para compatibilidade
+    except Exception as e:
+        logger.error(f"Erro ao verificar admin: {e}")
+        return username == 'admin'  # Fallback para compatibilidade
+
+def validar_senha(senha):
+    """Valida se a senha atende aos requisitos de segurança"""
+    if len(senha) < 8:
+        return False, "Senha deve ter pelo menos 8 caracteres"
+    
+    if not re.search(r'[A-Z]', senha):
+        return False, "Senha deve conter pelo menos uma letra maiúscula"
+    
+    if not re.search(r'[a-z]', senha):
+        return False, "Senha deve conter pelo menos uma letra minúscula"
+    
+    if not re.search(r'[0-9]', senha):
+        return False, "Senha deve conter pelo menos um número"
+    
+    return True, "Senha válida"
+
 @usuarios_bp.route('/usuarios')
 def usuarios():
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
+    if not is_admin_user(session['usuario']):
+        flash('Acesso negado! Apenas administradores podem gerenciar usuários.')
+        return redirect(url_for('dashboard.dashboard'))
     
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute('SELECT id, usuario, tipo FROM usuarios ORDER BY usuario')
+        cursor.execute('SELECT id, usuario, COALESCE(tipo, \'usuario\') as tipo FROM usuarios ORDER BY usuario')
         usuarios_lista = cursor.fetchall()
         
         cursor.close()
         conn.close()
         
         return render_template('usuarios.html', usuarios=usuarios_lista)
-    
+        
     except Exception as e:
-        logger.error(f"Erro ao listar usuários: {e}")
-        flash('Erro ao carregar usuários', 'error')
-        return redirect(url_for('dashboard.dashboard'))
+        logger.error(f"Erro ao carregar usuários: {e}")
+        flash('Erro ao carregar lista de usuários.')
+        return render_template('usuarios.html', usuarios=[])
 
 @usuarios_bp.route('/criar_usuario', methods=['GET', 'POST'])
 def criar_usuario():
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
+    if session['usuario'] != 'admin':
+        flash('Acesso negado! Apenas administradores podem criar usuários.')
+        return redirect(url_for('dashboard.dashboard'))
     
-    if request.method == 'POST':
-        try:
-            usuario = request.form['usuario'].strip()
-            senha = request.form['senha']
-            tipo = request.form['tipo']
-            
-            # Validações
-            senha_valida, mensagem = validar_senha(senha)
-            if not senha_valida:
-                flash(f'Erro na senha: {mensagem}', 'error')
-                return render_template('criar_usuario.html')
-            
-            # Hash da senha
-            senha_hash = generate_password_hash(senha)
-            
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            
-            # Verificar se usuário já existe
-            cursor.execute('SELECT id FROM usuarios WHERE usuario = %s', (usuario,))
-            if cursor.fetchone():
-                flash('Usuário já existe', 'error')
-                cursor.close()
-                conn.close()
-                return render_template('criar_usuario.html')
-            
-            # Inserir usuário
-            cursor.execute('''
-                INSERT INTO usuarios (usuario, senha, tipo) 
-                VALUES (%s, %s, %s) RETURNING id
-            ''', (usuario, senha_hash, tipo))
-            
-            usuario_id = cursor.fetchone()[0]
-            conn.commit()
-            cursor.close()
-            conn.close()
-            
-            # Registrar auditoria
-            registrar_auditoria(
-                session['usuario'], 'INSERT', 'usuarios', usuario_id,
-                None, f"Usuário criado: {usuario} (tipo: {tipo})"
-            )
-            
-            flash('Usuário criado com sucesso!', 'success')
-            return redirect(url_for('usuarios.usuarios'))
-            
-        except Exception as e:
-            logger.error(f"Erro ao criar usuário: {e}")
-            flash('Erro ao criar usuário', 'error')
+    if request.method == 'GET':
+        return render_template('criar_usuario.html')
     
-    return render_template('criar_usuario.html')
-
-@usuarios_bp.route('/editar_usuario/<int:usuario_id>', methods=['GET', 'POST'])
-def editar_usuario(usuario_id):
-    if 'usuario' not in session:
-        return redirect(url_for('auth.login'))
+    # POST
+    novo_usuario = request.form['usuario']
+    nova_senha = request.form['senha']
+    tipo_usuario = request.form.get('tipo', 'usuario')
+    
+    # Validar senha
+    senha_valida, mensagem = validar_senha(nova_senha)
+    if not senha_valida:
+        flash(f'Erro na senha: {mensagem}')
+        return redirect(url_for('usuarios.criar_usuario'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
+        # Verificar se usuário já existe
+        cursor.execute('SELECT id FROM usuarios WHERE usuario = %s', (novo_usuario,))
+        existing_user = cursor.fetchone()
         
-        if request.method == 'GET':
-            # Buscar dados do usuário
-            cursor.execute('SELECT id, usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
-            usuario_data = cursor.fetchone()
-            
-            if not usuario_data:
-                flash('Usuário não encontrado', 'error')
-                return redirect(url_for('usuarios.usuarios'))
-            
-            # Buscar permissões
-            permissoes = obter_permissoes_usuario(usuario_data[1])
-            
+        if existing_user:
+            flash(f'Usuário "{novo_usuario}" já existe!')
             cursor.close()
             conn.close()
-            
-            return render_template('editar_usuario.html', 
-                                usuario_data=usuario_data, 
-                                permissoes=permissoes)
-        
-        elif request.method == 'POST':
-            # Buscar dados atuais
-            cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
-            dados_anteriores = cursor.fetchone()
-            
-            if not dados_anteriores:
-                flash('Usuário não encontrado', 'error')
-                return redirect(url_for('usuarios.usuarios'))
-            
-            # Proteção especial para admin ID 1
-            if usuario_id == 1 and session['usuario'] != dados_anteriores[0]:
-                flash('Apenas o próprio admin pode modificar sua conta', 'error')
-                return redirect(url_for('usuarios.usuarios'))
-            
-            # Atualizar dados básicos se fornecidos
-            if 'tipo' in request.form and dados_anteriores[1] != request.form['tipo']:
-                if usuario_id == 1:
-                    flash('Não é possível alterar o tipo do admin principal', 'error')
-                else:
-                    cursor.execute('UPDATE usuarios SET tipo = %s WHERE id = %s', 
-                                (request.form['tipo'], usuario_id))
-            
-            # Atualizar senha se fornecida
-            if 'nova_senha' in request.form and request.form['nova_senha']:
-                nova_senha = request.form['nova_senha']
-                senha_valida, mensagem = validar_senha(nova_senha)
-                if senha_valida:
-                    senha_hash = generate_password_hash(nova_senha)
-                    cursor.execute('UPDATE usuarios SET senha = %s WHERE id = %s', 
-                                (senha_hash, usuario_id))
-                else:
-                    flash(f'Erro na nova senha: {mensagem}', 'error')
-            
-            # Gerenciar permissões
-            if 'permissoes' in request.form:
-                permissoes_atuais = obter_permissoes_usuario(dados_anteriores[0])
-                permissoes_novas = request.form.getlist('permissoes')
-                
-                # Remover permissões que não estão mais selecionadas
-                for perm in permissoes_atuais:
-                    if perm not in permissoes_novas:
-                        remover_permissao_usuario(dados_anteriores[0], perm)
-                
-                # Adicionar novas permissões
-                for perm in permissoes_novas:
-                    if perm not in permissoes_atuais:
-                        adicionar_permissao_usuario(dados_anteriores[0], perm)
-            
-            conn.commit()
-            cursor.close()
-            conn.close()
-            
-            # Registrar auditoria
-            registrar_auditoria(
-                session['usuario'], 'UPDATE', 'usuarios', usuario_id,
-                str(dados_anteriores), f"Usuário atualizado: {dados_anteriores[0]}"
-            )
-            
-            flash('Usuário atualizado com sucesso!', 'success')
             return redirect(url_for('usuarios.usuarios'))
-    
+        
+        senha_hash = generate_password_hash(nova_senha)
+        
+        # No Railway sempre será PostgreSQL
+        cursor.execute('INSERT INTO usuarios (usuario, senha, tipo) VALUES (%s, %s, %s) RETURNING id', (novo_usuario, senha_hash, tipo_usuario))
+        usuario_id = cursor.fetchone()[0]
+        
+        # Processar permissões adicionais
+        permissoes = request.form.getlist('permissoes')
+        
+        for permissao in permissoes:
+            adicionar_permissao_usuario(usuario_id, permissao)
+        
+        conn.commit()
+        flash('Usuário criado com sucesso!')
     except Exception as e:
-        logger.error(f"Erro ao editar usuário: {e}")
-        flash('Erro ao editar usuário', 'error')
-        return redirect(url_for('usuarios.usuarios'))
+        logger.error(f"Erro ao criar usuário: {e}")
+        flash(f'Erro ao criar usuário: {str(e)}')
+    
+    cursor.close()
+    conn.close()
+    return redirect(url_for('usuarios.usuarios'))
 
 @usuarios_bp.route('/excluir_usuario/<int:usuario_id>')
 def excluir_usuario(usuario_id):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
+    if not is_admin_user(session['usuario']):
+        flash('Acesso negado! Apenas administradores podem excluir usuários.')
+        return redirect(url_for('dashboard.dashboard'))
     
-    # Proteção: não permitir exclusão do admin ID 1
+    # Proteção especial para admin ID 1
     if usuario_id == 1:
-        flash('Não é possível excluir o usuário admin principal', 'error')
+        flash('Erro! O usuário admin principal (ID 1) não pode ser excluído.')
         return redirect(url_for('usuarios.usuarios'))
     
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Buscar dados do usuário para auditoria
-        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
-        usuario_data = cursor.fetchone()
+        # Verificar se é o admin
+        cursor.execute('SELECT usuario FROM usuarios WHERE id = %s', (usuario_id,))
+        user_data = cursor.fetchone()
         
-        if not usuario_data:
-            flash('Usuário não encontrado', 'error')
+        if not user_data:
+            flash('Usuário não encontrado!')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('usuarios.usuarios'))
+        
+        username = user_data[0] if isinstance(user_data, tuple) else user_data['usuario']
+        
+        if username == 'admin':
+            flash('Não é possível excluir o usuário admin!')
+            cursor.close()
+            conn.close()
             return redirect(url_for('usuarios.usuarios'))
         
         # Excluir usuário
         cursor.execute('DELETE FROM usuarios WHERE id = %s', (usuario_id,))
-        conn.commit()
+        usuarios_deletados = cursor.rowcount
+        
+        if usuarios_deletados > 0:
+            conn.commit()
+            flash(f'Usuário "{username}" excluído com sucesso!')
+        else:
+            flash('Erro: Usuário não foi excluído.')
+        
         cursor.close()
         conn.close()
         
-        # Registrar auditoria
-        registrar_auditoria(
-            session['usuario'], 'DELETE', 'usuarios', usuario_id,
-            str(usuario_data), f"Usuário excluído: {usuario_data[0]}"
-        )
-        
-        flash('Usuário excluído com sucesso!', 'success')
-        
     except Exception as e:
         logger.error(f"Erro ao excluir usuário: {e}")
-        flash('Erro ao excluir usuário', 'error')
+        flash(f'Erro ao excluir usuário: {str(e)}')
     
     return redirect(url_for('usuarios.usuarios'))
 
@@ -228,22 +185,13 @@ def excluir_usuario(usuario_id):
 def promover_usuario(usuario_id):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
-    
-    # Verificar se é admin
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (session['usuario'],))
-    user_type = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    
-    if not user_type or user_type[0] != 'admin':
-        flash('Acesso negado! Apenas administradores podem promover usuários.', 'error')
+    if not is_admin_user(session['usuario']):
+        flash('Acesso negado! Apenas administradores podem promover usuários.')
         return redirect(url_for('dashboard.dashboard'))
     
     # Proteção especial para admin ID 1
     if usuario_id == 1:
-        flash('O usuário admin principal (ID 1) já possui privilégios máximos.', 'warning')
+        flash('O usuário admin principal (ID 1) já possui privilégios máximos.')
         return redirect(url_for('usuarios.usuarios'))
     
     try:
@@ -255,7 +203,7 @@ def promover_usuario(usuario_id):
         user_data = cursor.fetchone()
         
         if not user_data:
-            flash('Usuário não encontrado!', 'error')
+            flash('Usuário não encontrado!')
             cursor.close()
             conn.close()
             return redirect(url_for('usuarios.usuarios'))
@@ -264,23 +212,27 @@ def promover_usuario(usuario_id):
         tipo_atual = user_data[1] if len(user_data) > 1 else 'usuario'
         
         if tipo_atual == 'admin':
-            flash(f'Usuário "{username}" já é administrador!', 'warning')
+            flash(f'Usuário "{username}" já é administrador!')
             cursor.close()
             conn.close()
             return redirect(url_for('usuarios.usuarios'))
         
         # Promover usuário a admin
         cursor.execute('UPDATE usuarios SET tipo = %s WHERE id = %s', ('admin', usuario_id))
-        conn.commit()
+        usuarios_atualizados = cursor.rowcount
         
-        flash(f'Usuário "{username}" promovido a administrador com sucesso!', 'success')
+        if usuarios_atualizados > 0:
+            conn.commit()
+            flash(f'Usuário "{username}" promovido a administrador com sucesso!')
+        else:
+            flash('Erro: Usuário não foi promovido.')
         
         cursor.close()
         conn.close()
         
     except Exception as e:
-        logger.error(f"Erro ao promover usuário ID {usuario_id}: {e}")
-        flash(f'Erro ao promover usuário: {str(e)}', 'error')
+        logger.error(f"Erro ao promover usuário: {e}")
+        flash(f'Erro ao promover usuário: {str(e)}')
     
     return redirect(url_for('usuarios.usuarios'))
 
@@ -288,22 +240,13 @@ def promover_usuario(usuario_id):
 def rebaixar_usuario(usuario_id):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
-    
-    # Verificar se é admin
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (session['usuario'],))
-    user_type = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    
-    if not user_type or user_type[0] != 'admin':
-        flash('Acesso negado! Apenas administradores podem rebaixar usuários.', 'error')
+    if not is_admin_user(session['usuario']):
+        flash('Acesso negado! Apenas administradores podem rebaixar usuários.')
         return redirect(url_for('dashboard.dashboard'))
     
     # Proteção especial para admin ID 1
     if usuario_id == 1:
-        flash('Erro! O usuário admin principal (ID 1) não pode ser rebaixado.', 'error')
+        flash('Erro! O usuário admin principal (ID 1) não pode ser rebaixado.')
         return redirect(url_for('usuarios.usuarios'))
     
     try:
@@ -315,7 +258,7 @@ def rebaixar_usuario(usuario_id):
         user_data = cursor.fetchone()
         
         if not user_data:
-            flash('Usuário não encontrado!', 'error')
+            flash('Usuário não encontrado!')
             cursor.close()
             conn.close()
             return redirect(url_for('usuarios.usuarios'))
@@ -324,104 +267,139 @@ def rebaixar_usuario(usuario_id):
         tipo_atual = user_data[1] if len(user_data) > 1 else 'usuario'
         
         if username == 'admin':
-            flash('Não é possível rebaixar o usuário admin principal!', 'error')
+            flash('Não é possível rebaixar o usuário admin principal!')
             cursor.close()
             conn.close()
             return redirect(url_for('usuarios.usuarios'))
         
         if tipo_atual == 'usuario':
-            flash(f'Usuário "{username}" já é usuário comum!', 'warning')
+            flash(f'Usuário "{username}" já é usuário comum!')
             cursor.close()
             conn.close()
             return redirect(url_for('usuarios.usuarios'))
         
-        # Rebaixar usuário
+        # Rebaixar usuário para comum
         cursor.execute('UPDATE usuarios SET tipo = %s WHERE id = %s', ('usuario', usuario_id))
-        conn.commit()
+        usuarios_atualizados = cursor.rowcount
         
-        flash(f'Usuário "{username}" rebaixado para usuário comum com sucesso!', 'success')
+        if usuarios_atualizados > 0:
+            conn.commit()
+            flash(f'Usuário "{username}" rebaixado a usuário comum!')
+        else:
+            flash('Erro: Usuário não foi rebaixado.')
         
         cursor.close()
         conn.close()
         
     except Exception as e:
-        logger.error(f"Erro ao rebaixar usuário ID {usuario_id}: {e}")
-        flash(f'Erro ao rebaixar usuário: {str(e)}', 'error')
+        logger.error(f"Erro ao rebaixar usuário: {e}")
+        flash(f'Erro ao rebaixar usuário: {str(e)}')
     
     return redirect(url_for('usuarios.usuarios'))
 
-@usuarios_bp.route('/admin/reset')
-def admin_reset():
+@usuarios_bp.route('/editar_usuario/<int:usuario_id>', methods=['GET', 'POST'])
+def editar_usuario(usuario_id):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
-    
-    # Verificar se é o admin ID 1
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario'],))
-    admin_check = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    
-    if not admin_check:
-        flash('Acesso negado! Apenas o admin principal pode acessar esta funcionalidade.', 'error')
+    if not is_admin_user(session['usuario']):
+        flash('Acesso negado! Apenas administradores podem editar usuários.')
         return redirect(url_for('dashboard.dashboard'))
     
-    return render_template('admin_reset.html')
-
-@usuarios_bp.route('/admin/reset/execute', methods=['POST'])
-def admin_reset_execute():
-    if 'usuario' not in session:
-        return redirect(url_for('auth.login'))
-    
-    # Verificar se é o admin ID 1
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario'],))
-    admin_check = cursor.fetchone()
-    
-    if not admin_check:
+    # Proteção especial para admin ID 1
+    if usuario_id == 1:
+        # Buscar dados do usuário admin para verificar
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT usuario FROM usuarios WHERE id = 1')
+        admin_data = cursor.fetchone()
         cursor.close()
         conn.close()
-        flash('Acesso negado! Apenas o admin principal pode executar o reset.', 'error')
-        return redirect(url_for('dashboard.dashboard'))
+        
+        if admin_data and session['usuario'] != admin_data[0]:
+            flash('Acesso negado! Apenas o próprio usuário admin pode alterar sua senha.')
+            return redirect(url_for('usuarios.usuarios'))
     
     try:
-        logger.warning(f"🚨 RESET INICIADO pelo admin ID 1: {session['usuario']}")
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
-        # Zerar tabelas (mantém estrutura)
-        cursor.execute('TRUNCATE TABLE arquivos_saude RESTART IDENTITY CASCADE')
-        cursor.execute('TRUNCATE TABLE auditoria RESTART IDENTITY CASCADE')
-        cursor.execute('TRUNCATE TABLE cadastros RESTART IDENTITY CASCADE')
+        if request.method == 'GET':
+            # Buscar dados do usuário
+            cursor.execute('SELECT id, usuario, COALESCE(tipo, \'usuario\') as tipo FROM usuarios WHERE id = %s', (usuario_id,))
+            user_data = cursor.fetchone()
+            
+            if not user_data:
+                flash('Usuário não encontrado!')
+                cursor.close()
+                conn.close()
+                return redirect(url_for('usuarios.usuarios'))
+            
+            # Buscar permissões do usuário
+            permissoes_usuario = obter_permissoes_usuario(usuario_id)
+            
+            cursor.close()
+            conn.close()
+            return render_template('editar_usuario.html', 
+                                 usuario=user_data, 
+                                 permissoes_usuario=permissoes_usuario)
         
-        # Resetar sequences manualmente (garantia)
-        cursor.execute('ALTER SEQUENCE arquivos_saude_id_seq RESTART WITH 1')
-        cursor.execute('ALTER SEQUENCE auditoria_id_seq RESTART WITH 1')
-        cursor.execute('ALTER SEQUENCE cadastros_id_seq RESTART WITH 1')
-        
-        conn.commit()
-        
-        # Registrar auditoria do reset
-        registrar_auditoria(
-            usuario=session['usuario'],
-            acao='RESET',
-            tabela='SISTEMA',
-            dados_novos='Reset completo das tabelas: cadastros, arquivos_saude, auditoria',
-            ip_address=request.remote_addr,
-            user_agent=request.headers.get('User-Agent')
-        )
-        
-        logger.warning(f"✅ RESET CONCLUÍDO pelo admin ID 1: {session['usuario']}")
-        flash('Reset executado com sucesso! Todas as tabelas foram zeradas e contadores reiniciados.', 'success')
-        
+        elif request.method == 'POST':
+            # Processar edição
+            novo_tipo = request.form.get('tipo', 'usuario')
+            nova_senha = request.form.get('nova_senha', '').strip()
+            
+            # Buscar dados atuais
+            cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
+            user_data = cursor.fetchone()
+            
+            if not user_data:
+                flash('Usuário não encontrado!')
+                cursor.close()
+                conn.close()
+                return redirect(url_for('usuarios.usuarios'))
+            
+            username = user_data[0]
+            
+            # Proteger admin principal
+            if username == 'admin' and novo_tipo != 'admin':
+                flash('Não é possível alterar o tipo do usuário admin principal!')
+                cursor.close()
+                conn.close()
+                return redirect(url_for('usuarios.usuarios'))
+            
+            # Atualizar tipo
+            cursor.execute('UPDATE usuarios SET tipo = %s WHERE id = %s', (novo_tipo, usuario_id))
+            
+            # Processar permissões adicionais
+            permissoes_atuais = obter_permissoes_usuario(usuario_id)
+            permissoes_novas = request.form.getlist('permissoes')
+            
+            # Remover permissões que não estão mais selecionadas
+            for permissao in permissoes_atuais:
+                if permissao not in permissoes_novas:
+                    remover_permissao_usuario(usuario_id, permissao)
+            
+            # Adicionar novas permissões
+            for permissao in permissoes_novas:
+                if permissao not in permissoes_atuais:
+                    adicionar_permissao_usuario(usuario_id, permissao)
+            
+            # Atualizar senha se fornecida
+            if nova_senha:
+                senha_hash = generate_password_hash(nova_senha)
+                cursor.execute('UPDATE usuarios SET senha = %s WHERE id = %s', (senha_hash, usuario_id))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            flash(f'Usuário "{username}" atualizado com sucesso!')
+            return redirect(url_for('usuarios.usuarios'))
+            
     except Exception as e:
-        logger.error(f"❌ Erro durante reset: {e}")
-        flash(f'Erro durante reset: {str(e)}', 'error')
-        conn.rollback()
-    
-    cursor.close()
-    conn.close()
-    return redirect(url_for('usuarios.admin_reset'))
+        logger.error(f"Erro ao editar usuário: {e}")
+        flash(f'Erro ao editar usuário: {str(e)}')
+        return redirect(url_for('usuarios.usuarios'))
 
 @usuarios_bp.route('/auditoria')
 def auditoria():
@@ -429,15 +407,8 @@ def auditoria():
         return redirect(url_for('auth.login'))
     
     # Verificar se é admin
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (session['usuario'],))
-    user_type = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    
-    if not user_type or user_type[0] != 'admin':
-        flash('Acesso negado. Apenas administradores podem acessar a auditoria.', 'error')
+    if session.get('tipo') != 'admin':
+        flash('Acesso negado. Apenas administradores podem acessar a auditoria.')
         return redirect(url_for('dashboard.dashboard'))
     
     try:
@@ -524,13 +495,86 @@ def auditoria():
         conn.close()
         
         return render_template('auditoria.html', 
-                            auditorias=auditorias,
-                            stats=stats,
-                            page=page,
-                            total_pages=total_pages,
-                            query_params=query_params)
+                             auditorias=auditorias,
+                             stats=stats,
+                             page=page,
+                             total_pages=total_pages,
+                             query_params=query_params)
         
     except Exception as e:
         logger.error(f"Erro ao carregar auditoria: {e}")
-        flash('Erro ao carregar dados de auditoria.', 'error')
+        flash('Erro ao carregar dados de auditoria.')
         return redirect(url_for('dashboard.dashboard'))
+
+@usuarios_bp.route('/admin/reset')
+def admin_reset():
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    # Verificar se é o admin ID 1
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario'],))
+    admin_check = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
+    if not admin_check:
+        flash('Acesso negado! Apenas o admin principal pode acessar esta funcionalidade.')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    return render_template('admin_reset.html')
+
+@usuarios_bp.route('/admin/reset/execute', methods=['POST'])
+def admin_reset_execute():
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    # Verificar se é o admin ID 1
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario'],))
+    admin_check = cursor.fetchone()
+    
+    if not admin_check:
+        cursor.close()
+        conn.close()
+        flash('Acesso negado! Apenas o admin principal pode executar o reset.')
+        return redirect(url_for('dashboard.dashboard'))
+    
+    try:
+        logger.warning(f"🚨 RESET INICIADO pelo admin ID 1: {session['usuario']}")
+        
+        # Zerar tabelas (mantém estrutura)
+        cursor.execute('TRUNCATE TABLE arquivos_saude RESTART IDENTITY CASCADE')
+        cursor.execute('TRUNCATE TABLE auditoria RESTART IDENTITY CASCADE')
+        cursor.execute('TRUNCATE TABLE cadastros RESTART IDENTITY CASCADE')
+        
+        # Resetar sequences manualmente (garantia)
+        cursor.execute('ALTER SEQUENCE arquivos_saude_id_seq RESTART WITH 1')
+        cursor.execute('ALTER SEQUENCE auditoria_id_seq RESTART WITH 1')
+        cursor.execute('ALTER SEQUENCE cadastros_id_seq RESTART WITH 1')
+        
+        conn.commit()
+        
+        # Registrar auditoria do reset
+        registrar_auditoria(
+            usuario=session['usuario'],
+            acao='RESET',
+            tabela='SISTEMA',
+            dados_novos='Reset completo das tabelas: cadastros, arquivos_saude, auditoria',
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent')
+        )
+        
+        logger.warning(f"✅ RESET CONCLUÍDO pelo admin ID 1: {session['usuario']}")
+        flash('Reset executado com sucesso! Todas as tabelas foram zeradas e contadores reiniciados.')
+        
+    except Exception as e:
+        logger.error(f"Erro durante reset: {e}")
+        flash(f'Erro durante reset: {str(e)}')
+        conn.rollback()
+    
+    cursor.close()
+    conn.close()
+    return redirect(url_for('usuarios.admin_reset'))
