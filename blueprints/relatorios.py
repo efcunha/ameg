@@ -50,7 +50,7 @@ def relatorio_completo():
         
         # Contar total de registros
         cursor.execute('SELECT COUNT(*) FROM cadastros')
-        total_records = cursor.fetchone()[0]
+        total_records = safe_get(cursor.fetchone(), 0, 0)
         total_pages = (total_records + per_page - 1) // per_page
         
         # Buscar cadastros paginados
@@ -106,7 +106,7 @@ def relatorio_estatistico():
         
         # Estatísticas gerais
         cursor.execute('SELECT COUNT(*) FROM cadastros')
-        total = cursor.fetchone()[0]
+        total = safe_get(cursor.fetchone(), 0, 0)
         
         # Por bairro
         cursor.execute('SELECT bairro, COUNT(*) FROM cadastros GROUP BY bairro ORDER BY COUNT(*) DESC')
@@ -449,17 +449,17 @@ def exportar():
             writer.writerow(['=== POR BAIRRO ==='])
             writer.writerow(['Bairro', 'Total'])
             for row in dados['por_bairro']:
-                writer.writerow([row[0] or 'Não informado', row[1]])
+                writer.writerow([safe_get(row, 0) or 'Não informado', safe_get(row, 1)])
             writer.writerow([''])
             writer.writerow(['=== POR GÊNERO ==='])
             writer.writerow(['Gênero', 'Total'])
             for row in dados['por_genero']:
-                writer.writerow([row[0] or 'Não informado', row[1]])
+                writer.writerow([safe_get(row, 0) or 'Não informado', safe_get(row, 1)])
             writer.writerow([''])
             writer.writerow(['=== POR FAIXA ETÁRIA ==='])
             writer.writerow(['Faixa Etária', 'Total'])
             for row in dados['por_idade']:
-                writer.writerow([row[0] or 'Não informado', row[1]])
+                writer.writerow([safe_get(row, 0) or 'Não informado', safe_get(row, 1)])
         elif tipo == 'bairro':
             writer.writerow(['Bairro', 'Total de Cadastros', 'Renda Média'])
         elif tipo == 'renda':
@@ -468,12 +468,12 @@ def exportar():
             writer.writerow(['=== POR FAIXA DE RENDA ==='])
             writer.writerow(['Faixa de Renda', 'Total de Cadastros'])
             for row in dados['faixas_renda']:
-                writer.writerow([row[0] or 'Não informado', row[1]])
+                writer.writerow([safe_get(row, 0) or 'Não informado', safe_get(row, 1)])
             writer.writerow([''])
             writer.writerow(['=== RENDA POR BAIRRO ==='])
             writer.writerow(['Bairro', 'Renda Média', 'Total de Cadastros'])
             for row in dados['renda_bairro']:
-                writer.writerow([row[0] or 'Não informado', f"R$ {row[1]:.2f}" if row[1] else 'Não informado', row[2]])
+                writer.writerow([safe_get(row, 0) or 'Não informado', f"R$ {safe_get(row, 1):.2f}" if safe_get(row, 1) else 'Não informado', safe_get(row, 2)])
         elif tipo == 'caixa':
             writer.writerow(['ID', 'Tipo', 'Valor', 'Descrição', 'Titular Cadastro', 'Nome Pessoa', 
                            'Número Recibo', 'Observações', 'Data', 'Usuário'])
@@ -718,11 +718,11 @@ def exportar():
                 try:
                     # Tentar como tupla primeiro
                     if isinstance(row, (tuple, list)) and len(row) > 40:
-                        nome = str(row[1]) if len(row) > 1 else ''
-                        telefone = str(row[7]) if len(row) > 7 else ''
-                        bairro = str(row[4]) if len(row) > 4 else ''
-                        cpf = str(row[14]) if len(row) > 14 else ''
-                        renda = f"R$ {row[41]:.2f}" if len(row) > 41 and row[41] else 'Não informado'
+                        nome = str(safe_get(row, 1)) if len(row) > 1 else ''
+                        telefone = str(safe_get(row, 7)) if len(row) > 7 else ''
+                        bairro = str(safe_get(row, 4)) if len(row) > 4 else ''
+                        cpf = str(safe_get(row, 14)) if len(row) > 14 else ''
+                        renda = f"R$ {safe_get(row, 41):.2f}" if len(row) > 41 and safe_get(row, 41) else 'Não informado'
                     else:
                         # Tentar como dicionário
                         nome = str(row.get('nome_completo', ''))
