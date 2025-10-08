@@ -10,9 +10,13 @@ def login_required(f):
     """Decorator para verificar se usuário está logado"""
     def decorated_function(*args, **kwargs):
         logger.info(f"🔐 Verificando login para {f.__name__}")
-        if 'user_id' not in session:
+        logger.info(f"📋 Session keys: {list(session.keys())}")
+        logger.info(f"👤 Usuario na session: {session.get('usuario', 'NONE')}")
+        
+        if 'usuario' not in session:
             logger.warning("❌ Usuário não logado, redirecionando para login")
             return redirect(url_for('auth.login'))
+        
         logger.info(f"✅ Usuário logado: {session.get('usuario', 'unknown')}")
         return f(*args, **kwargs)
     decorated_function.__name__ = f.__name__
@@ -57,7 +61,8 @@ def charts_page():
     """Página principal dos gráficos"""
     logger.info("🎯 ACESSANDO PÁGINA DE GRÁFICOS")
     logger.info(f"👤 Usuário: {session.get('usuario', 'unknown')}")
-    logger.info(f"🆔 User ID: {session.get('user_id', 'unknown')}")
+    logger.info(f"🔑 Tipo: {session.get('tipo', 'unknown')}")
+    logger.info(f"📋 Session completa: {dict(session)}")
     
     try:
         logger.info("🎨 Renderizando template charts.html")
