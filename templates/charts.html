@@ -36,7 +36,7 @@
         <a href="/dashboard">Dashboard</a>
         <a href="/cadastrar">Novo Cadastro</a>
         <a href="/relatorios">Relatórios</a>
-        <a href="/charts" class="active">📊 Gráficos</a>
+        <a href="/charts">📊 Gráficos</a>
         {% if tem_permissao_caixa %}
         <a href="/caixa">💰 Caixa</a>
         {% endif %}
@@ -136,5 +136,6 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/charts.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/nav-active.js') }}"></script>
 </body>
 </html>
