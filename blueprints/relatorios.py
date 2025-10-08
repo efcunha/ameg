@@ -334,7 +334,7 @@ def exportar():
     elif tipo == 'estatistico':
         # Buscar dados estatísticos exatamente como no backup
         cursor.execute('SELECT COUNT(*) FROM cadastros')
-        total = cursor.fetchone()[0]
+        total = safe_get(cursor.fetchone(), 0, 0)
         
         cursor.execute('SELECT bairro, COUNT(*) FROM cadastros WHERE bairro IS NOT NULL GROUP BY bairro ORDER BY COUNT(*) DESC')
         por_bairro = cursor.fetchall()
