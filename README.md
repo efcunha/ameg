@@ -86,8 +86,7 @@ git push origin main
 
 ```
 ameg/
-├── app.py                        # 🆕 Orquestrador principal (arquitetura blueprints)
-├── app.py.backup                 # Backup da versão monolítica anterior
+├── app.py                        # 🆕 Orquestrador principal (127 linhas)
 ├── database.py                   # Módulo PostgreSQL + security manager
 ├── security.py                   # Sistema de segurança avançado
 ├── generate_admin_credentials.py # Gerador de credenciais seguras
@@ -95,10 +94,13 @@ ameg/
 ├── SECURITY.md                   # Documentação de segurança
 ├── DOCUMENTACAO_APP.md           # Documentação técnica detalhada
 ├── SISTEMA_CAIXA.md              # Documentação do sistema financeiro
+├── ANALISE_SEGURANCA.md          # Análise completa de segurança
+├── ANALISE_DOCUMENTACAO.md       # Análise da documentação
 ├── Dockerfile                    # Container para Railway
 ├── start.sh                      # Script de inicialização
 ├── railway.toml                  # Configuração Railway
 ├── .env.secure                   # Credenciais locais (não commitado)
+├── .env.example                  # Exemplo de configuração
 ├── .gitignore                    # Arquivos protegidos
 ├── blueprints/                   # 🆕 ARQUITETURA MODULAR
 │   ├── __init__.py               # Inicialização dos blueprints
@@ -124,6 +126,7 @@ ameg/
 │   ├── editar_usuario.html       # Edição de usuários
 │   ├── auditoria.html            # Sistema de auditoria
 │   ├── admin_reset.html          # Reset administrativo
+│   ├── caixa.html                # Sistema de caixa
 │   └── ficha.html                # Ficha individual completa
 ├── static/                       # Arquivos estáticos otimizados
 │   ├── css/
