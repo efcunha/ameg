@@ -4,6 +4,13 @@ import psycopg2.extras
 import csv
 import io
 import logging
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from docx import Document
+from docx.shared import Inches
 
 logger = logging.getLogger(__name__)
 
@@ -394,6 +401,90 @@ def exportar():
             mimetype='text/csv',
             as_attachment=True,
             download_name=f'{filename}.csv'
+        )
+    
+    elif formato == 'pdf':
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Título
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            spaceAfter=30,
+            alignment=1  # Center
+        )
+        
+        if tipo == 'completo':
+            if cadastro_id:
+                elements.append(Paragraph(f"Ficha Individual - Cadastro {cadastro_id}", title_style))
+            else:
+                elements.append(Paragraph("Relatório Completo de Cadastros", title_style))
+        elif tipo == 'simplificado':
+            elements.append(Paragraph("Relatório Simplificado", title_style))
+        elif tipo == 'caixa':
+            elements.append(Paragraph("Relatório de Movimentações do Caixa", title_style))
+        
+        elements.append(Spacer(1, 12))
+        
+        # Preparar dados para tabela
+        if tipo == 'simplificado':
+            table_data = [['Nome', 'Telefone', 'Bairro', 'Renda Familiar']]
+            for row in dados:
+                table_data.append([
+                    str(row['nome_completo'] or ''),
+                    str(row['telefone'] or ''),
+                    str(row['bairro'] or ''),
+                    f"R$ {row['renda_familiar']:.2f}" if row['renda_familiar'] else ''
+                ])
+        elif tipo == 'caixa':
+            table_data = [['Tipo', 'Valor', 'Descrição', 'Data']]
+            for row in dados:
+                table_data.append([
+                    str(row['tipo'].title() if row['tipo'] else ''),
+                    f"R$ {row['valor']:.2f}" if row['valor'] else '',
+                    str(row['descricao'] or ''),
+                    row['data_movimentacao'].strftime('%d/%m/%Y') if row['data_movimentacao'] else ''
+                ])
+        else:
+            # Relatório completo
+            table_data = [['Nome', 'Telefone', 'Bairro', 'CPF', 'Renda']]
+            for row in dados:
+                table_data.append([
+                    str(row['nome_completo'] or ''),
+                    str(row['telefone'] or ''),
+                    str(row['bairro'] or ''),
+                    str(row['cpf'] or ''),
+                    f"R$ {row['renda_familiar']:.2f}" if row['renda_familiar'] else ''
+                ])
+        
+        # Criar tabela
+        table = Table(table_data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        elements.append(table)
+        doc.build(elements)
+        
+        buffer.seek(0)
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'{filename}.pdf'
         )
     
     # Fallback - não deveria chegar aqui
