@@ -89,11 +89,23 @@ def demografia_data():
             END as faixa,
             COUNT(*) as total
         FROM cadastros 
-        WHERE data_nascimento IS NOT NULL AND data_nascimento != ''
+        WHERE data_nascimento IS NOT NULL 
+        AND data_nascimento != '' 
+        AND data_nascimento ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
         GROUP BY faixa
         ORDER BY faixa
         """
         idade_data = execute_query(idade_query)
+        
+        # Se não há dados de idade válidos, criar dados alternativos
+        if not idade_data:
+            logger.info("🔄 Sem dados de idade válidos, usando contagem total")
+            idade_fallback_query = """
+            SELECT 'Dados disponíveis' as faixa, COUNT(*) as total
+            FROM cadastros
+            """
+            idade_data = execute_query(idade_fallback_query)
+        
         logger.info(f"✅ Dados de idade obtidos: {len(idade_data)} registros")
         
         # Bairros
@@ -205,18 +217,30 @@ def socioeconomico_data():
         renda_query = """
         SELECT 
             CASE 
-                WHEN CAST(renda_familiar AS FLOAT) < 1000 THEN 'Até R$ 1.000'
-                WHEN CAST(renda_familiar AS FLOAT) < 2000 THEN 'R$ 1.000 - R$ 2.000'
-                WHEN CAST(renda_familiar AS FLOAT) < 3000 THEN 'R$ 2.000 - R$ 3.000'
+                WHEN renda_familiar::numeric < 1000 THEN 'Até R$ 1.000'
+                WHEN renda_familiar::numeric < 2000 THEN 'R$ 1.000 - R$ 2.000'
+                WHEN renda_familiar::numeric < 3000 THEN 'R$ 2.000 - R$ 3.000'
                 ELSE 'Acima R$ 3.000'
             END as faixa_renda,
             COUNT(*) as total
         FROM cadastros 
-        WHERE renda_familiar IS NOT NULL AND renda_familiar != '' AND renda_familiar ~ '^[0-9.]+$'
+        WHERE renda_familiar IS NOT NULL 
+        AND renda_familiar != '' 
+        AND renda_familiar ~ '^[0-9]+\.?[0-9]*$'
         GROUP BY faixa_renda
         ORDER BY total DESC
         """
         renda_data = execute_query(renda_query)
+        
+        # Se não há dados de renda válidos, criar dados alternativos
+        if not renda_data:
+            logger.info("🔄 Sem dados de renda válidos, usando contagem total")
+            renda_fallback_query = """
+            SELECT 'Dados disponíveis' as faixa_renda, COUNT(*) as total
+            FROM cadastros
+            """
+            renda_data = execute_query(renda_fallback_query)
+        
         logger.info(f"✅ Dados de renda obtidos: {len(renda_data)} registros")
         
         # Tipos de moradia
