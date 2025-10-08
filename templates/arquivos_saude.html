@@ -49,6 +49,7 @@
         <div class="upload-card">
             <h3>📤 Enviar Novo Arquivo</h3>
             <form method="POST" action="/upload_arquivo/{{ cadastro_id }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div style="display: flex; gap: 20px; align-items: end;">
                     <div class="form-group" style="flex: 2;">
                         <label>Arquivo:</label>

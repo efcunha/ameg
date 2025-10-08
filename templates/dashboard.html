@@ -99,6 +99,7 @@
                         <div class="action-buttons">
                             <a href="/editar_cadastro/{{ cadastro[0] }}" style="background: #f39c12; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; margin-right: 5px;">✏️ Editar</a>
                             <form method="POST" action="/deletar_cadastro/{{ cadastro[0] }}" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja deletar este cadastro?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                 <button type="submit" style="background: #e74c3c; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">🗑️ Deletar</button>
                             </form>
                         </div>

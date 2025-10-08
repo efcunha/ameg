@@ -100,6 +100,7 @@
                 <h3 style="color: #dc3545; margin-top: 0;">🚨 ZONA DE PERIGO</h3>
                 
                 <form method="POST" action="/admin/reset/execute" id="resetForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="confirmation">
                         <input type="checkbox" id="confirm1" required>
                         <label for="confirm1">Confirmo que entendo que esta ação é IRREVERSÍVEL</label>

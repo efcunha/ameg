@@ -82,6 +82,7 @@
             </div>
             
             <form method="POST" action="/atualizar_cadastro/{{ cadastro.id }}" enctype="multipart/form-data" id="editarForm" onsubmit="return validarFormulario(event)">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="foto_base64" id="fotoBase64" value="{{ cadastro.foto_base64 or '' }}">
                 <h3 style="text-align: center;">1. DADOS DO TITULAR</h3>
                 

@@ -82,6 +82,7 @@
             </div>
             
             <form method="POST" enctype="multipart/form-data" id="cadastroForm" onsubmit="return validarFormulario(event)">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="foto_base64" id="fotoBase64">
                 <h3 style="text-align: center;">1. DADOS DO TITULAR</h3>
                 
