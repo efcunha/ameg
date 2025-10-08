@@ -903,35 +903,35 @@ def exportar():
                 ]))
                 elements.append(table)
             elif tipo == 'saude':
-                table_data = [['Nome Completo', 'Pessoa', 'Idade', 'Tel.', 'Bairro', 'Condições de Saúde']]
+                table_data = [['Nome Completo', 'Pessoa', 'Idade', 'Telefone', 'Bairro', 'Condições de Saúde']]
                 for row in dados:
                     # Montar condições de saúde de forma mais compacta
                     condicoes = []
                     if safe_get(row, 'tem_doenca_cronica') == 'Sim':
                         doencas = safe_get(row, 'doencas_cronicas', '')
                         if doencas:
-                            condicoes.append(f"Doença: {doencas[:30]}...")
+                            condicoes.append(f"Doença: {doencas[:40]}")
                         else:
                             condicoes.append("Doença Crônica")
                     
                     if safe_get(row, 'usa_medicamento_continuo') == 'Sim':
                         medicamentos = safe_get(row, 'medicamentos', '')
                         if medicamentos:
-                            condicoes.append(f"Medicamento: {medicamentos[:25]}...")
+                            condicoes.append(f"Medicamento: {medicamentos[:35]}")
                         else:
                             condicoes.append("Medicamento Contínuo")
                     
                     if safe_get(row, 'tem_doenca_mental') == 'Sim':
                         doencas_mentais = safe_get(row, 'doencas_mentais', '')
                         if doencas_mentais:
-                            condicoes.append(f"Mental: {doencas_mentais[:20]}...")
+                            condicoes.append(f"Mental: {doencas_mentais[:30]}")
                         else:
                             condicoes.append("Doença Mental")
                     
                     if safe_get(row, 'tem_deficiencia') == 'Sim':
                         deficiencias = safe_get(row, 'deficiencias', '')
                         if deficiencias:
-                            condicoes.append(f"Deficiência: {deficiencias[:20]}...")
+                            condicoes.append(f"Deficiência: {deficiencias[:30]}")
                         else:
                             condicoes.append("Deficiência")
                     
@@ -941,11 +941,11 @@ def exportar():
                     # Quebrar condições em múltiplas linhas se necessário
                     condicoes_texto = "\n".join(condicoes) if condicoes else "Nenhuma"
                     
-                    # Limitar tamanhos dos textos
-                    nome = str(safe_get(row, 'nome_completo', ''))[:25]
-                    pessoa = str(safe_get(row, 'nome_pessoa', ''))[:20]
-                    telefone = str(safe_get(row, 'telefone', ''))[:12]
-                    bairro = str(safe_get(row, 'bairro', ''))[:15]
+                    # Não limitar tanto os textos
+                    nome = str(safe_get(row, 'nome_completo', ''))[:35]
+                    pessoa = str(safe_get(row, 'nome_pessoa', ''))[:25]
+                    telefone = str(safe_get(row, 'telefone', ''))
+                    bairro = str(safe_get(row, 'bairro', ''))[:20]
                     
                     table_data.append([
                         nome,
@@ -956,26 +956,26 @@ def exportar():
                         condicoes_texto
                     ])
                 
-                # Criar e adicionar tabela com larguras ajustadas
-                table = Table(table_data, colWidths=[100, 80, 25, 50, 60, 200])
+                # Criar e adicionar tabela com larguras maiores
+                table = Table(table_data, colWidths=[130, 90, 30, 70, 80, 160])
                 table.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                     ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 9),
-                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-                    ('TOPPADDING', (0, 0), (-1, 0), 8),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                    ('TOPPADDING', (0, 0), (-1, 0), 10),
                     ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                     ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 1), (-1, -1), 8),
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),
                     ('GRID', (0, 0), (-1, -1), 1, colors.black),
                     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                     ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                    ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-                    ('TOPPADDING', (0, 1), (-1, -1), 6),
-                    ('BOTTOMPADDING', (0, 1), (-1, -1), 6)
+                    ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                    ('TOPPADDING', (0, 1), (-1, -1), 8),
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), 8)
                 ]))
                 elements.append(table)
             elif tipo == 'simplificado':
