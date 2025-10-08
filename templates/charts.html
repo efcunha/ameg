@@ -1,28 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AMEG - Gráficos Interativos</title>
+    <title>AMEG - Gráficos</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/mobile.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         body { font-family: Arial; margin: 0; background: #f4f4f4; }
         .header { background: #2c3e50; color: white; padding: 20px; }
         .nav { background: #34495e; padding: 15px; }
         .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
         .nav a:hover { background: #2980b9; }
-        .nav a.active { background: #e74c3c; }
         .container { padding: 20px; }
         .logout { float: right; }
-        .section-title { 
-            color: #2c3e50; 
-            border-left: 4px solid #3498db; 
-            padding-left: 15px; 
-            margin: 30px 0 20px 0; 
-            font-size: 24px; 
-        }
     </style>
 </head>
 <body>
@@ -36,7 +25,7 @@
         <a href="/dashboard">Dashboard</a>
         <a href="/cadastrar">Novo Cadastro</a>
         <a href="/relatorios">Relatórios</a>
-        <a href="/charts">📊 Gráficos</a>
+        <a href="/charts" style="background: #e74c3c;">📊 Gráficos</a>
         {% if tem_permissao_caixa %}
         <a href="/caixa">💰 Caixa</a>
         {% endif %}
@@ -44,98 +33,108 @@
         {% if is_admin_user(session.usuario) %}
         <a href="/usuarios">👥 Usuários</a>
         <a href="/auditoria">🔍 Auditoria</a>
-        {% if session.usuario == 'admin' %}
-        <a href="/admin/reset" style="background: #dc3545;">⚠️ Reset</a>
-        {% endif %}
         {% endif %}
     </div>
 
-    <div class="container">
-        <!-- Filtros -->
-        <div class="filters">
-            <div class="filter-group">
-                <label>Período:</label>
-                <select id="filtro-periodo">
-                    <option value="todos">Todos os períodos</option>
-                    <option value="6m">Últimos 6 meses</option>
-                    <option value="1a">Último ano</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Bairro:</label>
-                <select id="filtro-bairro">
-                    <option value="todos">Todos os bairros</option>
-                </select>
-            </div>
-            <button onclick="aplicarFiltros()" class="btn-primary">Aplicar Filtros</button>
-        </div>
-
-        <!-- Demografia -->
-        <h2 class="section-title">👥 Demografia dos Cadastrados</h2>
-        <div class="charts-container">
-            <div class="chart-card">
-                <div class="chart-title">Distribuição por Faixa Etária</div>
-                <canvas id="idadeChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <div class="chart-title">Top 10 Bairros</div>
-                <canvas id="bairrosChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <div class="chart-title">Evolução de Cadastros (12 meses)</div>
-                <canvas id="evolucaoChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Saúde -->
-        <h2 class="section-title">🏥 Dados de Saúde</h2>
-        <div class="charts-container">
-            <div class="chart-card">
-                <div class="chart-title">Doenças Crônicas Mais Comuns</div>
-                <canvas id="doencasChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <div class="chart-title">Medicamentos Mais Utilizados</div>
-                <canvas id="medicamentosChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <div class="chart-title">Tipos de Deficiência</div>
-                <canvas id="deficienciasChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Socioeconômico -->
-        <h2 class="section-title">💰 Situação Socioeconômica</h2>
-        <div class="charts-container">
-            <div class="chart-card">
-                <div class="chart-title">Distribuição de Renda Familiar</div>
-                <canvas id="rendaChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <div class="chart-title">Tipos de Moradia</div>
-                <canvas id="moradiaChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <div class="chart-title">Benefícios Sociais</div>
-                <canvas id="beneficiosChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Trabalho -->
-        <h2 class="section-title">💼 Dados de Trabalho</h2>
-        <div class="charts-container">
-            <div class="chart-card">
-                <div class="chart-title">Tipos de Trabalho</div>
-                <canvas id="tiposTrabalhoChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <div class="chart-title">Locais de Trabalho</div>
-                <canvas id="locaisTrabalhoChart"></canvas>
-            </div>
+    <div class="container" id="main-container">
+        <div style="text-align: center; padding: 50px;">
+            <h2>📊 Carregando Gráficos...</h2>
+            <p>Aguarde enquanto os dados são processados.</p>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/charts-clean.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/nav-active.js') }}"></script>
+    <script>
+        console.log('🚀 INICIANDO GRÁFICOS ÚNICOS');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(loadCharts, 1000);
+        });
+        
+        async function loadCharts() {
+            try {
+                console.log('📡 Buscando dados...');
+                const response = await fetch('/api/charts/demografia?periodo=todos&bairro=todos');
+                const data = await response.json();
+                
+                console.log('📦 Dados:', data);
+                
+                const container = document.getElementById('main-container');
+                container.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 15px; margin-bottom: 30px; text-align: center;">
+                        <h1 style="color: white; margin: 0; font-size: 2.5em;">📊 Dashboard AMEG</h1>
+                        <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Dados em Tempo Real</p>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+                        
+                        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1);">
+                            <h3 style="color: #3498db; margin-bottom: 20px;">👥 Faixa Etária</h3>
+                            ${createBars(data.idade, 'faixa', 'total', '#3498db')}
+                        </div>
+                        
+                        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1);">
+                            <h3 style="color: #e74c3c; margin-bottom: 20px;">🏘️ Bairros</h3>
+                            ${createBars(data.bairros, 'bairro', 'total', '#e74c3c')}
+                        </div>
+                        
+                        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); grid-column: 1 / -1;">
+                            <h3 style="color: #27ae60; margin-bottom: 20px;">📈 Evolução</h3>
+                            ${createBars(data.evolucao, 'mes', 'total', '#27ae60')}
+                        </div>
+                        
+                    </div>
+                    
+                    <div style="margin-top: 30px; padding: 20px; background: #2ecc71; border-radius: 10px; color: white; text-align: center;">
+                        <strong>✅ Gráficos Carregados!</strong> • Total: ${getTotalCount(data)} cadastros
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                document.getElementById('main-container').innerHTML = `
+                    <div style="background: #f8d7da; color: #721c24; padding: 20px; border-radius: 10px; text-align: center;">
+                        <h3>❌ Erro ao Carregar</h3>
+                        <p>${error.message}</p>
+                        <button onclick="loadCharts()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px;">Tentar Novamente</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function createBars(data, labelKey, valueKey, color) {
+            if (!data || data.length === 0) return '<p>Nenhum dado</p>';
+            
+            const max = Math.max(...data.map(d => d[valueKey]));
+            let html = '';
+            
+            data.forEach(item => {
+                const percent = (item[valueKey] / max) * 100;
+                html += `
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span><strong>${item[labelKey]}</strong></span>
+                            <span style="color: ${color}; font-weight: bold;">${item[valueKey]}</span>
+                        </div>
+                        <div style="background: #f0f0f0; height: 15px; border-radius: 8px;">
+                            <div style="background: ${color}; height: 100%; width: ${percent}%; border-radius: 8px; transition: width 0.5s;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            return html;
+        }
+        
+        function getTotalCount(data) {
+            if (data.idade && data.idade.length > 0) {
+                return data.idade.reduce((sum, item) => sum + item.total, 0);
+            }
+            return 0;
+        }
+        
+        function aplicarFiltros() {
+            loadCharts();
+        }
+    </script>
 </body>
 </html>
