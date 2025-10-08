@@ -1,22 +1,51 @@
 from flask import Flask, request
 from flask_compress import Compress
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from database import init_db_tables, create_admin_user, get_db_connection
 import os
 import gzip
 import logging
 from datetime import datetime
 
-# Configurar logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configurar logging seguro
+logging.basicConfig(
+    level=logging.INFO if os.environ.get('RAILWAY_ENVIRONMENT') else logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
+
+# Filtro para remover dados sensíveis dos logs
+class SensitiveDataFilter(logging.Filter):
+    def filter(self, record):
+        if hasattr(record, 'msg'):
+            # Remover senhas, CPFs, etc dos logs
+            sensitive_patterns = ['senha', 'password', 'cpf', 'rg']
+            msg = str(record.msg).lower()
+            for pattern in sensitive_patterns:
+                if pattern in msg:
+                    record.msg = record.msg.replace(record.msg, '[DADOS SENSÍVEIS REMOVIDOS]')
+        return True
+
+logger.addFilter(SensitiveDataFilter())
 
 # Criar aplicação Flask
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'ameg_secret_2024_fallback_key_change_in_production')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
-# Configurar compressão
+# Configurar compressão, CSRF e rate limiting
 Compress(app)
+csrf = CSRFProtect(app)
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 # Função helper para verificar se usuário é admin
 def is_admin_user(username):
@@ -63,6 +92,7 @@ app.register_blueprint(caixa_bp)
 if os.getenv('API_ENABLED', 'false').lower() == 'true':
     from blueprints.api import api_bp
     app.register_blueprint(api_bp)
+    csrf.exempt(api_bp)  # API usa JWT, não CSRF
     logger.info("🔌 API REST habilitada em /api/v1")
 
 # Headers de segurança
@@ -72,6 +102,22 @@ def add_security_headers(response):
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    # Content Security Policy
+    csp = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: blob:; "
+        "font-src 'self'; "
+        "connect-src 'self'; "
+        "media-src 'self'; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self'"
+    )
+    response.headers['Content-Security-Policy'] = csp
+    
     return response
 
 # Cache para arquivos estáticos

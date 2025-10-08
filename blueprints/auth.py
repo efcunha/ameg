@@ -1,11 +1,16 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_from_directory
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_from_directory, current_app
 from database import get_db_connection, registrar_auditoria
 from werkzeug.security import check_password_hash
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import logging
 
 logger = logging.getLogger(__name__)
 
 auth_bp = Blueprint('auth', __name__)
+
+# Rate limiter para este blueprint
+limiter = Limiter(key_func=get_remote_address)
 
 @auth_bp.route('/logo')
 def logo():
@@ -23,6 +28,7 @@ def login():
     return render_template('login.html')
 
 @auth_bp.route('/login', methods=['POST'])
+@limiter.limit("5 per minute")  # Máximo 5 tentativas por minuto
 def fazer_login():
     usuario = request.form['usuario']
     senha = request.form['senha']
