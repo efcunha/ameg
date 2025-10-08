@@ -341,10 +341,10 @@ def socioeconomico_data():
         # Benefícios sociais
         logger.info("🎁 Executando query de benefícios sociais...")
         beneficios_query = f"""
-        SELECT beneficios_sociais, COUNT(*) as total
+        SELECT fonte_renda_beneficio_social, COUNT(*) as total
         FROM cadastros 
-        {where_clause} AND beneficios_sociais IS NOT NULL AND beneficios_sociais != ''
-        GROUP BY beneficios_sociais
+        {where_clause} AND fonte_renda_beneficio_social IS NOT NULL AND fonte_renda_beneficio_social != ''
+        GROUP BY fonte_renda_beneficio_social
         ORDER BY total DESC
         """
         beneficios_data = execute_query(beneficios_query)
