@@ -449,17 +449,17 @@ def exportar():
             writer.writerow(['=== POR BAIRRO ==='])
             writer.writerow(['Bairro', 'Total'])
             for row in dados['por_bairro']:
-                writer.writerow([safe_get(row, 0) or 'Não informado', safe_get(row, 1)])
+                writer.writerow([row['bairro'] or 'Não informado', row['count']])
             writer.writerow([''])
             writer.writerow(['=== POR GÊNERO ==='])
             writer.writerow(['Gênero', 'Total'])
             for row in dados['por_genero']:
-                writer.writerow([safe_get(row, 0) or 'Não informado', safe_get(row, 1)])
+                writer.writerow([row['genero'] or 'Não informado', row['count']])
             writer.writerow([''])
             writer.writerow(['=== POR FAIXA ETÁRIA ==='])
             writer.writerow(['Faixa Etária', 'Total'])
             for row in dados['por_idade']:
-                writer.writerow([safe_get(row, 0) or 'Não informado', safe_get(row, 1)])
+                writer.writerow([row['faixa_etaria'] or 'Não informado', row['count']])
         elif tipo == 'bairro':
             writer.writerow(['Bairro', 'Total de Cadastros', 'Renda Média'])
         elif tipo == 'renda':
@@ -468,12 +468,12 @@ def exportar():
             writer.writerow(['=== POR FAIXA DE RENDA ==='])
             writer.writerow(['Faixa de Renda', 'Total de Cadastros'])
             for row in dados['faixas_renda']:
-                writer.writerow([safe_get(row, 0) or 'Não informado', safe_get(row, 1)])
+                writer.writerow([row['faixa_renda'] or 'Não informado', row['count']])
             writer.writerow([''])
             writer.writerow(['=== RENDA POR BAIRRO ==='])
             writer.writerow(['Bairro', 'Renda Média', 'Total de Cadastros'])
             for row in dados['renda_bairro']:
-                writer.writerow([safe_get(row, 0) or 'Não informado', f"R$ {safe_get(row, 1):.2f}" if safe_get(row, 1) else 'Não informado', safe_get(row, 2)])
+                writer.writerow([row['bairro'] or 'Não informado', f"R$ {row['renda_media']:.2f}" if row['renda_media'] else 'Não informado', row['total']])
         elif tipo == 'caixa':
             writer.writerow(['ID', 'Tipo', 'Valor', 'Descrição', 'Titular Cadastro', 'Nome Pessoa', 
                            'Número Recibo', 'Observações', 'Data', 'Usuário'])
@@ -498,10 +498,10 @@ def exportar():
         for row in dados:
             if tipo == 'simplificado':
                 writer.writerow([
-                    safe_get(row, 0),
-                    safe_get(row, 1),
-                    safe_get(row, 2),
-                    f"R$ {safe_get(row, 3):.2f}" if safe_get(row, 3) else 'Não informado'
+                    row['nome_completo'] or '',
+                    row['telefone'] or '',
+                    row['bairro'] or '',
+                    f"R$ {row['renda_familiar']:.2f}" if row['renda_familiar'] else 'Não informado'
                 ])
             elif tipo == 'bairro':
                 writer.writerow([
@@ -579,8 +579,8 @@ def exportar():
             table_data = [['Faixa de Renda', 'Total de Cadastros']]
             for row in dados['faixas_renda']:
                 table_data.append([
-                    str(safe_get(row, 0) or 'Não informado'),
-                    str(safe_get(row, 1) or '0')
+                    str(row['faixa_renda'] or 'Não informado'),
+                    str(row['count'] or '0')
                 ])
             
             table = Table(table_data)
@@ -603,9 +603,9 @@ def exportar():
             table_data = [['Bairro', 'Renda Média', 'Total de Cadastros']]
             for row in dados['renda_bairro']:
                 table_data.append([
-                    str(safe_get(row, 0) or 'Não informado'),
-                    f"R$ {safe_get(row, 1):.2f}" if safe_get(row, 1) else 'Não informado',
-                    str(safe_get(row, 2) or '0')
+                    str(row['bairro'] or 'Não informado'),
+                    f"R$ {row['renda_media']:.2f}" if row['renda_media'] else 'Não informado',
+                    str(row['total'] or '0')
                 ])
             
             table = Table(table_data)
@@ -630,7 +630,7 @@ def exportar():
             
             bairro_data = [['Bairro', 'Total']]
             for row in dados['por_bairro']:
-                bairro_data.append([str(safe_get(row, 0) or 'Não informado'), str(safe_get(row, 1))])
+                bairro_data.append([str(row['bairro'] or 'Não informado'), str(row['count'])])
             
             bairro_table = Table(bairro_data)
             bairro_table.setStyle(TableStyle([
@@ -650,7 +650,7 @@ def exportar():
             
             genero_data = [['Gênero', 'Total']]
             for row in dados['por_genero']:
-                genero_data.append([str(safe_get(row, 0) or 'Não informado'), str(safe_get(row, 1))])
+                genero_data.append([str(row['genero'] or 'Não informado'), str(row['count'])])
             
             genero_table = Table(genero_data)
             genero_table.setStyle(TableStyle([
@@ -670,7 +670,7 @@ def exportar():
             
             idade_data = [['Faixa Etária', 'Total']]
             for row in dados['por_idade']:
-                idade_data.append([str(safe_get(row, 0) or 'Não informado'), str(safe_get(row, 1))])
+                idade_data.append([str(row['faixa_etaria'] or 'Não informado'), str(row['count'])])
             
             idade_table = Table(idade_data)
             idade_table.setStyle(TableStyle([
@@ -686,21 +686,21 @@ def exportar():
         else:
             # Para todos os outros tipos (simplificado, bairro, completo, caixa)
             if tipo == 'simplificado':
-                table_data = [['Nome', 'Telefone', 'Bairro', 'Renda Familiar']]
+                table_data = [['Nome', 'Telefone', 'Bairro', 'Renda']]
                 for row in dados:
                     table_data.append([
-                        str(safe_get(row, 0) or ''),
-                        str(safe_get(row, 1) or ''),
-                        str(safe_get(row, 2) or ''),
-                        f"R$ {safe_get(row, 3):.2f}" if safe_get(row, 3) else ''
+                        str(row['nome_completo'] or ''),
+                        str(row['telefone'] or ''),
+                        str(row['bairro'] or ''),
+                        f"R$ {row['renda_familiar'] or '0'}" if row['renda_familiar'] else 'Não informado'
                     ])
             elif tipo == 'bairro':
                 table_data = [['Bairro', 'Total de Cadastros', 'Renda Média']]
                 for row in dados:
                     table_data.append([
-                        str(safe_get(row, 0) or 'Não informado'),
-                        str(safe_get(row, 1) or '0'),
-                        f"R$ {safe_get(row, 2):.2f}" if safe_get(row, 2) else 'Não informado'
+                        str(row['bairro'] or 'Não informado'),
+                        str(row['total'] or '0'),
+                        f"R$ {row['renda_media']:.2f}" if row['renda_media'] else 'Não informado'
                     ])
             elif tipo == 'caixa':
                 table_data = [['Tipo', 'Valor', 'Descrição', 'Data']]
