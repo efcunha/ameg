@@ -553,7 +553,8 @@ def exportar():
         
         if tipo == 'completo':
             if cadastro_id:
-                elements.append(Paragraph(f"Ficha Individual - Cadastro {cadastro_id}", title_style))
+                # Não adicionar título aqui, será adicionado no loop individual
+                pass
             else:
                 elements.append(Paragraph("Relatório Completo de Cadastros", title_style))
         elif tipo == 'estatistico':
