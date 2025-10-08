@@ -346,7 +346,7 @@ DATABASE_URL=<configurada_automaticamente>
 ### **Fase 3 - Funcionalidades Avançadas**
 - [ ] Dashboard com gráficos interativos
 - [ ] Notificações em tempo real
-- [ ] API REST para integração
+- [X] API REST para integração
 - [ ] Backup automático de arquivos
 
 ### **Fase 4 - Escalabilidade**
