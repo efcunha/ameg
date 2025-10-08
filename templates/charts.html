@@ -1,17 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AMEG - Gráficos</title>
+    <title>AMEG - Gráficos Interativos</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
-        body { font-family: Arial; margin: 0; background: #f4f4f4; }
-        .header { background: #2c3e50; color: white; padding: 20px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f8f9fa; }
+        .header { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 20px; }
         .nav { background: #34495e; padding: 15px; }
-        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
-        .nav a:hover { background: #2980b9; }
-        .container { padding: 20px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 8px; transition: all 0.3s; }
+        .nav a:hover { background: #2980b9; transform: translateY(-2px); }
+        .nav a.active { background: #e74c3c; }
+        .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
         .logout { float: right; }
+        .filters { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+        .filter-group { display: flex; flex-direction: column; }
+        .filter-group label { font-weight: 600; color: #2c3e50; margin-bottom: 5px; }
+        .filter-group select { padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; }
+        .btn-primary { background: linear-gradient(45deg, #3498db, #2980b9); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4); }
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin-bottom: 30px; }
+        .chart-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
+        .chart-title { font-size: 1.3em; font-weight: 600; color: #2c3e50; margin-bottom: 20px; display: flex; align-items: center; }
+        .chart-icon { background: linear-gradient(45deg, #3498db, #2980b9); color: white; padding: 8px; border-radius: 50%; margin-right: 12px; font-size: 0.9em; }
+        .full-width { grid-column: 1 / -1; }
     </style>
 </head>
 <body>
@@ -25,7 +38,7 @@
         <a href="/dashboard">Dashboard</a>
         <a href="/cadastrar">Novo Cadastro</a>
         <a href="/relatorios">Relatórios</a>
-        <a href="/charts" style="background: #e74c3c;">📊 Gráficos</a>
+        <a href="/charts" class="active">📊 Gráficos</a>
         {% if tem_permissao_caixa %}
         <a href="/caixa">💰 Caixa</a>
         {% endif %}
@@ -36,104 +49,237 @@
         {% endif %}
     </div>
 
-    <div class="container" id="main-container">
-        <div style="text-align: center; padding: 50px;">
-            <h2>📊 Carregando Gráficos...</h2>
-            <p>Aguarde enquanto os dados são processados.</p>
+    <div class="container">
+        <!-- Filtros -->
+        <div class="filters">
+            <div class="filter-group">
+                <label>📅 Período:</label>
+                <select id="filtro-periodo">
+                    <option value="todos">Todos os períodos</option>
+                    <option value="6m">Últimos 6 meses</option>
+                    <option value="1a">Último ano</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>🏘️ Bairro:</label>
+                <select id="filtro-bairro">
+                    <option value="todos">Todos os bairros</option>
+                </select>
+            </div>
+            <button onclick="aplicarFiltros()" class="btn-primary">🔄 Aplicar Filtros</button>
+        </div>
+
+        <!-- Header do Dashboard -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 15px; margin-bottom: 30px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">📊 Dashboard Interativo AMEG</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 1.2em;" id="dashboard-subtitle">Carregando dados...</p>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="charts-grid">
+            <!-- Faixa Etária -->
+            <div class="chart-card">
+                <div class="chart-title">
+                    <span class="chart-icon" style="background: linear-gradient(45deg, #FF6B6B, #FF5252);">👥</span>
+                    Distribuição por Faixa Etária
+                </div>
+                <canvas id="idadeChart" style="max-height: 300px;"></canvas>
+            </div>
+
+            <!-- Bairros -->
+            <div class="chart-card">
+                <div class="chart-title">
+                    <span class="chart-icon" style="background: linear-gradient(45deg, #4ECDC4, #26C6DA);">🏘️</span>
+                    Top Bairros
+                </div>
+                <canvas id="bairrosChart" style="max-height: 300px;"></canvas>
+            </div>
+
+            <!-- Evolução -->
+            <div class="chart-card full-width">
+                <div class="chart-title">
+                    <span class="chart-icon" style="background: linear-gradient(45deg, #45B7D1, #2196F3);">📈</span>
+                    Evolução de Cadastros
+                </div>
+                <canvas id="evolucaoChart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div id="status-message" style="margin-top: 30px; padding: 20px; background: #d4edda; border-radius: 10px; color: #155724; text-align: center; display: none;">
+            <strong>✅ Gráficos Carregados com Sucesso!</strong><br>
+            <span>Dados atualizados em tempo real • Clique nos gráficos para interagir</span>
         </div>
     </div>
 
     <script>
-        console.log('🚀 INICIANDO GRÁFICOS ÚNICOS');
+        console.log('🚀 INICIANDO GRÁFICOS INTERATIVOS MODERNOS');
+        
+        let charts = {};
         
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(loadCharts, 1000);
+            loadFilterOptions();
+            setTimeout(loadAllCharts, 1000);
         });
         
-        async function loadCharts() {
+        async function loadFilterOptions() {
             try {
-                console.log('📡 Buscando dados...');
-                const response = await fetch('/api/charts/demografia?periodo=todos&bairro=todos');
+                const response = await fetch('/api/charts/filters');
                 const data = await response.json();
                 
-                console.log('📦 Dados:', data);
+                const bairroSelect = document.getElementById('filtro-bairro');
+                data.bairros.forEach(bairro => {
+                    const option = document.createElement('option');
+                    option.value = bairro.value;
+                    option.textContent = bairro.label;
+                    bairroSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar filtros:', error);
+            }
+        }
+        
+        async function loadAllCharts() {
+            try {
+                const periodo = document.getElementById('filtro-periodo').value;
+                const bairro = document.getElementById('filtro-bairro').value;
                 
-                const container = document.getElementById('main-container');
-                container.innerHTML = `
-                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 15px; margin-bottom: 30px; text-align: center;">
-                        <h1 style="color: white; margin: 0; font-size: 2.5em;">📊 Dashboard AMEG</h1>
-                        <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Dados em Tempo Real</p>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
-                        
-                        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1);">
-                            <h3 style="color: #3498db; margin-bottom: 20px;">👥 Faixa Etária</h3>
-                            ${createBars(data.idade, 'faixa', 'total', '#3498db')}
-                        </div>
-                        
-                        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1);">
-                            <h3 style="color: #e74c3c; margin-bottom: 20px;">🏘️ Bairros</h3>
-                            ${createBars(data.bairros, 'bairro', 'total', '#e74c3c')}
-                        </div>
-                        
-                        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); grid-column: 1 / -1;">
-                            <h3 style="color: #27ae60; margin-bottom: 20px;">📈 Evolução</h3>
-                            ${createBars(data.evolucao, 'mes', 'total', '#27ae60')}
-                        </div>
-                        
-                    </div>
-                    
-                    <div style="margin-top: 30px; padding: 20px; background: #2ecc71; border-radius: 10px; color: white; text-align: center;">
-                        <strong>✅ Gráficos Carregados!</strong> • Total: ${getTotalCount(data)} cadastros
-                    </div>
-                `;
+                const params = new URLSearchParams();
+                if (periodo !== 'todos') params.append('periodo', periodo);
+                if (bairro !== 'todos') params.append('bairro', bairro);
+                
+                const suffix = params.toString() ? `?${params.toString()}` : '';
+                
+                // Carregar dados
+                const [demo, saude, socio, trabalho] = await Promise.all([
+                    fetch(`/api/charts/demografia${suffix}`).then(r => r.json()),
+                    fetch(`/api/charts/saude${suffix}`).then(r => r.json()),
+                    fetch(`/api/charts/socioeconomico${suffix}`).then(r => r.json()),
+                    fetch(`/api/charts/trabalho${suffix}`).then(r => r.json())
+                ]);
+                
+                // Destruir gráficos existentes
+                Object.values(charts).forEach(chart => chart?.destroy());
+                charts = {};
+                
+                // Criar gráficos modernos
+                createDoughnutChart('idadeChart', demo.idade, 'faixa', 'total', 'Faixa Etária');
+                createBarChart('bairrosChart', demo.bairros, 'bairro', 'total', 'Bairros');
+                createLineChart('evolucaoChart', demo.evolucao, 'mes', 'total', 'Evolução');
+                
+                // Atualizar subtitle
+                const total = demo.idade.reduce((sum, item) => sum + item.total, 0);
+                document.getElementById('dashboard-subtitle').textContent = `${total} cadastros analisados • Filtros: ${periodo === 'todos' ? 'Todos os períodos' : periodo} • ${bairro === 'todos' ? 'Todos os bairros' : bairro}`;
+                
+                // Mostrar status
+                document.getElementById('status-message').style.display = 'block';
                 
             } catch (error) {
-                console.error('❌ Erro:', error);
-                document.getElementById('main-container').innerHTML = `
-                    <div style="background: #f8d7da; color: #721c24; padding: 20px; border-radius: 10px; text-align: center;">
-                        <h3>❌ Erro ao Carregar</h3>
-                        <p>${error.message}</p>
-                        <button onclick="loadCharts()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px;">Tentar Novamente</button>
-                    </div>
-                `;
+                console.error('Erro ao carregar gráficos:', error);
+                document.getElementById('dashboard-subtitle').textContent = 'Erro ao carregar dados';
             }
         }
         
-        function createBars(data, labelKey, valueKey, color) {
-            if (!data || data.length === 0) return '<p>Nenhum dado</p>';
+        function createDoughnutChart(canvasId, data, labelKey, valueKey, title) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas || !data || data.length === 0) return;
             
-            const max = Math.max(...data.map(d => d[valueKey]));
-            let html = '';
-            
-            data.forEach(item => {
-                const percent = (item[valueKey] / max) * 100;
-                html += `
-                    <div style="margin-bottom: 15px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span><strong>${item[labelKey]}</strong></span>
-                            <span style="color: ${color}; font-weight: bold;">${item[valueKey]}</span>
-                        </div>
-                        <div style="background: #f0f0f0; height: 15px; border-radius: 8px;">
-                            <div style="background: ${color}; height: 100%; width: ${percent}%; border-radius: 8px; transition: width 0.5s;"></div>
-                        </div>
-                    </div>
-                `;
+            charts[canvasId] = new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(d => d[labelKey]),
+                    datasets: [{
+                        data: data.map(d => d[valueKey]),
+                        backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
+                        borderWidth: 0,
+                        hoverBorderWidth: 3,
+                        hoverBorderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', cornerRadius: 8 }
+                    },
+                    animation: { duration: 1500, easing: 'easeInOutQuart' }
+                }
             });
-            
-            return html;
         }
         
-        function getTotalCount(data) {
-            if (data.idade && data.idade.length > 0) {
-                return data.idade.reduce((sum, item) => sum + item.total, 0);
-            }
-            return 0;
+        function createBarChart(canvasId, data, labelKey, valueKey, title) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas || !data || data.length === 0) return;
+            
+            charts[canvasId] = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d[labelKey]),
+                    datasets: [{
+                        data: data.map(d => d[valueKey]),
+                        backgroundColor: '#4ECDC4',
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', cornerRadius: 8 }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    },
+                    animation: { duration: 1500, easing: 'easeInOutQuart' }
+                }
+            });
+        }
+        
+        function createLineChart(canvasId, data, labelKey, valueKey, title) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas || !data || data.length === 0) return;
+            
+            charts[canvasId] = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d[labelKey]),
+                    datasets: [{
+                        label: 'Cadastros',
+                        data: data.map(d => d[valueKey]),
+                        borderColor: '#45B7D1',
+                        backgroundColor: 'rgba(69, 183, 209, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#45B7D1',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', cornerRadius: 8 }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    },
+                    animation: { duration: 1500, easing: 'easeInOutQuart' }
+                }
+            });
         }
         
         function aplicarFiltros() {
-            loadCharts();
+            console.log('🔄 Aplicando filtros...');
+            loadAllCharts();
         }
     </script>
 </body>
