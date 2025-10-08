@@ -854,7 +854,6 @@ def exportar():
                     # Foto (se existir)
                     if row.get('foto_base64'):
                         try:
-                            from reportlab.lib.utils import ImageReader
                             import base64
                             
                             # Limpar prefixo data:image se existir
@@ -867,7 +866,7 @@ def exportar():
                             foto_buffer = io.BytesIO(foto_data)
                             
                             # Adicionar foto centralizada
-                            img = Image(ImageReader(foto_buffer), width=1*inch, height=1.3*inch)
+                            img = Image(foto_buffer, width=1*inch, height=1.3*inch)
                             img.hAlign = 'CENTER'
                             elements.append(img)
                             elements.append(Spacer(1, 10))
@@ -1103,7 +1102,6 @@ def exportar_fichas_individuais():
             # Foto (se existir)
             if row.get('foto_base64'):
                 try:
-                    from reportlab.lib.utils import ImageReader
                     import base64
                     
                     # Limpar prefixo data:image se existir
@@ -1116,7 +1114,7 @@ def exportar_fichas_individuais():
                     foto_buffer = io.BytesIO(foto_data)
                     
                     # Adicionar foto centralizada
-                    img = Image(ImageReader(foto_buffer), width=1*inch, height=1.3*inch)
+                    img = Image(foto_buffer, width=1*inch, height=1.3*inch)
                     img.hAlign = 'CENTER'
                     elements.append(img)
                     elements.append(Spacer(1, 10))
