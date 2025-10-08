@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/mobile.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
         body { font-family: Arial; margin: 0; background: #f4f4f4; }
         .header { background: #2c3e50; color: white; padding: 20px; }
@@ -135,7 +135,7 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/charts-debug.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts-fallback.js') }}"></script>
     <script src="{{ url_for('static', filename='js/nav-active.js') }}"></script>
 </body>
 </html>
