@@ -973,14 +973,12 @@ def exportar():
                     elements.append(Spacer(1, 6))
                     
                     habitacao_data = [
-                        ['Tipo Moradia:', str(row['tipo_moradia'] or '')],
-                        ['Situação Moradia:', str(row['situacao_moradia'] or '')],
-                        ['Energia Elétrica:', str(row['energia_eletrica'] or '')],
-                        ['Abastecimento Água:', str(row['abastecimento_agua'] or '')],
-                        ['Esgotamento Sanitário:', str(row['esgotamento_sanitario'] or '')],
-                        ['Destino Lixo:', str(row['destino_lixo'] or '')],
-                        ['Cômodos Casa:', str(row['comodos_casa'] or '')],
-                        ['Cômodos Dormir:', str(row['comodos_dormir'] or '')]
+                        ['Tipo Casa:', str(safe_get(row, 'casa_tipo', '') or '')],
+                        ['Material Casa:', str(safe_get(row, 'casa_material', '') or '')],
+                        ['Energia Elétrica:', str(safe_get(row, 'energia', '') or '')],
+                        ['Abastecimento Água:', str(safe_get(row, 'agua', '') or '')],
+                        ['Esgotamento Sanitário:', str(safe_get(row, 'esgoto', '') or '')],
+                        ['Destino Lixo:', str(safe_get(row, 'lixo', '') or '')]
                     ]
                     
                     habitacao_table = Table(habitacao_data, colWidths=[120, 350])
@@ -1000,14 +998,14 @@ def exportar():
                     elements.append(Spacer(1, 6))
                     
                     saude_data = [
-                        ['Doença Crônica:', str(row['doenca_cronica'] or '')],
-                        ['Qual Doença:', str(row['qual_doenca'] or '')],
-                        ['Medicamento Contínuo:', str(row['medicamento_continuo'] or '')],
-                        ['Qual Medicamento:', str(row['qual_medicamento'] or '')],
-                        ['Deficiência:', str(row['deficiencia'] or '')],
-                        ['Qual Deficiência:', str(row['qual_deficiencia'] or '')],
-                        ['Plano Saúde:', str(row['plano_saude'] or '')],
-                        ['Qual Plano:', str(row['qual_plano'] or '')]
+                        ['Doença Crônica:', str(safe_get(row, 'tem_doenca_cronica', '') or '')],
+                        ['Quais Doenças:', str(safe_get(row, 'doencas_cronicas', '') or '')],
+                        ['Medicamento Contínuo:', str(safe_get(row, 'usa_medicamento_continuo', '') or '')],
+                        ['Quais Medicamentos:', str(safe_get(row, 'medicamentos_continuos', '') or '')],
+                        ['Deficiência:', str(safe_get(row, 'tem_deficiencia', '') or '')],
+                        ['Tipo Deficiência:', str(safe_get(row, 'tipo_deficiencia', '') or '')],
+                        ['Doença Mental:', str(safe_get(row, 'tem_doenca_mental', '') or '')],
+                        ['Cuidados Especiais:', str(safe_get(row, 'precisa_cuidados_especiais', '') or '')]
                     ]
                     
                     saude_table = Table(saude_data, colWidths=[120, 350])
@@ -1216,14 +1214,12 @@ def exportar_fichas_individuais():
             elements.append(Spacer(1, 6))
             
             habitacao_data = [
-                ['Tipo Moradia:', str(row['tipo_moradia'] or '')],
-                ['Situação Moradia:', str(row['situacao_moradia'] or '')],
-                ['Energia Elétrica:', str(row['energia_eletrica'] or '')],
-                ['Abastecimento Água:', str(row['abastecimento_agua'] or '')],
-                ['Esgotamento Sanitário:', str(row['esgotamento_sanitario'] or '')],
-                ['Destino Lixo:', str(row['destino_lixo'] or '')],
-                ['Cômodos Casa:', str(row['comodos_casa'] or '')],
-                ['Cômodos Dormir:', str(row['comodos_dormir'] or '')]
+                ['Tipo Casa:', str(safe_get(row, 'casa_tipo', '') or '')],
+                ['Material Casa:', str(safe_get(row, 'casa_material', '') or '')],
+                ['Energia Elétrica:', str(safe_get(row, 'energia', '') or '')],
+                ['Abastecimento Água:', str(safe_get(row, 'agua', '') or '')],
+                ['Esgotamento Sanitário:', str(safe_get(row, 'esgoto', '') or '')],
+                ['Destino Lixo:', str(safe_get(row, 'lixo', '') or '')]
             ]
             
             habitacao_table = Table(habitacao_data, colWidths=[120, 350])
@@ -1243,14 +1239,14 @@ def exportar_fichas_individuais():
             elements.append(Spacer(1, 6))
             
             saude_data = [
-                ['Doença Crônica:', str(row['doenca_cronica'] or '')],
-                ['Qual Doença:', str(row['qual_doenca'] or '')],
-                ['Medicamento Contínuo:', str(row['medicamento_continuo'] or '')],
-                ['Qual Medicamento:', str(row['qual_medicamento'] or '')],
-                ['Deficiência:', str(row['deficiencia'] or '')],
-                ['Qual Deficiência:', str(row['qual_deficiencia'] or '')],
-                ['Plano Saúde:', str(row['plano_saude'] or '')],
-                ['Qual Plano:', str(row['qual_plano'] or '')]
+                ['Doença Crônica:', str(safe_get(row, 'tem_doenca_cronica', '') or '')],
+                ['Quais Doenças:', str(safe_get(row, 'doencas_cronicas', '') or '')],
+                ['Medicamento Contínuo:', str(safe_get(row, 'usa_medicamento_continuo', '') or '')],
+                ['Quais Medicamentos:', str(safe_get(row, 'medicamentos_continuos', '') or '')],
+                ['Deficiência:', str(safe_get(row, 'tem_deficiencia', '') or '')],
+                ['Tipo Deficiência:', str(safe_get(row, 'tipo_deficiencia', '') or '')],
+                ['Doença Mental:', str(safe_get(row, 'tem_doenca_mental', '') or '')],
+                ['Cuidados Especiais:', str(safe_get(row, 'precisa_cuidados_especiais', '') or '')]
             ]
             
             saude_table = Table(saude_data, colWidths=[120, 350])
