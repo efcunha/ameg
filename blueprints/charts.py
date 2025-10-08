@@ -1,8 +1,10 @@
 from flask import Blueprint, jsonify, render_template, session, redirect, url_for
-from database import execute_query
+from database import get_db_connection
 from datetime import datetime, timedelta
+import logging
 
 charts_bp = Blueprint('charts', __name__)
+logger = logging.getLogger(__name__)
 
 def login_required(f):
     """Decorator para verificar se usuário está logado"""
@@ -12,6 +14,25 @@ def login_required(f):
         return f(*args, **kwargs)
     decorated_function.__name__ = f.__name__
     return decorated_function
+
+def execute_query(query):
+    """Executa query e retorna resultados"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        # Converter para lista de dicionários
+        columns = [desc[0] for desc in cursor.description]
+        data = [dict(zip(columns, row)) for row in results]
+        
+        cursor.close()
+        conn.close()
+        return data
+    except Exception as e:
+        logger.error(f"Erro na query: {e}")
+        return []
 
 @charts_bp.route('/charts')
 @login_required
