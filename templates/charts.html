@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AMEG - Gráficos Interativos</title>
+    <title>AMEG - Gráficos Internos</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f8f9fa; }
         .header { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 20px; }
@@ -25,6 +24,7 @@
         .chart-title { font-size: 1.3em; font-weight: 600; color: #2c3e50; margin-bottom: 20px; display: flex; align-items: center; }
         .chart-icon { background: linear-gradient(45deg, #3498db, #2980b9); color: white; padding: 8px; border-radius: 50%; margin-right: 12px; font-size: 0.9em; }
         .full-width { grid-column: 1 / -1; }
+        canvas { border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -71,7 +71,7 @@
 
         <!-- Header do Dashboard -->
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 15px; margin-bottom: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">📊 Dashboard Interativo AMEG</h1>
+            <h1 style="color: white; margin: 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">📊 Dashboard AMEG Interno</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 1.2em;" id="dashboard-subtitle">Carregando dados...</p>
         </div>
 
@@ -83,7 +83,7 @@
                     <span class="chart-icon" style="background: linear-gradient(45deg, #FF6B6B, #FF5252);">👥</span>
                     Distribuição por Faixa Etária
                 </div>
-                <canvas id="idadeChart" style="max-height: 300px;"></canvas>
+                <canvas id="idadeChart" width="300" height="200"></canvas>
             </div>
 
             <!-- Bairros -->
@@ -92,7 +92,7 @@
                     <span class="chart-icon" style="background: linear-gradient(45deg, #4ECDC4, #26C6DA);">🏘️</span>
                     Top Bairros
                 </div>
-                <canvas id="bairrosChart" style="max-height: 300px;"></canvas>
+                <canvas id="bairrosChart" width="300" height="200"></canvas>
             </div>
 
             <!-- Evolução -->
@@ -101,46 +101,23 @@
                     <span class="chart-icon" style="background: linear-gradient(45deg, #45B7D1, #2196F3);">📈</span>
                     Evolução de Cadastros
                 </div>
-                <canvas id="evolucaoChart" style="max-height: 400px;"></canvas>
+                <canvas id="evolucaoChart" width="600" height="200"></canvas>
             </div>
         </div>
 
         <!-- Status -->
         <div id="status-message" style="margin-top: 30px; padding: 20px; background: #d4edda; border-radius: 10px; color: #155724; text-align: center; display: none;">
-            <strong>✅ Gráficos Carregados com Sucesso!</strong><br>
-            <span>Dados atualizados em tempo real • Clique nos gráficos para interagir</span>
+            <strong>✅ Gráficos Internos Carregados!</strong><br>
+            <span>Sistema de gráficos nativo AMEG • Sem dependências externas</span>
         </div>
     </div>
 
     <script>
-        console.log('🚀 INICIANDO GRÁFICOS INTERATIVOS MODERNOS');
-        
-        let charts = {};
+        console.log('🚀 INICIANDO SISTEMA DE GRÁFICOS INTERNO AMEG');
         
         document.addEventListener('DOMContentLoaded', function() {
             loadFilterOptions();
-            
-            // Verificar Chart.js com timeout
-            let attempts = 0;
-            const maxAttempts = 5;
-            
-            function checkChartJS() {
-                attempts++;
-                console.log(`🔍 Tentativa ${attempts} de carregar Chart.js...`);
-                
-                if (typeof Chart !== 'undefined') {
-                    console.log('✅ Chart.js carregado com sucesso!');
-                    setTimeout(loadAllCharts, 500);
-                } else if (attempts < maxAttempts) {
-                    console.log('⏳ Chart.js ainda não carregou, tentando novamente...');
-                    setTimeout(checkChartJS, 1000);
-                } else {
-                    console.error('❌ Chart.js falhou ao carregar após 5 tentativas');
-                    showChartJSError();
-                }
-            }
-            
-            checkChartJS();
+            setTimeout(loadAllCharts, 1000);
         });
         
         async function loadFilterOptions() {
@@ -171,167 +148,186 @@
                 
                 const suffix = params.toString() ? `?${params.toString()}` : '';
                 
-                console.log('📡 Carregando dados com sufixo:', suffix);
+                console.log('📡 Carregando dados:', suffix);
                 
-                // Carregar apenas demografia primeiro
-                const demoResponse = await fetch(`/api/charts/demografia${suffix}`);
-                if (!demoResponse.ok) {
-                    throw new Error(`Demografia HTTP ${demoResponse.status}`);
-                }
-                const demo = await demoResponse.json();
+                const response = await fetch(`/api/charts/demografia${suffix}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
-                console.log('📦 Dados demografia recebidos:', demo);
+                const data = await response.json();
+                console.log('📦 Dados recebidos:', data);
                 
-                // Destruir gráficos existentes
-                Object.values(charts).forEach(chart => chart?.destroy());
-                charts = {};
-                
-                // Criar gráficos modernos
-                createDoughnutChart('idadeChart', demo.idade, 'faixa', 'total', 'Faixa Etária');
-                createBarChart('bairrosChart', demo.bairros, 'bairro', 'total', 'Bairros');
-                createLineChart('evolucaoChart', demo.evolucao, 'mes', 'total', 'Evolução');
+                // Criar gráficos nativos
+                drawDoughnutChart('idadeChart', data.idade, 'faixa', 'total');
+                drawBarChart('bairrosChart', data.bairros, 'bairro', 'total');
+                drawLineChart('evolucaoChart', data.evolucao, 'mes', 'total');
                 
                 // Atualizar subtitle
-                const total = demo.idade.reduce((sum, item) => sum + item.total, 0);
-                document.getElementById('dashboard-subtitle').textContent = `${total} cadastros analisados • Filtros: ${periodo === 'todos' ? 'Todos os períodos' : periodo} • ${bairro === 'todos' ? 'Todos os bairros' : bairro}`;
+                const total = data.idade.reduce((sum, item) => sum + item.total, 0);
+                document.getElementById('dashboard-subtitle').textContent = `${total} cadastros • ${periodo === 'todos' ? 'Todos os períodos' : periodo} • ${bairro === 'todos' ? 'Todos os bairros' : bairro}`;
                 
-                // Mostrar status
                 document.getElementById('status-message').style.display = 'block';
                 
-                console.log('✅ Gráficos criados com sucesso!');
-                
             } catch (error) {
-                console.error('❌ Erro ao carregar gráficos:', error);
+                console.error('❌ Erro:', error);
                 document.getElementById('dashboard-subtitle').textContent = `Erro: ${error.message}`;
-                
-                // Mostrar erro na tela
-                const container = document.querySelector('.charts-grid');
-                container.innerHTML = `
-                    <div style="grid-column: 1 / -1; background: #f8d7da; color: #721c24; padding: 20px; border-radius: 10px; text-align: center;">
-                        <h3>❌ Erro ao Carregar Gráficos</h3>
-                        <p><strong>Erro:</strong> ${error.message}</p>
-                        <button onclick="loadAllCharts()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
-                            🔄 Tentar Novamente
-                        </button>
-                    </div>
-                `;
             }
         }
         
-        function createDoughnutChart(canvasId, data, labelKey, valueKey, title) {
+        function drawDoughnutChart(canvasId, data, labelKey, valueKey) {
             const canvas = document.getElementById(canvasId);
-            if (!canvas || !data || data.length === 0) return;
+            const ctx = canvas.getContext('2d');
             
-            charts[canvasId] = new Chart(canvas, {
-                type: 'doughnut',
-                data: {
-                    labels: data.map(d => d[labelKey]),
-                    datasets: [{
-                        data: data.map(d => d[valueKey]),
-                        backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
-                        borderWidth: 0,
-                        hoverBorderWidth: 3,
-                        hoverBorderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } },
-                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', cornerRadius: 8 }
-                    },
-                    animation: { duration: 1500, easing: 'easeInOutQuart' }
-                }
+            if (!data || data.length === 0) {
+                ctx.fillStyle = '#666';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Nenhum dado', canvas.width/2, canvas.height/2);
+                return;
+            }
+            
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'];
+            const total = data.reduce((sum, item) => sum + item[valueKey], 0);
+            
+            let currentAngle = -Math.PI / 2;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 20;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            data.forEach((item, index) => {
+                const sliceAngle = (item[valueKey] / total) * 2 * Math.PI;
+                
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+                ctx.lineTo(centerX, centerY);
+                ctx.fillStyle = colors[index % colors.length];
+                ctx.fill();
+                
+                // Label
+                const labelAngle = currentAngle + sliceAngle / 2;
+                const labelX = centerX + Math.cos(labelAngle) * (radius * 0.7);
+                const labelY = centerY + Math.sin(labelAngle) * (radius * 0.7);
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(item[valueKey], labelX, labelY);
+                
+                currentAngle += sliceAngle;
+            });
+            
+            // Legenda
+            data.forEach((item, index) => {
+                const y = 20 + index * 20;
+                ctx.fillStyle = colors[index % colors.length];
+                ctx.fillRect(10, y, 15, 15);
+                ctx.fillStyle = '#333';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(`${item[labelKey]}: ${item[valueKey]}`, 30, y + 12);
             });
         }
         
-        function createBarChart(canvasId, data, labelKey, valueKey, title) {
+        function drawBarChart(canvasId, data, labelKey, valueKey) {
             const canvas = document.getElementById(canvasId);
-            if (!canvas || !data || data.length === 0) return;
+            const ctx = canvas.getContext('2d');
             
-            charts[canvasId] = new Chart(canvas, {
-                type: 'bar',
-                data: {
-                    labels: data.map(d => d[labelKey]),
-                    datasets: [{
-                        data: data.map(d => d[valueKey]),
-                        backgroundColor: '#4ECDC4',
-                        borderRadius: 8,
-                        borderSkipped: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', cornerRadius: 8 }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-                        x: { grid: { display: false } }
-                    },
-                    animation: { duration: 1500, easing: 'easeInOutQuart' }
-                }
+            if (!data || data.length === 0) {
+                ctx.fillStyle = '#666';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Nenhum dado', canvas.width/2, canvas.height/2);
+                return;
+            }
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const maxValue = Math.max(...data.map(d => d[valueKey]));
+            const barWidth = (canvas.width - 60) / data.length;
+            const chartHeight = canvas.height - 60;
+            
+            data.forEach((item, index) => {
+                const barHeight = (item[valueKey] / maxValue) * chartHeight;
+                const x = 40 + index * barWidth;
+                const y = canvas.height - 40 - barHeight;
+                
+                // Barra
+                ctx.fillStyle = '#4ECDC4';
+                ctx.fillRect(x, y, barWidth - 10, barHeight);
+                
+                // Valor
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(item[valueKey], x + barWidth/2 - 5, y - 5);
+                
+                // Label
+                ctx.save();
+                ctx.translate(x + barWidth/2 - 5, canvas.height - 10);
+                ctx.rotate(-Math.PI/4);
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'right';
+                ctx.fillText(item[labelKey], 0, 0);
+                ctx.restore();
             });
         }
         
-        function createLineChart(canvasId, data, labelKey, valueKey, title) {
+        function drawLineChart(canvasId, data, labelKey, valueKey) {
             const canvas = document.getElementById(canvasId);
-            if (!canvas || !data || data.length === 0) return;
+            const ctx = canvas.getContext('2d');
             
-            charts[canvasId] = new Chart(canvas, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => d[labelKey]),
-                    datasets: [{
-                        label: 'Cadastros',
-                        data: data.map(d => d[valueKey]),
-                        borderColor: '#45B7D1',
-                        backgroundColor: 'rgba(69, 183, 209, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#45B7D1',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', cornerRadius: 8 }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-                        x: { grid: { display: false } }
-                    },
-                    animation: { duration: 1500, easing: 'easeInOutQuart' }
+            if (!data || data.length === 0) {
+                ctx.fillStyle = '#666';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Nenhum dado', canvas.width/2, canvas.height/2);
+                return;
+            }
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const maxValue = Math.max(...data.map(d => d[valueKey]));
+            const stepX = (canvas.width - 80) / (data.length - 1);
+            const chartHeight = canvas.height - 60;
+            
+            ctx.strokeStyle = '#45B7D1';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            data.forEach((item, index) => {
+                const x = 40 + index * stepX;
+                const y = canvas.height - 40 - (item[valueKey] / maxValue) * chartHeight;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
                 }
+                
+                // Ponto
+                ctx.fillStyle = '#45B7D1';
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Valor
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(item[valueKey], x, y - 10);
+                
+                // Label
+                ctx.font = '10px Arial';
+                ctx.fillText(item[labelKey], x, canvas.height - 10);
             });
+            
+            ctx.stroke();
         }
         
         function aplicarFiltros() {
             console.log('🔄 Aplicando filtros...');
             loadAllCharts();
-        }
-        
-        function showChartJSError() {
-            document.getElementById('dashboard-subtitle').textContent = 'Erro: Chart.js não carregou';
-            const container = document.querySelector('.charts-grid');
-            container.innerHTML = `
-                <div style="grid-column: 1 / -1; background: #f8d7da; color: #721c24; padding: 20px; border-radius: 10px; text-align: center;">
-                    <h3>❌ Erro ao Carregar Chart.js</h3>
-                    <p>A biblioteca de gráficos não pôde ser carregada.</p>
-                    <button onclick="location.reload()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
-                        🔄 Recarregar Página
-                    </button>
-                </div>
-            `;
         }
     </script>
 </body>
