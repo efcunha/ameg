@@ -449,17 +449,17 @@ def exportar():
             writer.writerow(['=== POR BAIRRO ==='])
             writer.writerow(['Bairro', 'Total'])
             for row in dados['por_bairro']:
-                writer.writerow([row['bairro'] or 'Não informado', row['count']])
+                writer.writerow([safe_get(row, 0) or 'Não informado', safe_get(row, 1)])
             writer.writerow([''])
             writer.writerow(['=== POR GÊNERO ==='])
             writer.writerow(['Gênero', 'Total'])
             for row in dados['por_genero']:
-                writer.writerow([row['genero'] or 'Não informado', row['count']])
+                writer.writerow([safe_get(row, 0) or 'Não informado', safe_get(row, 1)])
             writer.writerow([''])
             writer.writerow(['=== POR FAIXA ETÁRIA ==='])
             writer.writerow(['Faixa Etária', 'Total'])
             for row in dados['por_idade']:
-                writer.writerow([row['faixa_etaria'] or 'Não informado', row['count']])
+                writer.writerow([safe_get(row, 0) or 'Não informado', safe_get(row, 1)])
         elif tipo == 'bairro':
             writer.writerow(['Bairro', 'Total de Cadastros', 'Renda Média'])
         elif tipo == 'renda':
@@ -468,12 +468,12 @@ def exportar():
             writer.writerow(['=== POR FAIXA DE RENDA ==='])
             writer.writerow(['Faixa de Renda', 'Total de Cadastros'])
             for row in dados['faixas_renda']:
-                writer.writerow([row['faixa_renda'] or 'Não informado', row['count']])
+                writer.writerow([safe_get(row, 0) or 'Não informado', safe_get(row, 1)])
             writer.writerow([''])
             writer.writerow(['=== RENDA POR BAIRRO ==='])
             writer.writerow(['Bairro', 'Renda Média', 'Total de Cadastros'])
             for row in dados['renda_bairro']:
-                writer.writerow([row['bairro'] or 'Não informado', f"R$ {row['renda_media']:.2f}" if row['renda_media'] else 'Não informado', row['total']])
+                writer.writerow([safe_get(row, 0) or 'Não informado', f"R$ {safe_get(row, 1):.2f}" if safe_get(row, 1) else 'Não informado', safe_get(row, 2)])
         elif tipo == 'caixa':
             writer.writerow(['ID', 'Tipo', 'Valor', 'Descrição', 'Titular Cadastro', 'Nome Pessoa', 
                            'Número Recibo', 'Observações', 'Data', 'Usuário'])
@@ -498,10 +498,10 @@ def exportar():
         for row in dados:
             if tipo == 'simplificado':
                 writer.writerow([
-                    row['nome_completo'] or '',
-                    row['telefone'] or '',
-                    row['bairro'] or '',
-                    f"R$ {row['renda_familiar']:.2f}" if row['renda_familiar'] else 'Não informado'
+                    safe_get(row, 0),
+                    safe_get(row, 1),
+                    safe_get(row, 2),
+                    f"R$ {safe_get(row, 3):.2f}" if safe_get(row, 3) else 'Não informado'
                 ])
             elif tipo == 'bairro':
                 writer.writerow([
@@ -558,19 +558,30 @@ def exportar():
                 elements.append(Paragraph("Relatório Completo de Cadastros", title_style))
         elif tipo == 'estatistico':
             elements.append(Paragraph("Relatório Estatístico", title_style))
-        elif tipo == 'simplificado':
-            elements.append(Paragraph("Relatório Simplificado", title_style))
-        elif tipo == 'bairro':
-            elements.append(Paragraph("Relatório por Bairro", title_style))
-        elif tipo == 'renda':
-            elements.append(Paragraph("Relatório de Renda", title_style))
         elif tipo == 'caixa':
             elements.append(Paragraph("Relatório de Movimentações do Caixa", title_style))
         
         elements.append(Spacer(1, 12))
         
-        # Processar dados baseado no tipo
-        if tipo == 'renda':
+        # Preparar dados para tabela
+        if tipo == 'simplificado':
+            table_data = [['Nome', 'Telefone', 'Bairro', 'Renda Familiar']]
+            for row in dados:
+                table_data.append([
+                    str(safe_get(row, 0) or ''),
+                    str(safe_get(row, 1) or ''),
+                    str(safe_get(row, 2) or ''),
+                    f"R$ {safe_get(row, 3):.2f}" if safe_get(row, 3) else ''
+                ])
+        elif tipo == 'bairro':
+            table_data = [['Bairro', 'Total de Cadastros', 'Renda Média']]
+            for row in dados:
+                table_data.append([
+                    str(safe_get(row, 0) or 'Não informado'),
+                    str(safe_get(row, 1) or '0'),
+                    f"R$ {safe_get(row, 2):.2f}" if safe_get(row, 2) else 'Não informado'
+                ])
+        elif tipo == 'renda':
             # Por Faixa de Renda
             faixa_para = Paragraph("<b>💰 Por Faixa de Renda</b>", styles['Heading3'])
             elements.append(faixa_para)
@@ -579,8 +590,8 @@ def exportar():
             table_data = [['Faixa de Renda', 'Total de Cadastros']]
             for row in dados['faixas_renda']:
                 table_data.append([
-                    str(row['faixa_renda'] or 'Não informado'),
-                    str(row['count'] or '0')
+                    str(safe_get(row, 0) or 'Não informado'),
+                    str(safe_get(row, 1) or '0')
                 ])
             
             table = Table(table_data)
@@ -603,9 +614,9 @@ def exportar():
             table_data = [['Bairro', 'Renda Média', 'Total de Cadastros']]
             for row in dados['renda_bairro']:
                 table_data.append([
-                    str(row['bairro'] or 'Não informado'),
-                    f"R$ {row['renda_media']:.2f}" if row['renda_media'] else 'Não informado',
-                    str(row['total'] or '0')
+                    str(safe_get(row, 0) or 'Não informado'),
+                    f"R$ {safe_get(row, 1):.2f}" if safe_get(row, 1) else 'Não informado',
+                    str(safe_get(row, 2) or '0')
                 ])
             
             table = Table(table_data)
@@ -618,247 +629,115 @@ def exportar():
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
             elements.append(table)
-            
-        elif tipo == 'estatistico':
+            # Criar múltiplas tabelas para o relatório estatístico completo
             # Total
             elements.append(Paragraph(f"<b>Total de Cadastros: {dados['total']}</b>", styles['Heading2']))
             elements.append(Spacer(1, 12))
             
-            # Tentar criar gráficos de pizza, se falhar usar apenas tabelas
-            try:
-                from reportlab.graphics.shapes import Drawing
-                from reportlab.graphics.charts.piecharts import Pie
-                from reportlab.lib import colors as rl_colors
-                
-                # Por Bairro com gráfico
-                bairro_para = Paragraph("<b>📍 Por Bairro</b>", styles['Heading3'])
-                elements.append(bairro_para)
-                elements.append(Spacer(1, 6))
-                
-                # Gráfico de pizza
-                drawing = Drawing(200, 150)
-                pie = Pie()
-                pie.x = 50
-                pie.y = 25
-                pie.width = 100
-                pie.height = 100
-                pie.data = [row['count'] for row in dados['por_bairro'][:6]]  # Limitar a 6 itens
-                pie.labels = [str(row['bairro'] or 'N/A')[:10] for row in dados['por_bairro'][:6]]  # Limitar texto
-                
-                # Cores simples
-                pie_colors = [rl_colors.blue, rl_colors.red, rl_colors.green, rl_colors.orange, rl_colors.purple, rl_colors.brown]
-                for i in range(len(pie.data)):
-                    pie.slices[i].fillColor = pie_colors[i % len(pie_colors)]
-                
-                drawing.add(pie)
-                elements.append(drawing)
-                elements.append(Spacer(1, 10))
-                
-                # Tabela de dados
-                bairro_data = [['Bairro', 'Total']]
-                for row in dados['por_bairro']:
-                    bairro_data.append([str(row['bairro'] or 'Não informado'), str(row['count'])])
-                
-                bairro_table = Table(bairro_data)
-                bairro_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 8),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
-                ]))
-                elements.append(bairro_table)
-                elements.append(Spacer(1, 20))
-                
-                # Por Gênero com gráfico
-                genero_para = Paragraph("<b>👥 Por Gênero</b>", styles['Heading3'])
-                elements.append(genero_para)
-                elements.append(Spacer(1, 6))
-                
-                drawing2 = Drawing(200, 150)
-                pie2 = Pie()
-                pie2.x = 50
-                pie2.y = 25
-                pie2.width = 100
-                pie2.height = 100
-                pie2.data = [row['count'] for row in dados['por_genero']]
-                pie2.labels = [str(row['genero'] or 'N/A') for row in dados['por_genero']]
-                
-                for i in range(len(pie2.data)):
-                    pie2.slices[i].fillColor = pie_colors[i % len(pie_colors)]
-                
-                drawing2.add(pie2)
-                elements.append(drawing2)
-                elements.append(Spacer(1, 10))
-                
-                genero_data = [['Gênero', 'Total']]
-                for row in dados['por_genero']:
-                    genero_data.append([str(row['genero'] or 'Não informado'), str(row['count'])])
-                
-                genero_table = Table(genero_data)
-                genero_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 8),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
-                ]))
-                elements.append(genero_table)
-                elements.append(Spacer(1, 20))
-                
-                # Por Idade com gráfico
-                idade_para = Paragraph("<b>🎂 Por Faixa Etária</b>", styles['Heading3'])
-                elements.append(idade_para)
-                elements.append(Spacer(1, 6))
-                
-                drawing3 = Drawing(200, 150)
-                pie3 = Pie()
-                pie3.x = 50
-                pie3.y = 25
-                pie3.width = 100
-                pie3.height = 100
-                pie3.data = [row['count'] for row in dados['por_idade']]
-                pie3.labels = [str(row['faixa_etaria'] or 'N/A')[:10] for row in dados['por_idade']]
-                
-                for i in range(len(pie3.data)):
-                    pie3.slices[i].fillColor = pie_colors[i % len(pie_colors)]
-                
-                drawing3.add(pie3)
-                elements.append(drawing3)
-                elements.append(Spacer(1, 10))
-                
-                idade_data = [['Faixa Etária', 'Total']]
-                for row in dados['por_idade']:
-                    idade_data.append([str(row['faixa_etaria'] or 'Não informado'), str(row['count'])])
-                
-                idade_table = Table(idade_data)
-                idade_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 8),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
-                ]))
-                elements.append(idade_table)
-                
-            except Exception as e:
-                # Se falhar, usar apenas tabelas sem gráficos
-                # Por Bairro
-                elements.append(Paragraph("<b>📍 Por Bairro</b>", styles['Heading3']))
-                elements.append(Spacer(1, 6))
-                
-                bairro_data = [['Bairro', 'Total']]
-                for row in dados['por_bairro']:
-                    bairro_data.append([str(row['bairro'] or 'Não informado'), str(row['count'])])
-                
-                bairro_table = Table(bairro_data)
-                bairro_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 8),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
-                ]))
-                elements.append(bairro_table)
-                elements.append(Spacer(1, 20))
-                
-                # Por Gênero
-                elements.append(Paragraph("<b>👥 Por Gênero</b>", styles['Heading3']))
-                elements.append(Spacer(1, 6))
-                
-                genero_data = [['Gênero', 'Total']]
-                for row in dados['por_genero']:
-                    genero_data.append([str(row['genero'] or 'Não informado'), str(row['count'])])
-                
-                genero_table = Table(genero_data)
-                genero_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 8),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
-                ]))
-                elements.append(genero_table)
-                elements.append(Spacer(1, 20))
-                
-                # Por Faixa Etária
-                elements.append(Paragraph("<b>🎂 Por Faixa Etária</b>", styles['Heading3']))
-                elements.append(Spacer(1, 6))
-                
-                idade_data = [['Faixa Etária', 'Total']]
-                for row in dados['por_idade']:
-                    idade_data.append([str(row['faixa_etaria'] or 'Não informado'), str(row['count'])])
-                
-                idade_table = Table(idade_data)
-                idade_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 8),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
-                ]))
-                elements.append(idade_table)
+            # Por Bairro
+            elements.append(Paragraph("<b>📍 Por Bairro</b>", styles['Heading3']))
+            elements.append(Spacer(1, 6))
             
+            bairro_data = [['Bairro', 'Total']]
+            for row in dados['por_bairro']:
+                bairro_data.append([str(safe_get(row, 0) or 'Não informado'), str(safe_get(row, 1))])
+            
+            bairro_table = Table(bairro_data)
+            bairro_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(bairro_table)
+            elements.append(Spacer(1, 20))
+            
+            # Por Gênero
+            elements.append(Paragraph("<b>👥 Por Gênero</b>", styles['Heading3']))
+            elements.append(Spacer(1, 6))
+            
+            genero_data = [['Gênero', 'Total']]
+            for row in dados['por_genero']:
+                genero_data.append([str(safe_get(row, 0) or 'Não informado'), str(safe_get(row, 1))])
+            
+            genero_table = Table(genero_data)
+            genero_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(genero_table)
+            elements.append(Spacer(1, 20))
+            
+            # Por Faixa Etária
+            elements.append(Paragraph("<b>🎂 Por Faixa Etária</b>", styles['Heading3']))
+            elements.append(Spacer(1, 6))
+            
+            idade_data = [['Faixa Etária', 'Total']]
+            for row in dados['por_idade']:
+                idade_data.append([str(safe_get(row, 0) or 'Não informado'), str(safe_get(row, 1))])
+            
+            idade_table = Table(idade_data)
+            idade_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(idade_table)
+            
+        elif tipo == 'simplificado':
+            table_data = [['Nome', 'Telefone', 'Bairro', 'Renda Familiar']]
+            for row in dados:
+                table_data.append([
+                    str(safe_get(row, 0) or ''),
+                    str(safe_get(row, 1) or ''),
+                    str(safe_get(row, 2) or ''),
+                    f"R$ {safe_get(row, 3):.2f}" if safe_get(row, 3) else ''
+                ])
+        elif tipo == 'caixa':
+            table_data = [['Tipo', 'Valor', 'Descrição', 'Data']]
+            for row in dados:
+                table_data.append([
+                    str(row['tipo'].title() if row['tipo'] else ''),
+                    f"R$ {row['valor']:.2f}" if row['valor'] else '',
+                    str(row['descricao'] or ''),
+                    row['data_movimentacao'].strftime('%d/%m/%Y') if row['data_movimentacao'] else ''
+                ])
         else:
-            # Para todos os outros tipos (simplificado, bairro, completo, caixa)
-            if tipo == 'simplificado':
-                table_data = [['Nome', 'Telefone', 'Bairro', 'Renda']]
-                for row in dados:
-                    table_data.append([
-                        str(row['nome_completo'] or ''),
-                        str(row['telefone'] or ''),
-                        str(row['bairro'] or ''),
-                        f"R$ {row['renda_familiar'] or '0'}" if row['renda_familiar'] else 'Não informado'
-                    ])
-            elif tipo == 'bairro':
-                table_data = [['Bairro', 'Total de Cadastros', 'Renda Média']]
-                for row in dados:
-                    table_data.append([
-                        str(row['bairro'] or 'Não informado'),
-                        str(row['total'] or '0'),
-                        f"R$ {row['renda_media']:.2f}" if row['renda_media'] else 'Não informado'
-                    ])
-            elif tipo == 'caixa':
-                table_data = [['Tipo', 'Valor', 'Descrição', 'Data']]
-                for row in dados:
-                    table_data.append([
-                        str(row['tipo'].title() if row['tipo'] else ''),
-                        f"R$ {row['valor']:.2f}" if row['valor'] else '',
-                        str(row['descricao'] or ''),
-                        row['data_movimentacao'].strftime('%d/%m/%Y') if row['data_movimentacao'] else ''
-                    ])
-            else:
-                # Relatório completo
-                table_data = [['Nome', 'Telefone', 'Bairro', 'CPF', 'Renda']]
-                for row in dados:
-                    try:
-                        # Tentar como tupla primeiro
-                        if isinstance(row, (tuple, list)) and len(row) > 40:
-                            nome = str(safe_get(row, 1)) if len(row) > 1 else ''
-                            telefone = str(safe_get(row, 7)) if len(row) > 7 else ''
-                            bairro = str(safe_get(row, 4)) if len(row) > 4 else ''
-                            cpf = str(safe_get(row, 14)) if len(row) > 14 else ''
-                            renda = f"R$ {safe_get(row, 41):.2f}" if len(row) > 41 and safe_get(row, 41) else 'Não informado'
-                        else:
-                            # Tentar como dicionário
-                            nome = str(row.get('nome_completo', ''))
-                            telefone = str(row.get('telefone', ''))
-                            bairro = str(row.get('bairro', ''))
-                            cpf = str(row.get('cpf', ''))
-                            renda = f"R$ {row.get('renda_familiar', 0):.2f}" if row.get('renda_familiar') else 'Não informado'
-                        
-                        table_data.append([nome, telefone, bairro, cpf, renda])
-                    except:
-                        # Fallback para qualquer erro
-                        table_data.append(['', '', '', '', 'Não informado'])
-            
-            # Criar e adicionar tabela
+            # Relatório completo
+            table_data = [['Nome', 'Telefone', 'Bairro', 'CPF', 'Renda']]
+            for row in dados:
+                try:
+                    # Tentar como tupla primeiro
+                    if isinstance(row, (tuple, list)) and len(row) > 40:
+                        nome = str(safe_get(row, 1)) if len(row) > 1 else ''
+                        telefone = str(safe_get(row, 7)) if len(row) > 7 else ''
+                        bairro = str(safe_get(row, 4)) if len(row) > 4 else ''
+                        cpf = str(safe_get(row, 14)) if len(row) > 14 else ''
+                        renda = f"R$ {safe_get(row, 41):.2f}" if len(row) > 41 and safe_get(row, 41) else 'Não informado'
+                    else:
+                        # Tentar como dicionário
+                        nome = str(row.get('nome_completo', ''))
+                        telefone = str(row.get('telefone', ''))
+                        bairro = str(row.get('bairro', ''))
+                        cpf = str(row.get('cpf', ''))
+                        renda = f"R$ {row.get('renda_familiar', 0):.2f}" if row.get('renda_familiar') else 'Não informado'
+                    
+                    table_data.append([nome, telefone, bairro, cpf, renda])
+                except:
+                    # Fallback para qualquer erro
+                    table_data.append(['', '', '', '', 'Não informado'])
+        
+        # Criar tabela apenas para tipos que não sejam estatístico nem renda
+        if tipo not in ['estatistico', 'renda']:
             table = Table(table_data)
             table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
@@ -872,8 +751,8 @@ def exportar():
                 ('FONTSIZE', (0, 1), (-1, -1), 8),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
+            
             elements.append(table)
-        
         doc.build(elements)
         
         buffer.seek(0)
@@ -887,251 +766,6 @@ def exportar():
     # Fallback - não deveria chegar aqui
     flash('Formato de exportação não suportado.')
     return redirect(url_for('relatorios.relatorios'))
-
-@relatorios_bp.route('/exportar_fichas_individuais')
-def exportar_fichas_individuais():
-    if 'usuario' not in session:
-        return redirect(url_for('auth.login'))
-    
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
-        cadastros = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        
-        if not cadastros:
-            flash('Nenhum cadastro encontrado.')
-            return redirect(url_for('relatorios.relatorio_estatistico'))
-        
-        # Gerar PDF com todas as fichas individuais
-        buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch, bottomMargin=0.5*inch)
-        elements = []
-        styles = getSampleStyleSheet()
-        
-        # Título geral
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=16,
-            spaceAfter=20,
-            alignment=1
-        )
-        elements.append(Paragraph("RELATÓRIO ESTATÍSTICO - FICHAS INDIVIDUAIS", title_style))
-        elements.append(Paragraph(f"Total de Cadastros: {len(cadastros)}", styles['Normal']))
-        elements.append(Spacer(1, 20))
-        
-        # Processar cada cadastro
-        for i, row in enumerate(cadastros):
-            # Quebra de página entre fichas (exceto a primeira)
-            if i > 0:
-                elements.append(PageBreak())
-            
-            # Cabeçalho da ficha
-            ficha_title = ParagraphStyle(
-                'FichaTitle',
-                parent=styles['Heading2'],
-                fontSize=14,
-                spaceAfter=15,
-                alignment=1,
-                textColor=colors.darkblue
-            )
-            elements.append(Paragraph(f"FICHA INDIVIDUAL - CADASTRO {row['id']}", ficha_title))
-            
-            # Foto (se existir)
-            if row.get('foto_base64'):
-                try:
-                    from reportlab.lib.utils import ImageReader
-                    import base64
-                    
-                    # Decodificar base64
-                    foto_data = base64.b64decode(row['foto_base64'])
-                    foto_buffer = io.BytesIO(foto_data)
-                    
-                    # Adicionar foto
-                    img = Image(ImageReader(foto_buffer), width=1*inch, height=1.3*inch)
-                    elements.append(img)
-                    elements.append(Spacer(1, 10))
-                except:
-                    pass  # Se houver erro na foto, continua sem ela
-            
-            # Dados Pessoais
-            pessoais_para = Paragraph("<b>📋 Dados Pessoais</b>", styles['Heading3'])
-            elements.append(pessoais_para)
-            elements.append(Spacer(1, 6))
-            
-            pessoais_data = [
-                ['Nome Completo:', str(row['nome_completo'] or '')],
-                ['Endereço:', f"{row['endereco'] or ''}, {row['numero'] or ''}"],
-                ['Bairro:', str(row['bairro'] or '')],
-                ['CEP:', str(row['cep'] or '')],
-                ['Telefone:', str(row['telefone'] or '')],
-                ['Ponto Referência:', str(row['ponto_referencia'] or '')],
-                ['Gênero:', str(row['genero'] or '')],
-                ['Idade:', str(row['idade'] or '')],
-                ['Data Nascimento:', str(row['data_nascimento'] or '')],
-                ['Título Eleitor:', str(row['titulo_eleitor'] or '')],
-                ['Cidade Título:', str(row['cidade_titulo'] or '')],
-                ['CPF:', str(row['cpf'] or '')],
-                ['RG:', str(row['rg'] or '')],
-                ['NIS:', str(row['nis'] or '')],
-                ['Estado Civil:', str(row['estado_civil'] or '')],
-                ['Escolaridade:', str(row['escolaridade'] or '')],
-                ['Profissão:', str(row['profissao'] or '')]
-            ]
-            
-            pessoais_table = Table(pessoais_data, colWidths=[120, 350])
-            pessoais_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 8),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            elements.append(pessoais_table)
-            elements.append(Spacer(1, 15))
-            
-            # Dados do Companheiro (se existir)
-            if row['nome_companheiro']:
-                comp_para = Paragraph("<b>💑 Dados do Companheiro(a)</b>", styles['Heading3'])
-                elements.append(comp_para)
-                elements.append(Spacer(1, 6))
-                
-                comp_data = [
-                    ['Nome Companheiro:', str(row['nome_companheiro'] or '')],
-                    ['CPF Companheiro:', str(row['cpf_companheiro'] or '')],
-                    ['RG Companheiro:', str(row['rg_companheiro'] or '')],
-                    ['Idade Companheiro:', str(row['idade_companheiro'] or '')],
-                    ['Escolaridade Companheiro:', str(row['escolaridade_companheiro'] or '')],
-                    ['Profissão Companheiro:', str(row['profissao_companheiro'] or '')],
-                    ['Data Nasc. Companheiro:', str(row['data_nascimento_companheiro'] or '')],
-                    ['Título Companheiro:', str(row['titulo_companheiro'] or '')],
-                    ['Cidade Título Comp.:', str(row['cidade_titulo_companheiro'] or '')],
-                    ['NIS Companheiro:', str(row['nis_companheiro'] or '')]
-                ]
-                
-                comp_table = Table(comp_data, colWidths=[120, 350])
-                comp_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 8),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
-                ]))
-                elements.append(comp_table)
-                elements.append(Spacer(1, 15))
-            
-            # Dados Familiares e Trabalho
-            familia_para = Paragraph("<b>👨👩👧👦 Dados Familiares e Trabalho</b>", styles['Heading3'])
-            elements.append(familia_para)
-            elements.append(Spacer(1, 6))
-            
-            familia_data = [
-                ['Tipo Trabalho:', str(row['tipo_trabalho'] or '')],
-                ['Pessoas Trabalham:', str(row['pessoas_trabalham'] or '')],
-                ['Aposentados/Pensionistas:', str(row['aposentados_pensionistas'] or '')],
-                ['Pessoas na Família:', str(row['num_pessoas_familia'] or '')],
-                ['Número Famílias:', str(row['num_familias'] or '')],
-                ['Adultos:', str(row['adultos'] or '')],
-                ['Crianças:', str(row['criancas'] or '')],
-                ['Adolescentes:', str(row['adolescentes'] or '')],
-                ['Idosos:', str(row['idosos'] or '')],
-                ['Gestantes:', str(row['gestantes'] or '')],
-                ['Nutrizes:', str(row['nutrizes'] or '')],
-                ['Renda Familiar:', f"R$ {row['renda_familiar'] or '0'}"],
-                ['Renda Per Capita:', f"R$ {row['renda_per_capita'] or '0'}"],
-                ['Bolsa Família:', f"R$ {row['bolsa_familia'] or '0'}"]
-            ]
-            
-            familia_table = Table(familia_data, colWidths=[120, 350])
-            familia_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 8),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            elements.append(familia_table)
-            elements.append(Spacer(1, 15))
-            
-            # Dados Habitacionais
-            habitacao_para = Paragraph("<b>🏠 Dados Habitacionais</b>", styles['Heading3'])
-            elements.append(habitacao_para)
-            elements.append(Spacer(1, 6))
-            
-            habitacao_data = [
-                ['Tipo Moradia:', str(row['tipo_moradia'] or '')],
-                ['Situação Moradia:', str(row['situacao_moradia'] or '')],
-                ['Energia Elétrica:', str(row['energia_eletrica'] or '')],
-                ['Abastecimento Água:', str(row['abastecimento_agua'] or '')],
-                ['Esgotamento Sanitário:', str(row['esgotamento_sanitario'] or '')],
-                ['Destino Lixo:', str(row['destino_lixo'] or '')],
-                ['Cômodos Casa:', str(row['comodos_casa'] or '')],
-                ['Cômodos Dormir:', str(row['comodos_dormir'] or '')]
-            ]
-            
-            habitacao_table = Table(habitacao_data, colWidths=[120, 350])
-            habitacao_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 8),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            elements.append(habitacao_table)
-            elements.append(Spacer(1, 15))
-            
-            # Dados de Saúde
-            saude_para = Paragraph("<b>🏥 Dados de Saúde</b>", styles['Heading3'])
-            elements.append(saude_para)
-            elements.append(Spacer(1, 6))
-            
-            saude_data = [
-                ['Doença Crônica:', str(row['doenca_cronica'] or '')],
-                ['Qual Doença:', str(row['qual_doenca'] or '')],
-                ['Medicamento Contínuo:', str(row['medicamento_continuo'] or '')],
-                ['Qual Medicamento:', str(row['qual_medicamento'] or '')],
-                ['Deficiência:', str(row['deficiencia'] or '')],
-                ['Qual Deficiência:', str(row['qual_deficiencia'] or '')],
-                ['Plano Saúde:', str(row['plano_saude'] or '')],
-                ['Qual Plano:', str(row['qual_plano'] or '')]
-            ]
-            
-            saude_table = Table(saude_data, colWidths=[120, 350])
-            saude_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 8),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            elements.append(saude_table)
-            
-            # Observações (se existir)
-            if row.get('observacoes'):
-                elements.append(Spacer(1, 15))
-                obs_para = Paragraph("<b>📝 Observações</b>", styles['Heading3'])
-                elements.append(obs_para)
-                elements.append(Spacer(1, 6))
-                elements.append(Paragraph(str(row['observacoes']), styles['Normal']))
-        
-        # Gerar PDF
-        doc.build(elements)
-        buffer.seek(0)
-        
-        return send_file(
-            buffer,
-            mimetype='application/pdf',
-            as_attachment=True,
-            download_name='fichas_individuais_completas.pdf'
-        )
-        
-    except Exception as e:
-        logger.error(f"Erro ao gerar fichas individuais: {e}")
-        flash('Erro ao gerar fichas individuais.')
-        return redirect(url_for('relatorios.relatorio_estatistico'))
 
 @relatorios_bp.route('/ficha/<int:cadastro_id>')
 def ficha(cadastro_id):
