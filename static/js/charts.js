@@ -82,7 +82,13 @@ function createIdadeChart(data) {
         return;
     }
     
-    const ctx = document.getElementById('idadeChart').getContext('2d');
+    const canvasElement = document.getElementById('idadeChart');
+    if (!canvasElement) {
+        console.error('Elemento idadeChart não encontrado');
+        return;
+    }
+    
+    const ctx = canvasElement.getContext('2d');
     charts.idade = new Chart(ctx, {
         type: 'doughnut',
         data: {

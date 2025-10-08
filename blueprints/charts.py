@@ -82,9 +82,9 @@ def demografia_data():
         idade_query = """
         SELECT 
             CASE 
-                WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, TO_DATE(data_nascimento, 'YYYY-MM-DD'))) < 18 THEN 'Menor 18'
-                WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, TO_DATE(data_nascimento, 'YYYY-MM-DD'))) < 30 THEN '18-29'
-                WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, TO_DATE(data_nascimento, 'YYYY-MM-DD'))) < 50 THEN '30-49'
+                WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento::date)) < 18 THEN 'Menor 18'
+                WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento::date)) < 30 THEN '18-29'
+                WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento::date)) < 50 THEN '30-49'
                 ELSE '50+'
             END as faixa,
             COUNT(*) as total
@@ -113,7 +113,7 @@ def demografia_data():
         logger.info("📈 Executando query de evolução mensal...")
         evolucao_query = """
         SELECT 
-            TO_CHAR(TO_DATE(data_cadastro, 'YYYY-MM-DD'), 'YYYY-MM') as mes,
+            TO_CHAR(data_cadastro, 'YYYY-MM') as mes,
             COUNT(*) as total
         FROM cadastros 
         WHERE data_cadastro IS NOT NULL
