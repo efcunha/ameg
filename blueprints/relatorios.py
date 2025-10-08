@@ -624,64 +624,186 @@ def exportar():
             elements.append(Paragraph(f"<b>Total de Cadastros: {dados['total']}</b>", styles['Heading2']))
             elements.append(Spacer(1, 12))
             
-            # Por Bairro
-            elements.append(Paragraph("<b>📍 Por Bairro</b>", styles['Heading3']))
-            elements.append(Spacer(1, 6))
-            
-            bairro_data = [['Bairro', 'Total']]
-            for row in dados['por_bairro']:
-                bairro_data.append([str(row['bairro'] or 'Não informado'), str(row['count'])])
-            
-            bairro_table = Table(bairro_data)
-            bairro_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 8),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            elements.append(bairro_table)
-            elements.append(Spacer(1, 20))
-            
-            # Por Gênero
-            elements.append(Paragraph("<b>👥 Por Gênero</b>", styles['Heading3']))
-            elements.append(Spacer(1, 6))
-            
-            genero_data = [['Gênero', 'Total']]
-            for row in dados['por_genero']:
-                genero_data.append([str(row['genero'] or 'Não informado'), str(row['count'])])
-            
-            genero_table = Table(genero_data)
-            genero_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 8),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            elements.append(genero_table)
-            elements.append(Spacer(1, 20))
-            
-            # Por Faixa Etária
-            elements.append(Paragraph("<b>🎂 Por Faixa Etária</b>", styles['Heading3']))
-            elements.append(Spacer(1, 6))
-            
-            idade_data = [['Faixa Etária', 'Total']]
-            for row in dados['por_idade']:
-                idade_data.append([str(row['faixa_etaria'] or 'Não informado'), str(row['count'])])
-            
-            idade_table = Table(idade_data)
-            idade_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 8),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            elements.append(idade_table)
+            # Tentar criar gráficos de pizza, se falhar usar apenas tabelas
+            try:
+                from reportlab.graphics.shapes import Drawing
+                from reportlab.graphics.charts.piecharts import Pie
+                from reportlab.lib import colors as rl_colors
+                
+                # Por Bairro com gráfico
+                bairro_para = Paragraph("<b>📍 Por Bairro</b>", styles['Heading3'])
+                elements.append(bairro_para)
+                elements.append(Spacer(1, 6))
+                
+                # Gráfico de pizza
+                drawing = Drawing(200, 150)
+                pie = Pie()
+                pie.x = 50
+                pie.y = 25
+                pie.width = 100
+                pie.height = 100
+                pie.data = [row['count'] for row in dados['por_bairro'][:6]]  # Limitar a 6 itens
+                pie.labels = [str(row['bairro'] or 'N/A')[:10] for row in dados['por_bairro'][:6]]  # Limitar texto
+                
+                # Cores simples
+                pie_colors = [rl_colors.blue, rl_colors.red, rl_colors.green, rl_colors.orange, rl_colors.purple, rl_colors.brown]
+                for i in range(len(pie.data)):
+                    pie.slices[i].fillColor = pie_colors[i % len(pie_colors)]
+                
+                drawing.add(pie)
+                elements.append(drawing)
+                elements.append(Spacer(1, 10))
+                
+                # Tabela de dados
+                bairro_data = [['Bairro', 'Total']]
+                for row in dados['por_bairro']:
+                    bairro_data.append([str(row['bairro'] or 'Não informado'), str(row['count'])])
+                
+                bairro_table = Table(bairro_data)
+                bairro_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 8),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                elements.append(bairro_table)
+                elements.append(Spacer(1, 20))
+                
+                # Por Gênero com gráfico
+                genero_para = Paragraph("<b>👥 Por Gênero</b>", styles['Heading3'])
+                elements.append(genero_para)
+                elements.append(Spacer(1, 6))
+                
+                drawing2 = Drawing(200, 150)
+                pie2 = Pie()
+                pie2.x = 50
+                pie2.y = 25
+                pie2.width = 100
+                pie2.height = 100
+                pie2.data = [row['count'] for row in dados['por_genero']]
+                pie2.labels = [str(row['genero'] or 'N/A') for row in dados['por_genero']]
+                
+                for i in range(len(pie2.data)):
+                    pie2.slices[i].fillColor = pie_colors[i % len(pie_colors)]
+                
+                drawing2.add(pie2)
+                elements.append(drawing2)
+                elements.append(Spacer(1, 10))
+                
+                genero_data = [['Gênero', 'Total']]
+                for row in dados['por_genero']:
+                    genero_data.append([str(row['genero'] or 'Não informado'), str(row['count'])])
+                
+                genero_table = Table(genero_data)
+                genero_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 8),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                elements.append(genero_table)
+                elements.append(Spacer(1, 20))
+                
+                # Por Idade com gráfico
+                idade_para = Paragraph("<b>🎂 Por Faixa Etária</b>", styles['Heading3'])
+                elements.append(idade_para)
+                elements.append(Spacer(1, 6))
+                
+                drawing3 = Drawing(200, 150)
+                pie3 = Pie()
+                pie3.x = 50
+                pie3.y = 25
+                pie3.width = 100
+                pie3.height = 100
+                pie3.data = [row['count'] for row in dados['por_idade']]
+                pie3.labels = [str(row['faixa_etaria'] or 'N/A')[:10] for row in dados['por_idade']]
+                
+                for i in range(len(pie3.data)):
+                    pie3.slices[i].fillColor = pie_colors[i % len(pie_colors)]
+                
+                drawing3.add(pie3)
+                elements.append(drawing3)
+                elements.append(Spacer(1, 10))
+                
+                idade_data = [['Faixa Etária', 'Total']]
+                for row in dados['por_idade']:
+                    idade_data.append([str(row['faixa_etaria'] or 'Não informado'), str(row['count'])])
+                
+                idade_table = Table(idade_data)
+                idade_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 8),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                elements.append(idade_table)
+                
+            except Exception as e:
+                # Se falhar, usar apenas tabelas sem gráficos
+                # Por Bairro
+                elements.append(Paragraph("<b>📍 Por Bairro</b>", styles['Heading3']))
+                elements.append(Spacer(1, 6))
+                
+                bairro_data = [['Bairro', 'Total']]
+                for row in dados['por_bairro']:
+                    bairro_data.append([str(row['bairro'] or 'Não informado'), str(row['count'])])
+                
+                bairro_table = Table(bairro_data)
+                bairro_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 8),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                elements.append(bairro_table)
+                elements.append(Spacer(1, 20))
+                
+                # Por Gênero
+                elements.append(Paragraph("<b>👥 Por Gênero</b>", styles['Heading3']))
+                elements.append(Spacer(1, 6))
+                
+                genero_data = [['Gênero', 'Total']]
+                for row in dados['por_genero']:
+                    genero_data.append([str(row['genero'] or 'Não informado'), str(row['count'])])
+                
+                genero_table = Table(genero_data)
+                genero_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 8),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                elements.append(genero_table)
+                elements.append(Spacer(1, 20))
+                
+                # Por Faixa Etária
+                elements.append(Paragraph("<b>🎂 Por Faixa Etária</b>", styles['Heading3']))
+                elements.append(Spacer(1, 6))
+                
+                idade_data = [['Faixa Etária', 'Total']]
+                for row in dados['por_idade']:
+                    idade_data.append([str(row['faixa_etaria'] or 'Não informado'), str(row['count'])])
+                
+                idade_table = Table(idade_data)
+                idade_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 8),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                elements.append(idade_table)
             
         else:
             # Para todos os outros tipos (simplificado, bairro, completo, caixa)
