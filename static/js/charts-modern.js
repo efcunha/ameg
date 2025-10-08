@@ -9,9 +9,15 @@ window.addEventListener('load', function() {
             console.log('✅ Chart.js disponível - criando gráficos modernos');
             createModernCharts();
         } else {
-            console.log('❌ Chart.js não disponível - mantendo CSS');
+            console.log('❌ Chart.js não disponível');
+            // Tentar novamente em 2 segundos
+            setTimeout(function() {
+                if (typeof Chart !== 'undefined') {
+                    createModernCharts();
+                }
+            }, 2000);
         }
-    }, 2000);
+    }, 1000);
 });
 
 async function createModernCharts() {
