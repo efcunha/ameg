@@ -820,11 +820,34 @@ def exportar():
             elif tipo == 'bairro':
                 table_data = [['Bairro', 'Total de Cadastros', 'Renda Média']]
                 for row in dados:
-                    table_data.append([
-                        str(row['bairro'] or 'Não informado'),
-                        str(row['total'] or '0'),
-                        f"R$ {row['renda_media']:.2f}" if row['renda_media'] else 'Não informado'
-                    ])
+                    # Tentar como dicionário primeiro, depois como tupla
+                    if isinstance(row, dict):
+                        bairro = str(row.get('bairro', 'Não informado'))
+                        total = str(row.get('total', '0'))
+                        renda_media = f"R$ {row.get('renda_media', 0):.2f}" if row.get('renda_media') else 'Não informado'
+                    else:
+                        # Como tupla: bairro, total, renda_media
+                        bairro = str(safe_get(row, 0, 'Não informado'))
+                        total = str(safe_get(row, 1, '0'))
+                        renda_media = f"R$ {safe_get(row, 2, 0):.2f}" if safe_get(row, 2) else 'Não informado'
+                    
+                    table_data.append([bairro, total, renda_media])
+                
+                # Criar e adicionar tabela
+                table = Table(table_data)
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 8),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                elements.append(table)
             elif tipo == 'caixa':
                 table_data = [['Tipo', 'Valor', 'Descrição', 'Data']]
                 for row in dados:
@@ -834,6 +857,47 @@ def exportar():
                         str(row['descricao'] or ''),
                         row['data_movimentacao'].strftime('%d/%m/%Y') if row['data_movimentacao'] else ''
                     ])
+                
+                # Criar e adicionar tabela
+                table = Table(table_data)
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 8),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                elements.append(table)
+            elif tipo == 'simplificado':
+                table_data = [['Nome', 'Telefone', 'Bairro', 'Renda']]
+                for row in dados:
+                    table_data.append([
+                        str(row['nome_completo'] or ''),
+                        str(row['telefone'] or ''),
+                        str(row['bairro'] or ''),
+                        f"R$ {row['renda_familiar'] or '0'}" if row['renda_familiar'] else 'Não informado'
+                    ])
+                
+                # Criar e adicionar tabela
+                table = Table(table_data)
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 8),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                elements.append(table)
             else:
                 # Relatório completo - fichas individuais completas
                 for i, row in enumerate(dados):
