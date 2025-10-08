@@ -82,9 +82,24 @@ def demografia_data():
         idade_query = """
         SELECT 
             CASE 
-                WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento::date)) < 18 THEN 'Menor 18'
-                WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento::date)) < 30 THEN '18-29'
-                WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento::date)) < 50 THEN '30-49'
+                WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, 
+                    CASE 
+                        WHEN data_nascimento ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' 
+                        THEN data_nascimento::date 
+                        ELSE NULL 
+                    END)) < 18 THEN 'Menor 18'
+                WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, 
+                    CASE 
+                        WHEN data_nascimento ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' 
+                        THEN data_nascimento::date 
+                        ELSE NULL 
+                    END)) < 30 THEN '18-29'
+                WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, 
+                    CASE 
+                        WHEN data_nascimento ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' 
+                        THEN data_nascimento::date 
+                        ELSE NULL 
+                    END)) < 50 THEN '30-49'
                 ELSE '50+'
             END as faixa,
             COUNT(*) as total
@@ -217,9 +232,21 @@ def socioeconomico_data():
         renda_query = """
         SELECT 
             CASE 
-                WHEN renda_familiar::numeric < 1000 THEN 'Até R$ 1.000'
-                WHEN renda_familiar::numeric < 2000 THEN 'R$ 1.000 - R$ 2.000'
-                WHEN renda_familiar::numeric < 3000 THEN 'R$ 2.000 - R$ 3.000'
+                WHEN (CASE 
+                    WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' 
+                    THEN renda_familiar::numeric 
+                    ELSE 0 
+                END) < 1000 THEN 'Até R$ 1.000'
+                WHEN (CASE 
+                    WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' 
+                    THEN renda_familiar::numeric 
+                    ELSE 0 
+                END) < 2000 THEN 'R$ 1.000 - R$ 2.000'
+                WHEN (CASE 
+                    WHEN renda_familiar ~ '^[0-9]+\.?[0-9]*$' 
+                    THEN renda_familiar::numeric 
+                    ELSE 0 
+                END) < 3000 THEN 'R$ 2.000 - R$ 3.000'
                 ELSE 'Acima R$ 3.000'
             END as faixa_renda,
             COUNT(*) as total
