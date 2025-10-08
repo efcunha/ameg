@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, render_template, session, redirect, url_for, request
+from flask import Blueprint, jsonify, render_template, session, redirect, url_for
 from database import get_db_connection
 from datetime import datetime, timedelta
 import logging
@@ -55,29 +55,6 @@ def execute_query(query):
         logger.error(f"📝 Query que falhou: {query}")
         return []
 
-def build_where_clause(periodo, bairro):
-    """Constrói cláusula WHERE baseada nos filtros"""
-    conditions = []
-    
-    # Filtro de período
-    if periodo == '6m':
-        conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '6 months'")
-    elif periodo == '1a':
-        conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '1 year'")
-    
-    # Filtro de bairro
-    if bairro and bairro != 'todos':
-        conditions.append(f"bairro = '{bairro}'")
-    
-    # Construir WHERE clause
-    if conditions:
-        where_clause = "WHERE " + " AND ".join(conditions)
-    else:
-        where_clause = "WHERE 1=1"
-    
-    logger.info(f"🔍 WHERE clause construída: {where_clause}")
-    return where_clause
-
 @charts_bp.route('/api/charts/filters')
 @login_required
 def get_filter_options():
@@ -127,13 +104,30 @@ def demografia_data():
     logger.info("📊 INICIANDO API DEMOGRAFIA")
     
     # Obter filtros da query string
+    from flask import request
     periodo = request.args.get('periodo', 'todos')
     bairro = request.args.get('bairro', 'todos')
     
     logger.info(f"🔍 Filtros recebidos - Período: {periodo}, Bairro: {bairro}")
     
     try:
-        where_clause = build_where_clause(periodo, bairro)
+        # Construir condições WHERE
+        conditions = []
+        
+        if periodo == '6m':
+            conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '6 months'")
+        elif periodo == '1a':
+            conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '1 year'")
+        
+        if bairro and bairro != 'todos':
+            conditions.append(f"bairro = '{bairro}'")
+        
+        # Construir WHERE clause - se não há condições, usar WHERE 1=1
+        if conditions:
+            where_clause = "WHERE " + " AND ".join(conditions)
+        else:
+            where_clause = "WHERE 1=1"
+        logger.info(f"🔍 WHERE clause: {where_clause}")
         
         # Faixa etária
         logger.info("🎂 Executando query de faixa etária...")
@@ -213,20 +207,33 @@ def saude_data():
     logger.info("🏥 INICIANDO API SAÚDE")
     
     # Obter filtros da query string
+    from flask import request
     periodo = request.args.get('periodo', 'todos')
     bairro = request.args.get('bairro', 'todos')
     
     logger.info(f"🔍 Filtros aplicados - Período: {periodo}, Bairro: {bairro}")
     
     try:
-        where_clause = build_where_clause(periodo, bairro)
+        # Construir filtros WHERE
+        where_conditions = []
         
-        # Doenças crônicas
+        # Filtro de período
+        if periodo == '6m':
+            where_conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '6 months'")
+        elif periodo == '1a':
+            where_conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '1 year'")
+        
+        # Filtro de bairro
+        if bairro != 'todos':
+            where_conditions.append(f"bairro = '{bairro}'")
+        
+        where_clause = " AND " + " AND ".join(where_conditions) if where_conditions else ""
+        # Doenças crônicas - CORRIGIDO: tem_doenca_cronica é VARCHAR, não BOOLEAN
         logger.info("💊 Executando query de doenças crônicas...")
         doencas_query = f"""
         SELECT doencas_cronicas, COUNT(*) as total
         FROM cadastros 
-        {where_clause} AND tem_doenca_cronica = 'Sim' AND doencas_cronicas IS NOT NULL AND doencas_cronicas != ''
+        WHERE tem_doenca_cronica = 'Sim' AND doencas_cronicas IS NOT NULL AND doencas_cronicas != ''{where_clause}
         GROUP BY doencas_cronicas
         ORDER BY total DESC
         LIMIT 10
@@ -234,12 +241,12 @@ def saude_data():
         doencas_data = execute_query(doencas_query)
         logger.info(f"✅ Dados de doenças obtidos: {len(doencas_data)} registros")
         
-        # Medicamentos
+        # Medicamentos - CORRIGIDO: campo é medicamentos_continuos, não medicamentos_uso
         logger.info("💉 Executando query de medicamentos...")
         medicamentos_query = f"""
         SELECT medicamentos_continuos, COUNT(*) as total
         FROM cadastros 
-        {where_clause} AND usa_medicamento_continuo = 'Sim' AND medicamentos_continuos IS NOT NULL AND medicamentos_continuos != ''
+        WHERE usa_medicamento_continuo = 'Sim' AND medicamentos_continuos IS NOT NULL AND medicamentos_continuos != ''{where_clause}
         GROUP BY medicamentos_continuos
         ORDER BY total DESC
         LIMIT 10
@@ -247,12 +254,12 @@ def saude_data():
         medicamentos_data = execute_query(medicamentos_query)
         logger.info(f"✅ Dados de medicamentos obtidos: {len(medicamentos_data)} registros")
         
-        # Deficiências
+        # Deficiências - CORRIGIDO: campo é tipo_deficiencia, não deficiencia_tipo
         logger.info("♿ Executando query de deficiências...")
         deficiencias_query = f"""
         SELECT tipo_deficiencia, COUNT(*) as total
         FROM cadastros 
-        {where_clause} AND tem_deficiencia = 'Sim' AND tipo_deficiencia IS NOT NULL AND tipo_deficiencia != ''
+        WHERE tem_deficiencia = 'Sim' AND tipo_deficiencia IS NOT NULL AND tipo_deficiencia != ''{where_clause}
         GROUP BY tipo_deficiencia
         ORDER BY total DESC
         """
@@ -287,15 +294,28 @@ def socioeconomico_data():
     logger.info("💰 INICIANDO API SOCIOECONÔMICO")
     
     # Obter filtros da query string
+    from flask import request
     periodo = request.args.get('periodo', 'todos')
     bairro = request.args.get('bairro', 'todos')
     
     logger.info(f"🔍 Filtros aplicados - Período: {periodo}, Bairro: {bairro}")
     
     try:
-        where_clause = build_where_clause(periodo, bairro)
+        # Construir filtros WHERE
+        where_conditions = []
         
-        # Renda familiar
+        # Filtro de período
+        if periodo == '6m':
+            where_conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '6 months'")
+        elif periodo == '1a':
+            where_conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '1 year'")
+        
+        # Filtro de bairro
+        if bairro != 'todos':
+            where_conditions.append(f"bairro = '{bairro}'")
+        
+        where_clause = " AND " + " AND ".join(where_conditions) if where_conditions else ""
+        # Renda familiar - CORRIGIDO: usar ::text para regex
         logger.info("💵 Executando query de renda familiar...")
         renda_query = f"""
         SELECT 
@@ -308,7 +328,7 @@ def socioeconomico_data():
             END as faixa_renda,
             COUNT(*) as total
         FROM cadastros 
-        {where_clause} AND renda_familiar IS NOT NULL
+        WHERE renda_familiar IS NOT NULL{where_clause}
         GROUP BY faixa_renda
         ORDER BY total DESC
         """
@@ -320,7 +340,7 @@ def socioeconomico_data():
             renda_fallback_query = f"""
             SELECT 'Dados disponíveis' as faixa_renda, COUNT(*) as total
             FROM cadastros
-            {where_clause}
+            WHERE 1=1{where_clause}
             """
             renda_data = execute_query(renda_fallback_query)
         
@@ -331,7 +351,7 @@ def socioeconomico_data():
         moradia_query = f"""
         SELECT casa_tipo, COUNT(*) as total
         FROM cadastros 
-        {where_clause} AND casa_tipo IS NOT NULL AND casa_tipo != ''
+        WHERE casa_tipo IS NOT NULL AND casa_tipo != ''{where_clause}
         GROUP BY casa_tipo
         ORDER BY total DESC
         """
@@ -343,7 +363,7 @@ def socioeconomico_data():
         beneficios_query = f"""
         SELECT beneficios_sociais, COUNT(*) as total
         FROM cadastros 
-        {where_clause} AND beneficios_sociais IS NOT NULL AND beneficios_sociais != ''
+        WHERE beneficios_sociais IS NOT NULL AND beneficios_sociais != ''{where_clause}
         GROUP BY beneficios_sociais
         ORDER BY total DESC
         """
@@ -370,20 +390,34 @@ def trabalho_data():
     logger.info("💼 INICIANDO API TRABALHO")
     
     # Obter filtros da query string
+    from flask import request
     periodo = request.args.get('periodo', 'todos')
     bairro = request.args.get('bairro', 'todos')
     
     logger.info(f"🔍 Filtros aplicados - Período: {periodo}, Bairro: {bairro}")
     
     try:
-        where_clause = build_where_clause(periodo, bairro)
+        # Construir filtros WHERE
+        where_conditions = []
+        
+        # Filtro de período
+        if periodo == '6m':
+            where_conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '6 months'")
+        elif periodo == '1a':
+            where_conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '1 year'")
+        
+        # Filtro de bairro
+        if bairro != 'todos':
+            where_conditions.append(f"bairro = '{bairro}'")
+        
+        where_clause = " AND " + " AND ".join(where_conditions) if where_conditions else ""
         
         # Tipos de trabalho
         logger.info("🔨 Executando query de tipos de trabalho...")
         trabalho_query = f"""
         SELECT tipo_trabalho, COUNT(*) as total
         FROM cadastros 
-        {where_clause} AND tipo_trabalho IS NOT NULL AND tipo_trabalho != ''
+        WHERE tipo_trabalho IS NOT NULL AND tipo_trabalho != ''{where_clause}
         GROUP BY tipo_trabalho
         ORDER BY total DESC
         """
@@ -395,7 +429,7 @@ def trabalho_data():
         local_query = f"""
         SELECT local_trabalho, COUNT(*) as total
         FROM cadastros 
-        {where_clause} AND local_trabalho IS NOT NULL AND local_trabalho != ''
+        WHERE local_trabalho IS NOT NULL AND local_trabalho != ''{where_clause}
         GROUP BY local_trabalho
         ORDER BY total DESC
         LIMIT 10
