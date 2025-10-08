@@ -19,9 +19,11 @@ Sistema web completo para cadastro familiar da Associação dos Ambulantes e Tra
 - **Edição completa** - todos os campos editáveis
 - **Proteção de dados** - validação de limites e sanitização
 
-### **Sistema de Relatórios**
+### **Sistema de Relatórios Avançado**
 - **6 tipos de relatórios** especializados
+- **Fichas individuais completas** - PDFs com todos os dados + foto 3x4
 - **Exportação múltipla** - CSV, PDF, DOC
+- **Formatação otimizada** - Orientação paisagem para relatório de saúde
 - **Paginação otimizada** - 50 registros por página
 - **Filtros avançados** - busca e ordenação
 - **Estatísticas em tempo real** - dashboard com métricas
@@ -302,11 +304,18 @@ DATABASE_URL=<configurada_automaticamente>
 
 ## 🔄 Atualizações Recentes
 
+### **Melhorias nos Relatórios (Outubro 2025)**
+- **Fichas individuais completas**: Relatórios completos e estatísticos agora geram PDFs com fichas completas incluindo foto 3x4
+- **Formatação otimizada**: Correção de sobreposição de texto e ajuste de larguras de colunas
+- **Orientação paisagem**: Relatório de saúde usa layout paisagem para melhor legibilidade
+- **Campos corrigidos**: Uso de campos reais da tabela (casa_tipo, energia, agua, esgoto, etc.)
+- **Dados de saúde precisos**: Correção para usar campos corretos (tem_doenca_cronica, doencas_cronicas, etc.)
+
 ### **Arquitetura de Blueprints**
 - Migração completa para arquitetura modular
-- App.py reduzido de 3.900+ para 50 linhas (98.7% redução)
+- App.py reduzido de 3.900+ para 127 linhas (96.7% redução)
 - 7 blueprints especializados implementados
-- Preservação de 100% das funcionalidades (42→44 rotas)
+- Preservação de 100% das funcionalidades (42→43 rotas)
 - Limpeza de arquivos não utilizados
 
 ### **Segurança**
