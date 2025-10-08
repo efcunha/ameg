@@ -499,21 +499,26 @@ def exportar():
                 ])
             elif tipo not in ['estatistico', 'renda']:  # Para outros tipos
                 if tipo != 'caixa':
-                    row_data = [
-                        row[1] if hasattr(row, '__getitem__') else getattr(row, 'nome_completo', ''),
-                        row[6] if hasattr(row, '__getitem__') else getattr(row, 'telefone', ''),
-                        row[2] if hasattr(row, '__getitem__') else getattr(row, 'endereco', ''),
-                        row[3] if hasattr(row, '__getitem__') else getattr(row, 'numero', ''),
-                        row[4] if hasattr(row, '__getitem__') else getattr(row, 'bairro', ''),
-                        row[5] if hasattr(row, '__getitem__') else getattr(row, 'cep', ''),
-                        row[8] if hasattr(row, '__getitem__') else getattr(row, 'genero', ''),
-                        row[9] if hasattr(row, '__getitem__') else getattr(row, 'idade', ''),
-                        row[13] if hasattr(row, '__getitem__') else getattr(row, 'cpf', ''),
-                        row[14] if hasattr(row, '__getitem__') else getattr(row, 'rg', ''),
-                        row[16] if hasattr(row, '__getitem__') else getattr(row, 'estado_civil', ''),
-                        row[17] if hasattr(row, '__getitem__') else getattr(row, 'escolaridade', ''),
-                        row[40] if hasattr(row, '__getitem__') else getattr(row, 'renda_familiar', '')
-                    ]
+                    # Verificar se row tem elementos suficientes
+                    if len(row) > 40:
+                        row_data = [
+                            row[1] if len(row) > 1 else '',   # nome_completo
+                            row[7] if len(row) > 7 else '',   # telefone
+                            row[2] if len(row) > 2 else '',   # endereco
+                            row[3] if len(row) > 3 else '',   # numero
+                            row[4] if len(row) > 4 else '',   # bairro
+                            row[5] if len(row) > 5 else '',   # cep
+                            row[9] if len(row) > 9 else '',   # genero
+                            row[10] if len(row) > 10 else '', # idade
+                            row[14] if len(row) > 14 else '', # cpf
+                            row[15] if len(row) > 15 else '', # rg
+                            row[17] if len(row) > 17 else '', # estado_civil
+                            row[18] if len(row) > 18 else '', # escolaridade
+                            row[41] if len(row) > 41 else ''  # renda_familiar
+                        ]
+                    else:
+                        # Fallback para dados incompletos
+                        row_data = [row[0] if len(row) > 0 else '', '', '', '', '', '', '', '', '', '', '', '', '']
                     writer.writerow(row_data)
         
         output.seek(0)
@@ -703,13 +708,24 @@ def exportar():
             # Relatório completo
             table_data = [['Nome', 'Telefone', 'Bairro', 'CPF', 'Renda']]
             for row in dados:
-                table_data.append([
-                    str(row[1] if hasattr(row, '__getitem__') else getattr(row, 'nome_completo', '')),
-                    str(row[6] if hasattr(row, '__getitem__') else getattr(row, 'telefone', '')),
-                    str(row[4] if hasattr(row, '__getitem__') else getattr(row, 'bairro', '')),
-                    str(row[13] if hasattr(row, '__getitem__') else getattr(row, 'cpf', '')),
-                    f"R$ {row[40]:.2f}" if (hasattr(row, '__getitem__') and row[40]) else 'Não informado'
-                ])
+                # Verificar se row tem elementos suficientes
+                if len(row) > 40:
+                    table_data.append([
+                        str(row[1] if len(row) > 1 else ''),  # nome_completo
+                        str(row[7] if len(row) > 7 else ''),  # telefone
+                        str(row[4] if len(row) > 4 else ''),  # bairro
+                        str(row[14] if len(row) > 14 else ''), # cpf
+                        f"R$ {row[41]:.2f}" if len(row) > 41 and row[41] else 'Não informado'  # renda_familiar
+                    ])
+                else:
+                    # Fallback para dados incompletos
+                    table_data.append([
+                        str(row[0] if len(row) > 0 else ''),
+                        '',
+                        '',
+                        '',
+                        'Não informado'
+                    ])
         
         # Criar tabela apenas para tipos que não sejam estatístico nem renda
         if tipo not in ['estatistico', 'renda']:
