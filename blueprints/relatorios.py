@@ -4,7 +4,7 @@ import psycopg2.extras
 import csv
 import io
 import logging
-from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.pagesizes import letter, A4, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
@@ -595,6 +595,8 @@ def exportar():
         elif tipo == 'caixa':
             elements.append(Paragraph("Relatório de Movimentações do Caixa", title_style))
         elif tipo == 'saude':
+            # Usar orientação paisagem para relatório de saúde
+            doc = SimpleDocTemplate(buffer, pagesize=landscape(A4))
             elements.append(Paragraph("Relatório de Saúde", title_style))
         
         elements.append(Spacer(1, 12))
@@ -903,81 +905,115 @@ def exportar():
                 ]))
                 elements.append(table)
             elif tipo == 'saude':
-                table_data = [['Nome Completo', 'Pessoa', 'Idade', 'Telefone', 'Bairro', 'Condições de Saúde']]
-                for row in dados:
-                    # Montar condições de saúde de forma mais compacta
-                    condicoes = []
-                    if safe_get(row, 'tem_doenca_cronica') == 'Sim':
-                        doencas = safe_get(row, 'doencas_cronicas', '')
-                        if doencas:
-                            condicoes.append(f"Doença: {doencas[:40]}")
-                        else:
-                            condicoes.append("Doença Crônica")
-                    
-                    if safe_get(row, 'usa_medicamento_continuo') == 'Sim':
-                        medicamentos = safe_get(row, 'medicamentos', '')
-                        if medicamentos:
-                            condicoes.append(f"Medicamento: {medicamentos[:35]}")
-                        else:
-                            condicoes.append("Medicamento Contínuo")
-                    
-                    if safe_get(row, 'tem_doenca_mental') == 'Sim':
-                        doencas_mentais = safe_get(row, 'doencas_mentais', '')
-                        if doencas_mentais:
-                            condicoes.append(f"Mental: {doencas_mentais[:30]}")
-                        else:
-                            condicoes.append("Doença Mental")
-                    
-                    if safe_get(row, 'tem_deficiencia') == 'Sim':
-                        deficiencias = safe_get(row, 'deficiencias', '')
-                        if deficiencias:
-                            condicoes.append(f"Deficiência: {deficiencias[:30]}")
-                        else:
-                            condicoes.append("Deficiência")
-                    
-                    if safe_get(row, 'precisa_cuidados_especiais') == 'Sim':
-                        condicoes.append("Cuidados Especiais")
-                    
-                    # Quebrar condições em múltiplas linhas se necessário
-                    condicoes_texto = "\n".join(condicoes) if condicoes else "Nenhuma"
-                    
-                    # Não limitar tanto os textos
-                    nome = str(safe_get(row, 'nome_completo', ''))[:35]
-                    pessoa = str(safe_get(row, 'nome_pessoa', ''))[:25]
-                    telefone = str(safe_get(row, 'telefone', ''))
-                    bairro = str(safe_get(row, 'bairro', ''))[:20]
-                    
-                    table_data.append([
-                        nome,
-                        pessoa,
-                        str(safe_get(row, 'idade', '')),
-                        telefone,
-                        bairro,
-                        condicoes_texto
-                    ])
+                # Criar múltiplas tabelas menores para melhor formatação
+                elements.append(Paragraph("<b>Cadastros com Condições de Saúde</b>", styles['Heading2']))
+                elements.append(Spacer(1, 12))
                 
-                # Criar e adicionar tabela com larguras maiores
-                table = Table(table_data, colWidths=[130, 90, 30, 70, 80, 160])
-                table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 10),
-                    ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-                    ('TOPPADDING', (0, 0), (-1, 0), 10),
-                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 1), (-1, -1), 9),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 6),
-                    ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-                    ('TOPPADDING', (0, 1), (-1, -1), 8),
-                    ('BOTTOMPADDING', (0, 1), (-1, -1), 8)
-                ]))
-                elements.append(table)
+                # Agrupar por cadastro para melhor organização
+                cadastros_agrupados = {}
+                for row in dados:
+                    cadastro_id = safe_get(row, 'id') or safe_get(row, 'cadastro_id')
+                    if cadastro_id not in cadastros_agrupados:
+                        cadastros_agrupados[cadastro_id] = {
+                            'info': row,
+                            'pessoas': []
+                        }
+                    cadastros_agrupados[cadastro_id]['pessoas'].append(row)
+                
+                # Criar uma seção para cada cadastro
+                for cadastro_id, dados_cadastro in cadastros_agrupados.items():
+                    info = dados_cadastro['info']
+                    
+                    # Cabeçalho do cadastro
+                    cadastro_para = Paragraph(f"<b>Cadastro: {safe_get(info, 'nome_completo', 'N/A')}</b>", styles['Heading3'])
+                    elements.append(cadastro_para)
+                    elements.append(Spacer(1, 6))
+                    
+                    # Informações básicas
+                    info_basica = [
+                        ['Idade:', str(safe_get(info, 'idade', 'N/A'))],
+                        ['Telefone:', str(safe_get(info, 'telefone', 'N/A'))],
+                        ['Bairro:', str(safe_get(info, 'bairro', 'N/A'))]
+                    ]
+                    
+                    info_table = Table(info_basica, colWidths=[60, 200])
+                    info_table.setStyle(TableStyle([
+                        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 10),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 4)
+                    ]))
+                    elements.append(info_table)
+                    elements.append(Spacer(1, 8))
+                    
+                    # Tabela de condições de saúde das pessoas
+                    condicoes_data = [['Pessoa', 'Condições de Saúde']]
+                    
+                    for pessoa_row in dados_cadastro['pessoas']:
+                        nome_pessoa = str(safe_get(pessoa_row, 'nome_pessoa', 'N/A'))
+                        
+                        # Montar condições de forma organizada
+                        condicoes = []
+                        
+                        if safe_get(pessoa_row, 'tem_doenca_cronica') == 'Sim':
+                            doencas = safe_get(pessoa_row, 'doencas_cronicas', '')
+                            if doencas:
+                                condicoes.append(f"• Doença Crônica: {doencas}")
+                            else:
+                                condicoes.append("• Doença Crônica")
+                        
+                        if safe_get(pessoa_row, 'usa_medicamento_continuo') == 'Sim':
+                            medicamentos = safe_get(pessoa_row, 'medicamentos', '')
+                            if medicamentos:
+                                condicoes.append(f"• Medicamento: {medicamentos}")
+                            else:
+                                condicoes.append("• Medicamento Contínuo")
+                        
+                        if safe_get(pessoa_row, 'tem_doenca_mental') == 'Sim':
+                            doencas_mentais = safe_get(pessoa_row, 'doencas_mentais', '')
+                            if doencas_mentais:
+                                condicoes.append(f"• Doença Mental: {doencas_mentais}")
+                            else:
+                                condicoes.append("• Doença Mental")
+                        
+                        if safe_get(pessoa_row, 'tem_deficiencia') == 'Sim':
+                            deficiencias = safe_get(pessoa_row, 'deficiencias', '')
+                            if deficiencias:
+                                condicoes.append(f"• Deficiência: {deficiencias}")
+                            else:
+                                condicoes.append("• Deficiência")
+                        
+                        if safe_get(pessoa_row, 'precisa_cuidados_especiais') == 'Sim':
+                            cuidados = safe_get(pessoa_row, 'cuidados_especiais', '')
+                            if cuidados:
+                                condicoes.append(f"• Cuidados Especiais: {cuidados}")
+                            else:
+                                condicoes.append("• Cuidados Especiais")
+                        
+                        condicoes_texto = "\n".join(condicoes) if condicoes else "Nenhuma condição registrada"
+                        
+                        condicoes_data.append([nome_pessoa, condicoes_texto])
+                    
+                    # Criar tabela de condições
+                    condicoes_table = Table(condicoes_data, colWidths=[150, 400])
+                    condicoes_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, 0), 11),
+                        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                        ('FONTSIZE', (0, 1), (-1, -1), 10),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+                        ('TOPPADDING', (0, 0), (-1, -1), 8),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey])
+                    ]))
+                    elements.append(condicoes_table)
+                    elements.append(Spacer(1, 20))
             elif tipo == 'simplificado':
                 table_data = [['Nome', 'Telefone', 'Bairro', 'Renda']]
                 for row in dados:
