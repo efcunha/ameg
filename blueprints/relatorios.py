@@ -558,30 +558,19 @@ def exportar():
                 elements.append(Paragraph("Relatório Completo de Cadastros", title_style))
         elif tipo == 'estatistico':
             elements.append(Paragraph("Relatório Estatístico", title_style))
+        elif tipo == 'simplificado':
+            elements.append(Paragraph("Relatório Simplificado", title_style))
+        elif tipo == 'bairro':
+            elements.append(Paragraph("Relatório por Bairro", title_style))
+        elif tipo == 'renda':
+            elements.append(Paragraph("Relatório de Renda", title_style))
         elif tipo == 'caixa':
             elements.append(Paragraph("Relatório de Movimentações do Caixa", title_style))
         
         elements.append(Spacer(1, 12))
         
-        # Preparar dados para tabela
-        if tipo == 'simplificado':
-            table_data = [['Nome', 'Telefone', 'Bairro', 'Renda Familiar']]
-            for row in dados:
-                table_data.append([
-                    str(safe_get(row, 0) or ''),
-                    str(safe_get(row, 1) or ''),
-                    str(safe_get(row, 2) or ''),
-                    f"R$ {safe_get(row, 3):.2f}" if safe_get(row, 3) else ''
-                ])
-        elif tipo == 'bairro':
-            table_data = [['Bairro', 'Total de Cadastros', 'Renda Média']]
-            for row in dados:
-                table_data.append([
-                    str(safe_get(row, 0) or 'Não informado'),
-                    str(safe_get(row, 1) or '0'),
-                    f"R$ {safe_get(row, 2):.2f}" if safe_get(row, 2) else 'Não informado'
-                ])
-        elif tipo == 'renda':
+        # Processar dados baseado no tipo
+        if tipo == 'renda':
             # Por Faixa de Renda
             faixa_para = Paragraph("<b>💰 Por Faixa de Renda</b>", styles['Heading3'])
             elements.append(faixa_para)
@@ -629,7 +618,8 @@ def exportar():
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
             elements.append(table)
-            # Criar múltiplas tabelas para o relatório estatístico completo
+            
+        elif tipo == 'estatistico':
             # Total
             elements.append(Paragraph(f"<b>Total de Cadastros: {dados['total']}</b>", styles['Heading2']))
             elements.append(Spacer(1, 12))
@@ -693,51 +683,60 @@ def exportar():
             ]))
             elements.append(idade_table)
             
-        elif tipo == 'simplificado':
-            table_data = [['Nome', 'Telefone', 'Bairro', 'Renda Familiar']]
-            for row in dados:
-                table_data.append([
-                    str(safe_get(row, 0) or ''),
-                    str(safe_get(row, 1) or ''),
-                    str(safe_get(row, 2) or ''),
-                    f"R$ {safe_get(row, 3):.2f}" if safe_get(row, 3) else ''
-                ])
-        elif tipo == 'caixa':
-            table_data = [['Tipo', 'Valor', 'Descrição', 'Data']]
-            for row in dados:
-                table_data.append([
-                    str(row['tipo'].title() if row['tipo'] else ''),
-                    f"R$ {row['valor']:.2f}" if row['valor'] else '',
-                    str(row['descricao'] or ''),
-                    row['data_movimentacao'].strftime('%d/%m/%Y') if row['data_movimentacao'] else ''
-                ])
         else:
-            # Relatório completo
-            table_data = [['Nome', 'Telefone', 'Bairro', 'CPF', 'Renda']]
-            for row in dados:
-                try:
-                    # Tentar como tupla primeiro
-                    if isinstance(row, (tuple, list)) and len(row) > 40:
-                        nome = str(safe_get(row, 1)) if len(row) > 1 else ''
-                        telefone = str(safe_get(row, 7)) if len(row) > 7 else ''
-                        bairro = str(safe_get(row, 4)) if len(row) > 4 else ''
-                        cpf = str(safe_get(row, 14)) if len(row) > 14 else ''
-                        renda = f"R$ {safe_get(row, 41):.2f}" if len(row) > 41 and safe_get(row, 41) else 'Não informado'
-                    else:
-                        # Tentar como dicionário
-                        nome = str(row.get('nome_completo', ''))
-                        telefone = str(row.get('telefone', ''))
-                        bairro = str(row.get('bairro', ''))
-                        cpf = str(row.get('cpf', ''))
-                        renda = f"R$ {row.get('renda_familiar', 0):.2f}" if row.get('renda_familiar') else 'Não informado'
-                    
-                    table_data.append([nome, telefone, bairro, cpf, renda])
-                except:
-                    # Fallback para qualquer erro
-                    table_data.append(['', '', '', '', 'Não informado'])
-        
-        # Criar tabela apenas para tipos que não sejam estatístico nem renda
-        if tipo not in ['estatistico', 'renda']:
+            # Para todos os outros tipos (simplificado, bairro, completo, caixa)
+            if tipo == 'simplificado':
+                table_data = [['Nome', 'Telefone', 'Bairro', 'Renda Familiar']]
+                for row in dados:
+                    table_data.append([
+                        str(safe_get(row, 0) or ''),
+                        str(safe_get(row, 1) or ''),
+                        str(safe_get(row, 2) or ''),
+                        f"R$ {safe_get(row, 3):.2f}" if safe_get(row, 3) else ''
+                    ])
+            elif tipo == 'bairro':
+                table_data = [['Bairro', 'Total de Cadastros', 'Renda Média']]
+                for row in dados:
+                    table_data.append([
+                        str(safe_get(row, 0) or 'Não informado'),
+                        str(safe_get(row, 1) or '0'),
+                        f"R$ {safe_get(row, 2):.2f}" if safe_get(row, 2) else 'Não informado'
+                    ])
+            elif tipo == 'caixa':
+                table_data = [['Tipo', 'Valor', 'Descrição', 'Data']]
+                for row in dados:
+                    table_data.append([
+                        str(row['tipo'].title() if row['tipo'] else ''),
+                        f"R$ {row['valor']:.2f}" if row['valor'] else '',
+                        str(row['descricao'] or ''),
+                        row['data_movimentacao'].strftime('%d/%m/%Y') if row['data_movimentacao'] else ''
+                    ])
+            else:
+                # Relatório completo
+                table_data = [['Nome', 'Telefone', 'Bairro', 'CPF', 'Renda']]
+                for row in dados:
+                    try:
+                        # Tentar como tupla primeiro
+                        if isinstance(row, (tuple, list)) and len(row) > 40:
+                            nome = str(safe_get(row, 1)) if len(row) > 1 else ''
+                            telefone = str(safe_get(row, 7)) if len(row) > 7 else ''
+                            bairro = str(safe_get(row, 4)) if len(row) > 4 else ''
+                            cpf = str(safe_get(row, 14)) if len(row) > 14 else ''
+                            renda = f"R$ {safe_get(row, 41):.2f}" if len(row) > 41 and safe_get(row, 41) else 'Não informado'
+                        else:
+                            # Tentar como dicionário
+                            nome = str(row.get('nome_completo', ''))
+                            telefone = str(row.get('telefone', ''))
+                            bairro = str(row.get('bairro', ''))
+                            cpf = str(row.get('cpf', ''))
+                            renda = f"R$ {row.get('renda_familiar', 0):.2f}" if row.get('renda_familiar') else 'Não informado'
+                        
+                        table_data.append([nome, telefone, bairro, cpf, renda])
+                    except:
+                        # Fallback para qualquer erro
+                        table_data.append(['', '', '', '', 'Não informado'])
+            
+            # Criar e adicionar tabela
             table = Table(table_data)
             table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
@@ -751,8 +750,8 @@ def exportar():
                 ('FONTSIZE', (0, 1), (-1, -1), 8),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
-            
             elements.append(table)
+        
         doc.build(elements)
         
         buffer.seek(0)
