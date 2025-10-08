@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráficos - Sistema AMEG</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Gráficos Interativos - AMEG</h1>
+            <a href="{{ url_for('dashboard.dashboard') }}" class="btn-voltar">← Voltar ao Dashboard</a>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters">
+            <div class="filter-group">
+                <label>Período:</label>
+                <select id="filtro-periodo">
+                    <option value="todos">Todos os períodos</option>
+                    <option value="6m">Últimos 6 meses</option>
+                    <option value="1a">Último ano</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Bairro:</label>
+                <select id="filtro-bairro">
+                    <option value="todos">Todos os bairros</option>
+                </select>
+            </div>
+            <button onclick="aplicarFiltros()" class="btn-primary">Aplicar Filtros</button>
+        </div>
+
+        <!-- Demografia -->
+        <h2>👥 Demografia dos Cadastrados</h2>
+        <div class="charts-container">
+            <div class="chart-card">
+                <div class="chart-title">Distribuição por Faixa Etária</div>
+                <canvas id="idadeChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Top 10 Bairros</div>
+                <canvas id="bairrosChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Evolução de Cadastros (12 meses)</div>
+                <canvas id="evolucaoChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Saúde -->
+        <h2>🏥 Dados de Saúde</h2>
+        <div class="charts-container">
+            <div class="chart-card">
+                <div class="chart-title">Doenças Crônicas Mais Comuns</div>
+                <canvas id="doencasChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Medicamentos Mais Utilizados</div>
+                <canvas id="medicamentosChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Tipos de Deficiência</div>
+                <canvas id="deficienciasChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Socioeconômico -->
+        <h2>💰 Situação Socioeconômica</h2>
+        <div class="charts-container">
+            <div class="chart-card">
+                <div class="chart-title">Distribuição de Renda Familiar</div>
+                <canvas id="rendaChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Tipos de Moradia</div>
+                <canvas id="moradiaChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Benefícios Sociais</div>
+                <canvas id="beneficiosChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Trabalho -->
+        <h2>💼 Dados de Trabalho</h2>
+        <div class="charts-container">
+            <div class="chart-card">
+                <div class="chart-title">Tipos de Trabalho</div>
+                <canvas id="tiposTrabalhoChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Locais de Trabalho</div>
+                <canvas id="locaisTrabalhoChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/charts.min.js') }}"></script>
+</body>
+</html>
