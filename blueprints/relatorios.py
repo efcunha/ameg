@@ -834,45 +834,199 @@ def exportar():
                         row['data_movimentacao'].strftime('%d/%m/%Y') if row['data_movimentacao'] else ''
                     ])
             else:
-                # Relatório completo
-                table_data = [['Nome', 'Telefone', 'Bairro', 'CPF', 'Renda']]
-                for row in dados:
-                    try:
-                        # Tentar como tupla primeiro
-                        if isinstance(row, (tuple, list)) and len(row) > 40:
-                            nome = str(safe_get(row, 1)) if len(row) > 1 else ''
-                            telefone = str(safe_get(row, 7)) if len(row) > 7 else ''
-                            bairro = str(safe_get(row, 4)) if len(row) > 4 else ''
-                            cpf = str(safe_get(row, 14)) if len(row) > 14 else ''
-                            renda = f"R$ {safe_get(row, 41):.2f}" if len(row) > 41 and safe_get(row, 41) else 'Não informado'
-                        else:
-                            # Tentar como dicionário
-                            nome = str(row.get('nome_completo', ''))
-                            telefone = str(row.get('telefone', ''))
-                            bairro = str(row.get('bairro', ''))
-                            cpf = str(row.get('cpf', ''))
-                            renda = f"R$ {row.get('renda_familiar', 0):.2f}" if row.get('renda_familiar') else 'Não informado'
+                # Relatório completo - fichas individuais completas
+                for i, row in enumerate(dados):
+                    # Quebra de página entre fichas (exceto a primeira)
+                    if i > 0:
+                        elements.append(PageBreak())
+                    
+                    # Cabeçalho da ficha
+                    ficha_title = ParagraphStyle(
+                        'FichaTitle',
+                        parent=styles['Heading2'],
+                        fontSize=14,
+                        spaceAfter=15,
+                        alignment=1,
+                        textColor=colors.darkblue
+                    )
+                    elements.append(Paragraph(f"FICHA INDIVIDUAL - CADASTRO {row['id']}", ficha_title))
+                    
+                    # Foto (se existir)
+                    if row.get('foto_base64'):
+                        try:
+                            from reportlab.lib.utils import ImageReader
+                            import base64
+                            
+                            # Decodificar base64
+                            foto_data = base64.b64decode(row['foto_base64'])
+                            foto_buffer = io.BytesIO(foto_data)
+                            
+                            # Adicionar foto
+                            img = Image(ImageReader(foto_buffer), width=1*inch, height=1.3*inch)
+                            elements.append(img)
+                            elements.append(Spacer(1, 10))
+                        except:
+                            pass  # Se houver erro na foto, continua sem ela
+                    
+                    # Dados Pessoais
+                    pessoais_para = Paragraph("<b>📋 Dados Pessoais</b>", styles['Heading3'])
+                    elements.append(pessoais_para)
+                    elements.append(Spacer(1, 6))
+                    
+                    pessoais_data = [
+                        ['Nome Completo:', str(row['nome_completo'] or '')],
+                        ['Endereço:', f"{row['endereco'] or ''}, {row['numero'] or ''}"],
+                        ['Bairro:', str(row['bairro'] or '')],
+                        ['CEP:', str(row['cep'] or '')],
+                        ['Telefone:', str(row['telefone'] or '')],
+                        ['Ponto Referência:', str(row['ponto_referencia'] or '')],
+                        ['Gênero:', str(row['genero'] or '')],
+                        ['Idade:', str(row['idade'] or '')],
+                        ['Data Nascimento:', str(row['data_nascimento'] or '')],
+                        ['Título Eleitor:', str(row['titulo_eleitor'] or '')],
+                        ['Cidade Título:', str(row['cidade_titulo'] or '')],
+                        ['CPF:', str(row['cpf'] or '')],
+                        ['RG:', str(row['rg'] or '')],
+                        ['NIS:', str(row['nis'] or '')],
+                        ['Estado Civil:', str(row['estado_civil'] or '')],
+                        ['Escolaridade:', str(row['escolaridade'] or '')],
+                        ['Profissão:', str(row['profissao'] or '')]
+                    ]
+                    
+                    pessoais_table = Table(pessoais_data, colWidths=[120, 350])
+                    pessoais_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 8),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                    ]))
+                    elements.append(pessoais_table)
+                    elements.append(Spacer(1, 15))
+                    
+                    # Dados do Companheiro (se existir)
+                    if row['nome_companheiro']:
+                        comp_para = Paragraph("<b>💑 Dados do Companheiro(a)</b>", styles['Heading3'])
+                        elements.append(comp_para)
+                        elements.append(Spacer(1, 6))
                         
-                        table_data.append([nome, telefone, bairro, cpf, renda])
-                    except:
-                        # Fallback para qualquer erro
-                        table_data.append(['', '', '', '', 'Não informado'])
-            
-            # Criar e adicionar tabela
-            table = Table(table_data)
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 1), (-1, -1), 8),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            elements.append(table)
+                        comp_data = [
+                            ['Nome Companheiro:', str(row['nome_companheiro'] or '')],
+                            ['CPF Companheiro:', str(row['cpf_companheiro'] or '')],
+                            ['RG Companheiro:', str(row['rg_companheiro'] or '')],
+                            ['Idade Companheiro:', str(row['idade_companheiro'] or '')],
+                            ['Escolaridade Companheiro:', str(row['escolaridade_companheiro'] or '')],
+                            ['Profissão Companheiro:', str(row['profissao_companheiro'] or '')],
+                            ['Data Nasc. Companheiro:', str(row['data_nascimento_companheiro'] or '')],
+                            ['Título Companheiro:', str(row['titulo_companheiro'] or '')],
+                            ['Cidade Título Comp.:', str(row['cidade_titulo_companheiro'] or '')],
+                            ['NIS Companheiro:', str(row['nis_companheiro'] or '')]
+                        ]
+                        
+                        comp_table = Table(comp_data, colWidths=[120, 350])
+                        comp_table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, -1), 8),
+                            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                        ]))
+                        elements.append(comp_table)
+                        elements.append(Spacer(1, 15))
+                    
+                    # Dados Familiares e Trabalho
+                    familia_para = Paragraph("<b>👨👩👧👦 Dados Familiares e Trabalho</b>", styles['Heading3'])
+                    elements.append(familia_para)
+                    elements.append(Spacer(1, 6))
+                    
+                    familia_data = [
+                        ['Tipo Trabalho:', str(row['tipo_trabalho'] or '')],
+                        ['Pessoas Trabalham:', str(row['pessoas_trabalham'] or '')],
+                        ['Aposentados/Pensionistas:', str(row['aposentados_pensionistas'] or '')],
+                        ['Pessoas na Família:', str(row['num_pessoas_familia'] or '')],
+                        ['Número Famílias:', str(row['num_familias'] or '')],
+                        ['Adultos:', str(row['adultos'] or '')],
+                        ['Crianças:', str(row['criancas'] or '')],
+                        ['Adolescentes:', str(row['adolescentes'] or '')],
+                        ['Idosos:', str(row['idosos'] or '')],
+                        ['Gestantes:', str(row['gestantes'] or '')],
+                        ['Nutrizes:', str(row['nutrizes'] or '')],
+                        ['Renda Familiar:', f"R$ {row['renda_familiar'] or '0'}"],
+                        ['Renda Per Capita:', f"R$ {row['renda_per_capita'] or '0'}"],
+                        ['Bolsa Família:', f"R$ {row['bolsa_familia'] or '0'}"]
+                    ]
+                    
+                    familia_table = Table(familia_data, colWidths=[120, 350])
+                    familia_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 8),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                    ]))
+                    elements.append(familia_table)
+                    elements.append(Spacer(1, 15))
+                    
+                    # Dados Habitacionais
+                    habitacao_para = Paragraph("<b>🏠 Dados Habitacionais</b>", styles['Heading3'])
+                    elements.append(habitacao_para)
+                    elements.append(Spacer(1, 6))
+                    
+                    habitacao_data = [
+                        ['Tipo Moradia:', str(row['tipo_moradia'] or '')],
+                        ['Situação Moradia:', str(row['situacao_moradia'] or '')],
+                        ['Energia Elétrica:', str(row['energia_eletrica'] or '')],
+                        ['Abastecimento Água:', str(row['abastecimento_agua'] or '')],
+                        ['Esgotamento Sanitário:', str(row['esgotamento_sanitario'] or '')],
+                        ['Destino Lixo:', str(row['destino_lixo'] or '')],
+                        ['Cômodos Casa:', str(row['comodos_casa'] or '')],
+                        ['Cômodos Dormir:', str(row['comodos_dormir'] or '')]
+                    ]
+                    
+                    habitacao_table = Table(habitacao_data, colWidths=[120, 350])
+                    habitacao_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 8),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                    ]))
+                    elements.append(habitacao_table)
+                    elements.append(Spacer(1, 15))
+                    
+                    # Dados de Saúde
+                    saude_para = Paragraph("<b>🏥 Dados de Saúde</b>", styles['Heading3'])
+                    elements.append(saude_para)
+                    elements.append(Spacer(1, 6))
+                    
+                    saude_data = [
+                        ['Doença Crônica:', str(row['doenca_cronica'] or '')],
+                        ['Qual Doença:', str(row['qual_doenca'] or '')],
+                        ['Medicamento Contínuo:', str(row['medicamento_continuo'] or '')],
+                        ['Qual Medicamento:', str(row['qual_medicamento'] or '')],
+                        ['Deficiência:', str(row['deficiencia'] or '')],
+                        ['Qual Deficiência:', str(row['qual_deficiencia'] or '')],
+                        ['Plano Saúde:', str(row['plano_saude'] or '')],
+                        ['Qual Plano:', str(row['qual_plano'] or '')]
+                    ]
+                    
+                    saude_table = Table(saude_data, colWidths=[120, 350])
+                    saude_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), 8),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                    ]))
+                    elements.append(saude_table)
+                    
+                    # Observações (se existir)
+                    if row.get('observacoes'):
+                        elements.append(Spacer(1, 15))
+                        obs_para = Paragraph("<b>📝 Observações</b>", styles['Heading3'])
+                        elements.append(obs_para)
+                        elements.append(Spacer(1, 6))
+                        elements.append(Paragraph(str(row['observacoes']), styles['Normal']))
         
         doc.build(elements)
         
