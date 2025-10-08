@@ -97,7 +97,7 @@
                 <p><strong>Descrição:</strong> {{ arquivo[5] }}</p>
                 {% endif %}
                 <p><small>Enviado em: {{ arquivo[6] }}</small></p>
-                <a href="/download_arquivo/{{ arquivo[0] }}" class="btn">📥 Download</a>
+                <a href="{{ url_for('arquivos.download_arquivo', arquivo_id=arquivo[0]) }}" class="btn">📥 Download</a>
             </div>
             {% endfor %}
         </div>

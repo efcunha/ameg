@@ -310,7 +310,7 @@
                                 <div class="arquivo-data">
                                     {{ arquivo.data_upload.strftime('%d/%m/%Y %H:%M') }}
                                 </div>
-                                <a href="{{ url_for('download_arquivo', arquivo_id=arquivo.id) }}" 
+                                <a href="{{ url_for('arquivos.download_arquivo', arquivo_id=arquivo.id) }}" 
                                    class="btn-download" 
                                    title="Baixar arquivo">
                                     📥 Download
