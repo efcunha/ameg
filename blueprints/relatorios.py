@@ -320,40 +320,36 @@ def exportar():
         dados = cursor.fetchall()
         filename = 'relatorio_simplificado'
     elif tipo == 'estatistico':
-        # Buscar dados estatísticos
-        cursor.execute('SELECT COUNT(*) as total FROM cadastros')
-        total = cursor.fetchone()['total']
+        # Buscar dados estatísticos exatamente como no backup
+        cursor.execute('SELECT COUNT(*) FROM cadastros')
+        total = cursor.fetchone()[0]
         
-        cursor.execute('SELECT bairro, COUNT(*) as quantidade FROM cadastros GROUP BY bairro ORDER BY COUNT(*) DESC')
+        cursor.execute('SELECT bairro, COUNT(*) FROM cadastros WHERE bairro IS NOT NULL GROUP BY bairro ORDER BY COUNT(*) DESC')
         por_bairro = cursor.fetchall()
         
-        cursor.execute('SELECT genero, COUNT(*) as quantidade FROM cadastros GROUP BY genero')
+        cursor.execute('SELECT genero, COUNT(*) FROM cadastros WHERE genero IS NOT NULL GROUP BY genero ORDER BY COUNT(*) DESC')
         por_genero = cursor.fetchall()
         
         cursor.execute('''SELECT 
             CASE 
-                WHEN idade < 18 THEN 'Menor de 18'
+                WHEN idade < 18 THEN 'Menor de 18 anos'
                 WHEN idade BETWEEN 18 AND 30 THEN '18-30 anos'
                 WHEN idade BETWEEN 31 AND 50 THEN '31-50 anos'
                 WHEN idade BETWEEN 51 AND 65 THEN '51-65 anos'
-                ELSE 'Acima de 65'
+                ELSE 'Acima de 65 anos'
             END as faixa_etaria,
-            COUNT(*) as quantidade
+            COUNT(*) 
             FROM cadastros 
             WHERE idade IS NOT NULL 
             GROUP BY faixa_etaria''')
         por_idade = cursor.fetchall()
         
-        cursor.execute('SELECT AVG(renda_familiar) as renda_media FROM cadastros WHERE renda_familiar IS NOT NULL')
-        renda_media = cursor.fetchone()['renda_media'] or 0
-        
-        # Preparar dados para exportação
+        # Combinar todos os dados para exportação
         dados = {
             'total': total,
             'por_bairro': por_bairro,
             'por_genero': por_genero,
-            'por_idade': por_idade,
-            'renda_media': renda_media
+            'por_idade': por_idade
         }
         filename = 'relatorio_estatistico'
     elif tipo == 'caixa':
@@ -393,29 +389,25 @@ def exportar():
         if tipo == 'simplificado':
             writer.writerow(['Nome', 'Telefone', 'Bairro', 'Renda Familiar'])
         elif tipo == 'estatistico':
-            # Escrever estatísticas em formato CSV
-            writer.writerow(['RELATÓRIO ESTATÍSTICO'])
+            # Escrever estatísticas em formato CSV exatamente como no backup
+            writer.writerow(['=== RELATÓRIO ESTATÍSTICO COMPLETO ==='])
             writer.writerow([''])
-            writer.writerow(['Total de Cadastros', dados['total']])
-            writer.writerow(['Renda Média', f"R$ {dados['renda_media']:.2f}"])
+            writer.writerow(['TOTAL DE CADASTROS:', dados['total']])
             writer.writerow([''])
-            
-            writer.writerow(['DISTRIBUIÇÃO POR BAIRRO'])
-            writer.writerow(['Bairro', 'Quantidade'])
-            for item in dados['por_bairro']:
-                writer.writerow([item['bairro'] or 'Não informado', item['quantidade']])
+            writer.writerow(['=== POR BAIRRO ==='])
+            writer.writerow(['Bairro', 'Total'])
+            for row in dados['por_bairro']:
+                writer.writerow([row[0] or 'Não informado', row[1]])
             writer.writerow([''])
-            
-            writer.writerow(['DISTRIBUIÇÃO POR GÊNERO'])
-            writer.writerow(['Gênero', 'Quantidade'])
-            for item in dados['por_genero']:
-                writer.writerow([item['genero'] or 'Não informado', item['quantidade']])
+            writer.writerow(['=== POR GÊNERO ==='])
+            writer.writerow(['Gênero', 'Total'])
+            for row in dados['por_genero']:
+                writer.writerow([row[0] or 'Não informado', row[1]])
             writer.writerow([''])
-            
-            writer.writerow(['DISTRIBUIÇÃO POR FAIXA ETÁRIA'])
-            writer.writerow(['Faixa Etária', 'Quantidade'])
-            for item in dados['por_idade']:
-                writer.writerow([item['faixa_etaria'], item['quantidade']])
+            writer.writerow(['=== POR FAIXA ETÁRIA ==='])
+            writer.writerow(['Faixa Etária', 'Total'])
+            for row in dados['por_idade']:
+                writer.writerow([row[0] or 'Não informado', row[1]])
         elif tipo == 'caixa':
             writer.writerow(['ID', 'Tipo', 'Valor', 'Descrição', 'Titular Cadastro', 'Nome Pessoa', 
                            'Número Recibo', 'Observações', 'Data', 'Usuário'])
@@ -484,8 +476,6 @@ def exportar():
                 elements.append(Paragraph(f"Ficha Individual - Cadastro {cadastro_id}", title_style))
             else:
                 elements.append(Paragraph("Relatório Completo de Cadastros", title_style))
-        elif tipo == 'simplificado':
-            elements.append(Paragraph("Relatório Simplificado", title_style))
         elif tipo == 'estatistico':
             elements.append(Paragraph("Relatório Estatístico", title_style))
         elif tipo == 'caixa':
@@ -495,16 +485,18 @@ def exportar():
         
         # Preparar dados para tabela
         if tipo == 'estatistico':
-            # Adicionar informações gerais
-            elements.append(Paragraph(f"<b>Total de Cadastros:</b> {dados['total']}", styles['Normal']))
-            elements.append(Paragraph(f"<b>Renda Média:</b> R$ {dados['renda_media']:.2f}", styles['Normal']))
+            # Criar múltiplas tabelas para o relatório estatístico completo
+            # Total
+            elements.append(Paragraph(f"<b>Total de Cadastros: {dados['total']}</b>", styles['Heading2']))
             elements.append(Spacer(1, 12))
             
-            # Tabela por bairro
-            elements.append(Paragraph("<b>Distribuição por Bairro</b>", styles['Heading2']))
-            bairro_data = [['Bairro', 'Quantidade']]
-            for item in dados['por_bairro']:
-                bairro_data.append([item['bairro'] or 'Não informado', str(item['quantidade'])])
+            # Por Bairro
+            elements.append(Paragraph("<b>📍 Por Bairro</b>", styles['Heading3']))
+            elements.append(Spacer(1, 6))
+            
+            bairro_data = [['Bairro', 'Total']]
+            for row in dados['por_bairro']:
+                bairro_data.append([str(row[0] or 'Não informado'), str(row[1])])
             
             bairro_table = Table(bairro_data)
             bairro_table.setStyle(TableStyle([
@@ -512,17 +504,19 @@ def exportar():
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
             elements.append(bairro_table)
-            elements.append(Spacer(1, 12))
+            elements.append(Spacer(1, 20))
             
-            # Tabela por gênero
-            elements.append(Paragraph("<b>Distribuição por Gênero</b>", styles['Heading2']))
-            genero_data = [['Gênero', 'Quantidade']]
-            for item in dados['por_genero']:
-                genero_data.append([item['genero'] or 'Não informado', str(item['quantidade'])])
+            # Por Gênero
+            elements.append(Paragraph("<b>👥 Por Gênero</b>", styles['Heading3']))
+            elements.append(Spacer(1, 6))
+            
+            genero_data = [['Gênero', 'Total']]
+            for row in dados['por_genero']:
+                genero_data.append([str(row[0] or 'Não informado'), str(row[1])])
             
             genero_table = Table(genero_data)
             genero_table.setStyle(TableStyle([
@@ -530,17 +524,19 @@ def exportar():
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
             elements.append(genero_table)
-            elements.append(Spacer(1, 12))
+            elements.append(Spacer(1, 20))
             
-            # Tabela por faixa etária
-            elements.append(Paragraph("<b>Distribuição por Faixa Etária</b>", styles['Heading2']))
-            idade_data = [['Faixa Etária', 'Quantidade']]
-            for item in dados['por_idade']:
-                idade_data.append([item['faixa_etaria'], str(item['quantidade'])])
+            # Por Faixa Etária
+            elements.append(Paragraph("<b>🎂 Por Faixa Etária</b>", styles['Heading3']))
+            elements.append(Spacer(1, 6))
+            
+            idade_data = [['Faixa Etária', 'Total']]
+            for row in dados['por_idade']:
+                idade_data.append([str(row[0] or 'Não informado'), str(row[1])])
             
             idade_table = Table(idade_data)
             idade_table.setStyle(TableStyle([
@@ -548,7 +544,7 @@ def exportar():
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
             elements.append(idade_table)
