@@ -352,6 +352,46 @@ def exportar():
             'por_idade': por_idade
         }
         filename = 'relatorio_estatistico'
+    elif tipo == 'bairro':
+        cursor.execute('''SELECT bairro, COUNT(*) as total, 
+                         AVG(renda_familiar) as renda_media
+                         FROM cadastros 
+                         WHERE bairro IS NOT NULL AND bairro != ''
+                         GROUP BY bairro 
+                         ORDER BY total DESC''')
+        dados = cursor.fetchall()
+        filename = 'relatorio_por_bairro'
+    elif tipo == 'renda':
+        # Buscar faixas de renda
+        cursor.execute('''SELECT 
+            CASE 
+                WHEN renda_familiar IS NOT NULL AND renda_familiar <= 1000 THEN 'Até R$ 1.000'
+                WHEN renda_familiar IS NOT NULL AND renda_familiar BETWEEN 1001 AND 2000 THEN 'R$ 1.001 - R$ 2.000'
+                WHEN renda_familiar IS NOT NULL AND renda_familiar BETWEEN 2001 AND 3000 THEN 'R$ 2.001 - R$ 3.000'
+                WHEN renda_familiar IS NOT NULL AND renda_familiar > 3000 THEN 'Acima de R$ 3.000'
+                ELSE 'Não informado'
+            END as faixa_renda,
+            COUNT(*) 
+            FROM cadastros 
+            GROUP BY faixa_renda''')
+        faixas_renda = cursor.fetchall()
+        
+        # Buscar renda por bairro
+        cursor.execute('''SELECT bairro, 
+                         AVG(renda_familiar) as renda_media, 
+                         COUNT(*) as total
+                         FROM cadastros 
+                         WHERE bairro IS NOT NULL AND bairro != ''
+                         GROUP BY bairro 
+                         ORDER BY renda_media DESC NULLS LAST''')
+        renda_bairro = cursor.fetchall()
+        
+        # Combinar dados para exportação
+        dados = {
+            'faixas_renda': faixas_renda,
+            'renda_bairro': renda_bairro
+        }
+        filename = 'relatorio_renda'
     elif tipo == 'caixa':
         filtro_tipo = request.args.get('filtro_tipo')
         
@@ -408,6 +448,20 @@ def exportar():
             writer.writerow(['Faixa Etária', 'Total'])
             for row in dados['por_idade']:
                 writer.writerow([row[0] or 'Não informado', row[1]])
+        elif tipo == 'bairro':
+            writer.writerow(['Bairro', 'Total de Cadastros', 'Renda Média'])
+        elif tipo == 'renda':
+            writer.writerow(['=== ANÁLISE DE RENDA FAMILIAR ==='])
+            writer.writerow([''])
+            writer.writerow(['=== POR FAIXA DE RENDA ==='])
+            writer.writerow(['Faixa de Renda', 'Total de Cadastros'])
+            for row in dados['faixas_renda']:
+                writer.writerow([row[0] or 'Não informado', row[1]])
+            writer.writerow([''])
+            writer.writerow(['=== RENDA POR BAIRRO ==='])
+            writer.writerow(['Bairro', 'Renda Média', 'Total de Cadastros'])
+            for row in dados['renda_bairro']:
+                writer.writerow([row[0] or 'Não informado', f"R$ {row[1]:.2f}" if row[1] else 'Não informado', row[2]])
         elif tipo == 'caixa':
             writer.writerow(['ID', 'Tipo', 'Valor', 'Descrição', 'Titular Cadastro', 'Nome Pessoa', 
                            'Número Recibo', 'Observações', 'Data', 'Usuário'])
@@ -428,8 +482,22 @@ def exportar():
             # Cabeçalhos completos 
             writer.writerow(['Nome', 'Telefone', 'Endereço', 'Número', 'Bairro', 'CEP', 'Gênero', 'Idade', 'CPF', 'RG', 'Estado Civil', 'Escolaridade', 'Renda Familiar'])
             
-            # Dados
-            for row in dados:
+        # Dados
+        for row in dados:
+            if tipo == 'simplificado':
+                writer.writerow([
+                    str(row[0] or ''),
+                    str(row[1] or ''),
+                    str(row[2] or ''),
+                    f"R$ {row[3]:.2f}" if row[3] else 'Não informado'
+                ])
+            elif tipo == 'bairro':
+                writer.writerow([
+                    str(row[0] or 'Não informado'),
+                    str(row[1] or '0'),
+                    f"R$ {row[2]:.2f}" if row[2] else 'Não informado'
+                ])
+            elif tipo not in ['estatistico', 'renda']:  # Para outros tipos
                 if tipo != 'caixa':
                     row_data = [
                         row[1] if hasattr(row, '__getitem__') else getattr(row, 'nome_completo', ''),
@@ -484,7 +552,71 @@ def exportar():
         elements.append(Spacer(1, 12))
         
         # Preparar dados para tabela
-        if tipo == 'estatistico':
+        if tipo == 'simplificado':
+            table_data = [['Nome', 'Telefone', 'Bairro', 'Renda Familiar']]
+            for row in dados:
+                table_data.append([
+                    str(row[0] or ''),
+                    str(row[1] or ''),
+                    str(row[2] or ''),
+                    f"R$ {row[3]:.2f}" if row[3] else ''
+                ])
+        elif tipo == 'bairro':
+            table_data = [['Bairro', 'Total de Cadastros', 'Renda Média']]
+            for row in dados:
+                table_data.append([
+                    str(row[0] or 'Não informado'),
+                    str(row[1] or '0'),
+                    f"R$ {row[2]:.2f}" if row[2] else 'Não informado'
+                ])
+        elif tipo == 'renda':
+            # Por Faixa de Renda
+            faixa_para = Paragraph("<b>💰 Por Faixa de Renda</b>", styles['Heading3'])
+            elements.append(faixa_para)
+            elements.append(Spacer(1, 6))
+            
+            table_data = [['Faixa de Renda', 'Total de Cadastros']]
+            for row in dados['faixas_renda']:
+                table_data.append([
+                    str(row[0] or 'Não informado'),
+                    str(row[1] or '0')
+                ])
+            
+            table = Table(table_data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(table)
+            elements.append(Spacer(1, 20))
+            
+            # Por Bairro
+            bairro_para = Paragraph("<b>📍 Renda por Bairro</b>", styles['Heading3'])
+            elements.append(bairro_para)
+            elements.append(Spacer(1, 6))
+            
+            table_data = [['Bairro', 'Renda Média', 'Total de Cadastros']]
+            for row in dados['renda_bairro']:
+                table_data.append([
+                    str(row[0] or 'Não informado'),
+                    f"R$ {row[1]:.2f}" if row[1] else 'Não informado',
+                    str(row[2] or '0')
+                ])
+            
+            table = Table(table_data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(table)
             # Criar múltiplas tabelas para o relatório estatístico completo
             # Total
             elements.append(Paragraph(f"<b>Total de Cadastros: {dados['total']}</b>", styles['Heading2']))
@@ -553,10 +685,10 @@ def exportar():
             table_data = [['Nome', 'Telefone', 'Bairro', 'Renda Familiar']]
             for row in dados:
                 table_data.append([
-                    str(row['nome_completo'] or ''),
-                    str(row['telefone'] or ''),
-                    str(row['bairro'] or ''),
-                    f"R$ {row['renda_familiar']:.2f}" if row['renda_familiar'] else ''
+                    str(row[0] or ''),
+                    str(row[1] or ''),
+                    str(row[2] or ''),
+                    f"R$ {row[3]:.2f}" if row[3] else ''
                 ])
         elif tipo == 'caixa':
             table_data = [['Tipo', 'Valor', 'Descrição', 'Data']]
@@ -572,15 +704,15 @@ def exportar():
             table_data = [['Nome', 'Telefone', 'Bairro', 'CPF', 'Renda']]
             for row in dados:
                 table_data.append([
-                    str(row['nome_completo'] or ''),
-                    str(row['telefone'] or ''),
-                    str(row['bairro'] or ''),
-                    str(row['cpf'] or ''),
-                    f"R$ {row['renda_familiar']:.2f}" if row['renda_familiar'] else ''
+                    str(row[1] if hasattr(row, '__getitem__') else getattr(row, 'nome_completo', '')),
+                    str(row[6] if hasattr(row, '__getitem__') else getattr(row, 'telefone', '')),
+                    str(row[4] if hasattr(row, '__getitem__') else getattr(row, 'bairro', '')),
+                    str(row[13] if hasattr(row, '__getitem__') else getattr(row, 'cpf', '')),
+                    f"R$ {row[40]:.2f}" if (hasattr(row, '__getitem__') and row[40]) else 'Não informado'
                 ])
         
-        # Criar tabela apenas para tipos que não sejam estatístico
-        if tipo != 'estatistico':
+        # Criar tabela apenas para tipos que não sejam estatístico nem renda
+        if tipo not in ['estatistico', 'renda']:
             table = Table(table_data)
             table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
