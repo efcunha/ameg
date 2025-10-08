@@ -150,13 +150,16 @@
                 
                 const suffix = params.toString() ? `?${params.toString()}` : '';
                 
-                // Carregar dados
-                const [demo, saude, socio, trabalho] = await Promise.all([
-                    fetch(`/api/charts/demografia${suffix}`).then(r => r.json()),
-                    fetch(`/api/charts/saude${suffix}`).then(r => r.json()),
-                    fetch(`/api/charts/socioeconomico${suffix}`).then(r => r.json()),
-                    fetch(`/api/charts/trabalho${suffix}`).then(r => r.json())
-                ]);
+                console.log('📡 Carregando dados com sufixo:', suffix);
+                
+                // Carregar apenas demografia primeiro
+                const demoResponse = await fetch(`/api/charts/demografia${suffix}`);
+                if (!demoResponse.ok) {
+                    throw new Error(`Demografia HTTP ${demoResponse.status}`);
+                }
+                const demo = await demoResponse.json();
+                
+                console.log('📦 Dados demografia recebidos:', demo);
                 
                 // Destruir gráficos existentes
                 Object.values(charts).forEach(chart => chart?.destroy());
@@ -174,9 +177,23 @@
                 // Mostrar status
                 document.getElementById('status-message').style.display = 'block';
                 
+                console.log('✅ Gráficos criados com sucesso!');
+                
             } catch (error) {
-                console.error('Erro ao carregar gráficos:', error);
-                document.getElementById('dashboard-subtitle').textContent = 'Erro ao carregar dados';
+                console.error('❌ Erro ao carregar gráficos:', error);
+                document.getElementById('dashboard-subtitle').textContent = `Erro: ${error.message}`;
+                
+                // Mostrar erro na tela
+                const container = document.querySelector('.charts-grid');
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; background: #f8d7da; color: #721c24; padding: 20px; border-radius: 10px; text-align: center;">
+                        <h3>❌ Erro ao Carregar Gráficos</h3>
+                        <p><strong>Erro:</strong> ${error.message}</p>
+                        <button onclick="loadAllCharts()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+                            🔄 Tentar Novamente
+                        </button>
+                    </div>
+                `;
             }
         }
         
