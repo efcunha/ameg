@@ -1,9 +1,17 @@
-from flask import Blueprint, jsonify, render_template
-from flask_login import login_required
+from flask import Blueprint, jsonify, render_template, session, redirect, url_for
 from database import execute_query
 from datetime import datetime, timedelta
 
 charts_bp = Blueprint('charts', __name__)
+
+def login_required(f):
+    """Decorator para verificar se usuário está logado"""
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    decorated_function.__name__ = f.__name__
+    return decorated_function
 
 @charts_bp.route('/charts')
 @login_required
