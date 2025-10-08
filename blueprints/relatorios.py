@@ -499,26 +499,44 @@ def exportar():
                 ])
             elif tipo not in ['estatistico', 'renda']:  # Para outros tipos
                 if tipo != 'caixa':
-                    # Verificar se row tem elementos suficientes
-                    if len(row) > 40:
-                        row_data = [
-                            row[1] if len(row) > 1 else '',   # nome_completo
-                            row[7] if len(row) > 7 else '',   # telefone
-                            row[2] if len(row) > 2 else '',   # endereco
-                            row[3] if len(row) > 3 else '',   # numero
-                            row[4] if len(row) > 4 else '',   # bairro
-                            row[5] if len(row) > 5 else '',   # cep
-                            row[9] if len(row) > 9 else '',   # genero
-                            row[10] if len(row) > 10 else '', # idade
-                            row[14] if len(row) > 14 else '', # cpf
-                            row[15] if len(row) > 15 else '', # rg
-                            row[17] if len(row) > 17 else '', # estado_civil
-                            row[18] if len(row) > 18 else '', # escolaridade
-                            row[41] if len(row) > 41 else ''  # renda_familiar
-                        ]
-                    else:
-                        # Fallback para dados incompletos
-                        row_data = [row[0] if len(row) > 0 else '', '', '', '', '', '', '', '', '', '', '', '', '']
+                    try:
+                        # Tentar como tupla primeiro
+                        if isinstance(row, (tuple, list)) and len(row) > 40:
+                            row_data = [
+                                row[1] if len(row) > 1 else '',   # nome_completo
+                                row[7] if len(row) > 7 else '',   # telefone
+                                row[2] if len(row) > 2 else '',   # endereco
+                                row[3] if len(row) > 3 else '',   # numero
+                                row[4] if len(row) > 4 else '',   # bairro
+                                row[5] if len(row) > 5 else '',   # cep
+                                row[9] if len(row) > 9 else '',   # genero
+                                row[10] if len(row) > 10 else '', # idade
+                                row[14] if len(row) > 14 else '', # cpf
+                                row[15] if len(row) > 15 else '', # rg
+                                row[17] if len(row) > 17 else '', # estado_civil
+                                row[18] if len(row) > 18 else '', # escolaridade
+                                row[41] if len(row) > 41 else ''  # renda_familiar
+                            ]
+                        else:
+                            # Tentar como dicionário
+                            row_data = [
+                                row.get('nome_completo', ''),
+                                row.get('telefone', ''),
+                                row.get('endereco', ''),
+                                row.get('numero', ''),
+                                row.get('bairro', ''),
+                                row.get('cep', ''),
+                                row.get('genero', ''),
+                                row.get('idade', ''),
+                                row.get('cpf', ''),
+                                row.get('rg', ''),
+                                row.get('estado_civil', ''),
+                                row.get('escolaridade', ''),
+                                row.get('renda_familiar', '')
+                            ]
+                    except:
+                        # Fallback para qualquer erro
+                        row_data = ['', '', '', '', '', '', '', '', '', '', '', '', '']
                     writer.writerow(row_data)
         
         output.seek(0)
@@ -708,24 +726,26 @@ def exportar():
             # Relatório completo
             table_data = [['Nome', 'Telefone', 'Bairro', 'CPF', 'Renda']]
             for row in dados:
-                # Verificar se row tem elementos suficientes
-                if len(row) > 40:
-                    table_data.append([
-                        str(row[1] if len(row) > 1 else ''),  # nome_completo
-                        str(row[7] if len(row) > 7 else ''),  # telefone
-                        str(row[4] if len(row) > 4 else ''),  # bairro
-                        str(row[14] if len(row) > 14 else ''), # cpf
-                        f"R$ {row[41]:.2f}" if len(row) > 41 and row[41] else 'Não informado'  # renda_familiar
-                    ])
-                else:
-                    # Fallback para dados incompletos
-                    table_data.append([
-                        str(row[0] if len(row) > 0 else ''),
-                        '',
-                        '',
-                        '',
-                        'Não informado'
-                    ])
+                try:
+                    # Tentar como tupla primeiro
+                    if isinstance(row, (tuple, list)) and len(row) > 40:
+                        nome = str(row[1]) if len(row) > 1 else ''
+                        telefone = str(row[7]) if len(row) > 7 else ''
+                        bairro = str(row[4]) if len(row) > 4 else ''
+                        cpf = str(row[14]) if len(row) > 14 else ''
+                        renda = f"R$ {row[41]:.2f}" if len(row) > 41 and row[41] else 'Não informado'
+                    else:
+                        # Tentar como dicionário
+                        nome = str(row.get('nome_completo', ''))
+                        telefone = str(row.get('telefone', ''))
+                        bairro = str(row.get('bairro', ''))
+                        cpf = str(row.get('cpf', ''))
+                        renda = f"R$ {row.get('renda_familiar', 0):.2f}" if row.get('renda_familiar') else 'Não informado'
+                    
+                    table_data.append([nome, telefone, bairro, cpf, renda])
+                except:
+                    # Fallback para qualquer erro
+                    table_data.append(['', '', '', '', 'Não informado'])
         
         # Criar tabela apenas para tipos que não sejam estatístico nem renda
         if tipo not in ['estatistico', 'renda']:
