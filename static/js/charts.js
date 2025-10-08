@@ -426,12 +426,31 @@ function showLoading() {
         if (canvas) {
             canvas.style.display = 'none';
         }
-        card.innerHTML = '<div class="loading">Carregando gráfico...</div>';
+        
+        // Adicionar loading sem usar innerHTML
+        let loadingDiv = card.querySelector('.loading');
+        if (!loadingDiv) {
+            loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading';
+            loadingDiv.textContent = 'Carregando gráfico...';
+            card.appendChild(loadingDiv);
+        }
+        loadingDiv.style.display = 'block';
     });
 }
 
 function hideLoading() {
-    // Loading será removido quando os gráficos forem criados
+    document.querySelectorAll('.chart-card').forEach(card => {
+        const canvas = card.querySelector('canvas');
+        const loadingDiv = card.querySelector('.loading');
+        
+        if (canvas) {
+            canvas.style.display = 'block';
+        }
+        if (loadingDiv) {
+            loadingDiv.style.display = 'none';
+        }
+    });
 }
 
 function showError(message) {
