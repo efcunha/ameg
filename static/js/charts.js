@@ -16,49 +16,72 @@ let charts = {};
 
 // Inicializar gráficos ao carregar a página
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Iniciando carregamento dos gráficos...');
     loadAllCharts();
 });
 
 async function loadAllCharts() {
     try {
         showLoading();
+        console.log('Carregando dados dos gráficos...');
         
         // Carregar dados em paralelo
         const [demografiaData, saudeData, socioeconomicoData, trabalhoData] = await Promise.all([
-            fetch('/api/charts/demografia').then(r => r.json()),
-            fetch('/api/charts/saude').then(r => r.json()),
-            fetch('/api/charts/socioeconomico').then(r => r.json()),
-            fetch('/api/charts/trabalho').then(r => r.json())
+            fetch('/api/charts/demografia').then(r => {
+                console.log('Demografia response:', r.status);
+                return r.json();
+            }),
+            fetch('/api/charts/saude').then(r => {
+                console.log('Saude response:', r.status);
+                return r.json();
+            }),
+            fetch('/api/charts/socioeconomico').then(r => {
+                console.log('Socioeconomico response:', r.status);
+                return r.json();
+            }),
+            fetch('/api/charts/trabalho').then(r => {
+                console.log('Trabalho response:', r.status);
+                return r.json();
+            })
         ]);
 
+        console.log('Dados carregados:', {demografiaData, saudeData, socioeconomicoData, trabalhoData});
+
         // Criar gráficos de demografia
-        createIdadeChart(demografiaData.idade);
-        createBairrosChart(demografiaData.bairros);
-        createEvolucaoChart(demografiaData.evolucao);
+        if (demografiaData.idade) createIdadeChart(demografiaData.idade);
+        if (demografiaData.bairros) createBairrosChart(demografiaData.bairros);
+        if (demografiaData.evolucao) createEvolucaoChart(demografiaData.evolucao);
 
         // Criar gráficos de saúde
-        createDoencasChart(saudeData.doencas);
-        createMedicamentosChart(saudeData.medicamentos);
-        createDeficienciasChart(saudeData.deficiencias);
+        if (saudeData.doencas) createDoencasChart(saudeData.doencas);
+        if (saudeData.medicamentos) createMedicamentosChart(saudeData.medicamentos);
+        if (saudeData.deficiencias) createDeficienciasChart(saudeData.deficiencias);
 
         // Criar gráficos socioeconômicos
-        createRendaChart(socioeconomicoData.renda);
-        createMoradiaChart(socioeconomicoData.moradia);
-        createBeneficiosChart(socioeconomicoData.beneficios);
+        if (socioeconomicoData.renda) createRendaChart(socioeconomicoData.renda);
+        if (socioeconomicoData.moradia) createMoradiaChart(socioeconomicoData.moradia);
+        if (socioeconomicoData.beneficios) createBeneficiosChart(socioeconomicoData.beneficios);
 
         // Criar gráficos de trabalho
-        createTiposTrabalhoChart(trabalhoData.tipos);
-        createLocaisTrabalhoChart(trabalhoData.locais);
+        if (trabalhoData.tipos) createTiposTrabalhoChart(trabalhoData.tipos);
+        if (trabalhoData.locais) createLocaisTrabalhoChart(trabalhoData.locais);
 
         hideLoading();
+        console.log('Gráficos carregados com sucesso!');
     } catch (error) {
         console.error('Erro ao carregar gráficos:', error);
         hideLoading();
+        showError('Erro ao carregar gráficos: ' + error.message);
     }
 }
 
 // Gráficos de Demografia
 function createIdadeChart(data) {
+    if (!data || data.length === 0) {
+        console.log('Sem dados para gráfico de idade');
+        return;
+    }
+    
     const ctx = document.getElementById('idadeChart').getContext('2d');
     charts.idade = new Chart(ctx, {
         type: 'doughnut',
@@ -90,6 +113,11 @@ function createIdadeChart(data) {
 }
 
 function createBairrosChart(data) {
+    if (!data || data.length === 0) {
+        console.log('Sem dados para gráfico de bairros');
+        return;
+    }
+    
     const ctx = document.getElementById('bairrosChart').getContext('2d');
     charts.bairros = new Chart(ctx, {
         type: 'bar',
@@ -116,6 +144,11 @@ function createBairrosChart(data) {
 }
 
 function createEvolucaoChart(data) {
+    if (!data || data.length === 0) {
+        console.log('Sem dados para gráfico de evolução');
+        return;
+    }
+    
     const ctx = document.getElementById('evolucaoChart').getContext('2d');
     charts.evolucao = new Chart(ctx, {
         type: 'line',
@@ -141,9 +174,14 @@ function createEvolucaoChart(data) {
 
 // Gráficos de Saúde
 function createDoencasChart(data) {
+    if (!data || data.length === 0) {
+        console.log('Sem dados para gráfico de doenças');
+        return;
+    }
+    
     const ctx = document.getElementById('doencasChart').getContext('2d');
     charts.doencas = new Chart(ctx, {
-        type: 'horizontalBar',
+        type: 'bar',
         data: {
             labels: data.map(d => d.doencas_cronicas),
             datasets: [{
@@ -156,6 +194,7 @@ function createDoencasChart(data) {
         },
         options: {
             responsive: true,
+            indexAxis: 'y',
             scales: {
                 x: { beginAtZero: true }
             },
@@ -167,6 +206,11 @@ function createDoencasChart(data) {
 }
 
 function createMedicamentosChart(data) {
+    if (!data || data.length === 0) {
+        console.log('Sem dados para gráfico de medicamentos');
+        return;
+    }
+    
     const ctx = document.getElementById('medicamentosChart').getContext('2d');
     charts.medicamentos = new Chart(ctx, {
         type: 'pie',
@@ -187,6 +231,11 @@ function createMedicamentosChart(data) {
 }
 
 function createDeficienciasChart(data) {
+    if (!data || data.length === 0) {
+        console.log('Sem dados para gráfico de deficiências');
+        return;
+    }
+    
     const ctx = document.getElementById('deficienciasChart').getContext('2d');
     charts.deficiencias = new Chart(ctx, {
         type: 'doughnut',
@@ -208,6 +257,11 @@ function createDeficienciasChart(data) {
 
 // Gráficos Socioeconômicos
 function createRendaChart(data) {
+    if (!data || data.length === 0) {
+        console.log('Sem dados para gráfico de renda');
+        return;
+    }
+    
     const ctx = document.getElementById('rendaChart').getContext('2d');
     charts.renda = new Chart(ctx, {
         type: 'bar',
@@ -234,6 +288,11 @@ function createRendaChart(data) {
 }
 
 function createMoradiaChart(data) {
+    if (!data || data.length === 0) {
+        console.log('Sem dados para gráfico de moradia');
+        return;
+    }
+    
     const ctx = document.getElementById('moradiaChart').getContext('2d');
     charts.moradia = new Chart(ctx, {
         type: 'pie',
@@ -254,9 +313,14 @@ function createMoradiaChart(data) {
 }
 
 function createBeneficiosChart(data) {
+    if (!data || data.length === 0) {
+        console.log('Sem dados para gráfico de benefícios');
+        return;
+    }
+    
     const ctx = document.getElementById('beneficiosChart').getContext('2d');
     charts.beneficios = new Chart(ctx, {
-        type: 'horizontalBar',
+        type: 'bar',
         data: {
             labels: data.map(d => d.beneficios_sociais),
             datasets: [{
@@ -269,6 +333,7 @@ function createBeneficiosChart(data) {
         },
         options: {
             responsive: true,
+            indexAxis: 'y',
             scales: {
                 x: { beginAtZero: true }
             },
@@ -281,6 +346,11 @@ function createBeneficiosChart(data) {
 
 // Gráficos de Trabalho
 function createTiposTrabalhoChart(data) {
+    if (!data || data.length === 0) {
+        console.log('Sem dados para gráfico de tipos de trabalho');
+        return;
+    }
+    
     const ctx = document.getElementById('tiposTrabalhoChart').getContext('2d');
     charts.tiposTrabalho = new Chart(ctx, {
         type: 'doughnut',
@@ -301,6 +371,11 @@ function createTiposTrabalhoChart(data) {
 }
 
 function createLocaisTrabalhoChart(data) {
+    if (!data || data.length === 0) {
+        console.log('Sem dados para gráfico de locais de trabalho');
+        return;
+    }
+    
     const ctx = document.getElementById('locaisTrabalhoChart').getContext('2d');
     charts.locaisTrabalho = new Chart(ctx, {
         type: 'bar',
@@ -329,6 +404,10 @@ function createLocaisTrabalhoChart(data) {
 // Funções auxiliares
 function showLoading() {
     document.querySelectorAll('.chart-card').forEach(card => {
+        const canvas = card.querySelector('canvas');
+        if (canvas) {
+            canvas.style.display = 'none';
+        }
         card.innerHTML = '<div class="loading">Carregando gráfico...</div>';
     });
 }
@@ -337,10 +416,15 @@ function hideLoading() {
     // Loading será removido quando os gráficos forem criados
 }
 
+function showError(message) {
+    document.querySelectorAll('.chart-card').forEach(card => {
+        card.innerHTML = `<div class="loading" style="color: red;">❌ ${message}</div>`;
+    });
+}
+
 function aplicarFiltros() {
-    // Implementar filtros dinâmicos
     console.log('Aplicando filtros...');
-    // Recarregar gráficos com filtros aplicados
+    loadAllCharts();
 }
 
 // Função para exportar gráfico
