@@ -857,15 +857,23 @@ def exportar():
                             from reportlab.lib.utils import ImageReader
                             import base64
                             
+                            # Limpar prefixo data:image se existir
+                            foto_base64 = row['foto_base64']
+                            if ',' in foto_base64:
+                                foto_base64 = foto_base64.split(',')[1]
+                            
                             # Decodificar base64
-                            foto_data = base64.b64decode(row['foto_base64'])
+                            foto_data = base64.b64decode(foto_base64)
                             foto_buffer = io.BytesIO(foto_data)
                             
-                            # Adicionar foto
+                            # Adicionar foto centralizada
                             img = Image(ImageReader(foto_buffer), width=1*inch, height=1.3*inch)
+                            img.hAlign = 'CENTER'
                             elements.append(img)
                             elements.append(Spacer(1, 10))
-                        except:
+                        except Exception as e:
+                            # Log do erro para debug
+                            logger.error(f"Erro ao processar foto: {e}")
                             pass  # Se houver erro na foto, continua sem ela
                     
                     # Dados Pessoais
@@ -1098,15 +1106,23 @@ def exportar_fichas_individuais():
                     from reportlab.lib.utils import ImageReader
                     import base64
                     
+                    # Limpar prefixo data:image se existir
+                    foto_base64 = row['foto_base64']
+                    if ',' in foto_base64:
+                        foto_base64 = foto_base64.split(',')[1]
+                    
                     # Decodificar base64
-                    foto_data = base64.b64decode(row['foto_base64'])
+                    foto_data = base64.b64decode(foto_base64)
                     foto_buffer = io.BytesIO(foto_data)
                     
-                    # Adicionar foto
+                    # Adicionar foto centralizada
                     img = Image(ImageReader(foto_buffer), width=1*inch, height=1.3*inch)
+                    img.hAlign = 'CENTER'
                     elements.append(img)
                     elements.append(Spacer(1, 10))
-                except:
+                except Exception as e:
+                    # Log do erro para debug
+                    logger.error(f"Erro ao processar foto: {e}")
                     pass  # Se houver erro na foto, continua sem ela
             
             # Dados Pessoais
