@@ -16,6 +16,18 @@ logger = logging.getLogger(__name__)
 
 relatorios_bp = Blueprint('relatorios', __name__)
 
+def safe_get(row, key_or_index, default=''):
+    """Acessa dados de forma segura, seja tupla, lista ou dicionário"""
+    try:
+        if isinstance(row, dict):
+            return row.get(key_or_index, default)
+        elif isinstance(row, (tuple, list)):
+            return row[key_or_index] if len(row) > key_or_index else default
+        else:
+            return default
+    except:
+        return default
+
 @relatorios_bp.route('/relatorios')
 def relatorios():
     if 'usuario' not in session:
@@ -486,57 +498,34 @@ def exportar():
         for row in dados:
             if tipo == 'simplificado':
                 writer.writerow([
-                    str(row[0] or ''),
-                    str(row[1] or ''),
-                    str(row[2] or ''),
-                    f"R$ {row[3]:.2f}" if row[3] else 'Não informado'
+                    safe_get(row, 0),
+                    safe_get(row, 1),
+                    safe_get(row, 2),
+                    f"R$ {safe_get(row, 3):.2f}" if safe_get(row, 3) else 'Não informado'
                 ])
             elif tipo == 'bairro':
                 writer.writerow([
-                    str(row[0] or 'Não informado'),
-                    str(row[1] or '0'),
-                    f"R$ {row[2]:.2f}" if row[2] else 'Não informado'
+                    safe_get(row, 0, 'Não informado'),
+                    safe_get(row, 1, '0'),
+                    f"R$ {safe_get(row, 2):.2f}" if safe_get(row, 2) else 'Não informado'
                 ])
             elif tipo not in ['estatistico', 'renda']:  # Para outros tipos
                 if tipo != 'caixa':
-                    try:
-                        # Tentar como tupla primeiro
-                        if isinstance(row, (tuple, list)) and len(row) > 40:
-                            row_data = [
-                                row[1] if len(row) > 1 else '',   # nome_completo
-                                row[7] if len(row) > 7 else '',   # telefone
-                                row[2] if len(row) > 2 else '',   # endereco
-                                row[3] if len(row) > 3 else '',   # numero
-                                row[4] if len(row) > 4 else '',   # bairro
-                                row[5] if len(row) > 5 else '',   # cep
-                                row[9] if len(row) > 9 else '',   # genero
-                                row[10] if len(row) > 10 else '', # idade
-                                row[14] if len(row) > 14 else '', # cpf
-                                row[15] if len(row) > 15 else '', # rg
-                                row[17] if len(row) > 17 else '', # estado_civil
-                                row[18] if len(row) > 18 else '', # escolaridade
-                                row[41] if len(row) > 41 else ''  # renda_familiar
-                            ]
-                        else:
-                            # Tentar como dicionário
-                            row_data = [
-                                row.get('nome_completo', ''),
-                                row.get('telefone', ''),
-                                row.get('endereco', ''),
-                                row.get('numero', ''),
-                                row.get('bairro', ''),
-                                row.get('cep', ''),
-                                row.get('genero', ''),
-                                row.get('idade', ''),
-                                row.get('cpf', ''),
-                                row.get('rg', ''),
-                                row.get('estado_civil', ''),
-                                row.get('escolaridade', ''),
-                                row.get('renda_familiar', '')
-                            ]
-                    except:
-                        # Fallback para qualquer erro
-                        row_data = ['', '', '', '', '', '', '', '', '', '', '', '', '']
+                    row_data = [
+                        safe_get(row, 'nome_completo') or safe_get(row, 1),
+                        safe_get(row, 'telefone') or safe_get(row, 7),
+                        safe_get(row, 'endereco') or safe_get(row, 2),
+                        safe_get(row, 'numero') or safe_get(row, 3),
+                        safe_get(row, 'bairro') or safe_get(row, 4),
+                        safe_get(row, 'cep') or safe_get(row, 5),
+                        safe_get(row, 'genero') or safe_get(row, 9),
+                        safe_get(row, 'idade') or safe_get(row, 10),
+                        safe_get(row, 'cpf') or safe_get(row, 14),
+                        safe_get(row, 'rg') or safe_get(row, 15),
+                        safe_get(row, 'estado_civil') or safe_get(row, 17),
+                        safe_get(row, 'escolaridade') or safe_get(row, 18),
+                        safe_get(row, 'renda_familiar') or safe_get(row, 41)
+                    ]
                     writer.writerow(row_data)
         
         output.seek(0)
@@ -579,18 +568,18 @@ def exportar():
             table_data = [['Nome', 'Telefone', 'Bairro', 'Renda Familiar']]
             for row in dados:
                 table_data.append([
-                    str(row[0] or ''),
-                    str(row[1] or ''),
-                    str(row[2] or ''),
-                    f"R$ {row[3]:.2f}" if row[3] else ''
+                    str(safe_get(row, 0) or ''),
+                    str(safe_get(row, 1) or ''),
+                    str(safe_get(row, 2) or ''),
+                    f"R$ {safe_get(row, 3):.2f}" if safe_get(row, 3) else ''
                 ])
         elif tipo == 'bairro':
             table_data = [['Bairro', 'Total de Cadastros', 'Renda Média']]
             for row in dados:
                 table_data.append([
-                    str(row[0] or 'Não informado'),
-                    str(row[1] or '0'),
-                    f"R$ {row[2]:.2f}" if row[2] else 'Não informado'
+                    str(safe_get(row, 0) or 'Não informado'),
+                    str(safe_get(row, 1) or '0'),
+                    f"R$ {safe_get(row, 2):.2f}" if safe_get(row, 2) else 'Não informado'
                 ])
         elif tipo == 'renda':
             # Por Faixa de Renda
@@ -601,8 +590,8 @@ def exportar():
             table_data = [['Faixa de Renda', 'Total de Cadastros']]
             for row in dados['faixas_renda']:
                 table_data.append([
-                    str(row[0] or 'Não informado'),
-                    str(row[1] or '0')
+                    str(safe_get(row, 0) or 'Não informado'),
+                    str(safe_get(row, 1) or '0')
                 ])
             
             table = Table(table_data)
@@ -625,9 +614,9 @@ def exportar():
             table_data = [['Bairro', 'Renda Média', 'Total de Cadastros']]
             for row in dados['renda_bairro']:
                 table_data.append([
-                    str(row[0] or 'Não informado'),
-                    f"R$ {row[1]:.2f}" if row[1] else 'Não informado',
-                    str(row[2] or '0')
+                    str(safe_get(row, 0) or 'Não informado'),
+                    f"R$ {safe_get(row, 1):.2f}" if safe_get(row, 1) else 'Não informado',
+                    str(safe_get(row, 2) or '0')
                 ])
             
             table = Table(table_data)
@@ -651,7 +640,7 @@ def exportar():
             
             bairro_data = [['Bairro', 'Total']]
             for row in dados['por_bairro']:
-                bairro_data.append([str(row[0] or 'Não informado'), str(row[1])])
+                bairro_data.append([str(safe_get(row, 0) or 'Não informado'), str(safe_get(row, 1))])
             
             bairro_table = Table(bairro_data)
             bairro_table.setStyle(TableStyle([
@@ -671,7 +660,7 @@ def exportar():
             
             genero_data = [['Gênero', 'Total']]
             for row in dados['por_genero']:
-                genero_data.append([str(row[0] or 'Não informado'), str(row[1])])
+                genero_data.append([str(safe_get(row, 0) or 'Não informado'), str(safe_get(row, 1))])
             
             genero_table = Table(genero_data)
             genero_table.setStyle(TableStyle([
@@ -691,7 +680,7 @@ def exportar():
             
             idade_data = [['Faixa Etária', 'Total']]
             for row in dados['por_idade']:
-                idade_data.append([str(row[0] or 'Não informado'), str(row[1])])
+                idade_data.append([str(safe_get(row, 0) or 'Não informado'), str(safe_get(row, 1))])
             
             idade_table = Table(idade_data)
             idade_table.setStyle(TableStyle([
@@ -708,10 +697,10 @@ def exportar():
             table_data = [['Nome', 'Telefone', 'Bairro', 'Renda Familiar']]
             for row in dados:
                 table_data.append([
-                    str(row[0] or ''),
-                    str(row[1] or ''),
-                    str(row[2] or ''),
-                    f"R$ {row[3]:.2f}" if row[3] else ''
+                    str(safe_get(row, 0) or ''),
+                    str(safe_get(row, 1) or ''),
+                    str(safe_get(row, 2) or ''),
+                    f"R$ {safe_get(row, 3):.2f}" if safe_get(row, 3) else ''
                 ])
         elif tipo == 'caixa':
             table_data = [['Tipo', 'Valor', 'Descrição', 'Data']]
