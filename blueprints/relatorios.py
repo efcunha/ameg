@@ -425,6 +425,33 @@ def exportar():
         
         cursor.execute(query)
         dados = cursor.fetchall()
+    elif tipo == 'saude':
+        if cadastro_id:
+            # Relatório individual de saúde
+            cursor.execute('''SELECT c.*, dsp.nome_pessoa, dsp.tem_doenca_cronica, dsp.doencas_cronicas,
+                             dsp.usa_medicamento_continuo, dsp.medicamentos, dsp.tem_doenca_mental, 
+                             dsp.doencas_mentais, dsp.tem_deficiencia, dsp.deficiencias, 
+                             dsp.precisa_cuidados_especiais, dsp.cuidados_especiais
+                             FROM cadastros c
+                             LEFT JOIN dados_saude_pessoa dsp ON c.id = dsp.cadastro_id
+                             WHERE c.id = %s''', (cadastro_id,))
+            dados = cursor.fetchall()
+            filename = f'relatorio_saude_cadastro_{cadastro_id}'
+        else:
+            # Relatório geral de saúde
+            cursor.execute('''SELECT c.id, c.nome_completo, c.idade, c.telefone, c.bairro,
+                             dsp.nome_pessoa, dsp.tem_doenca_cronica, dsp.doencas_cronicas,
+                             dsp.usa_medicamento_continuo, dsp.medicamentos, dsp.tem_doenca_mental, 
+                             dsp.doencas_mentais, dsp.tem_deficiencia, dsp.deficiencias, 
+                             dsp.precisa_cuidados_especiais, dsp.cuidados_especiais
+                             FROM cadastros c
+                             INNER JOIN dados_saude_pessoa dsp ON c.id = dsp.cadastro_id
+                             WHERE (dsp.tem_doenca_cronica = 'Sim' OR dsp.usa_medicamento_continuo = 'Sim' 
+                             OR dsp.tem_doenca_mental = 'Sim' OR dsp.tem_deficiencia = 'Sim' 
+                             OR dsp.precisa_cuidados_especiais = 'Sim')
+                             ORDER BY c.nome_completo, dsp.nome_pessoa''')
+            dados = cursor.fetchall()
+            filename = 'relatorio_saude_completo'
     else:
         cursor.execute('SELECT * FROM cadastros ORDER BY nome_completo')
         dados = cursor.fetchall()
@@ -567,6 +594,8 @@ def exportar():
             elements.append(Paragraph("Relatório de Renda", title_style))
         elif tipo == 'caixa':
             elements.append(Paragraph("Relatório de Movimentações do Caixa", title_style))
+        elif tipo == 'saude':
+            elements.append(Paragraph("Relatório de Saúde", title_style))
         
         elements.append(Spacer(1, 12))
         
@@ -871,6 +900,58 @@ def exportar():
                     ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
                     ('FONTSIZE', (0, 1), (-1, -1), 8),
                     ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                elements.append(table)
+            elif tipo == 'saude':
+                table_data = [['Nome Completo', 'Pessoa', 'Idade', 'Telefone', 'Bairro', 'Condições de Saúde']]
+                for row in dados:
+                    # Montar condições de saúde
+                    condicoes = []
+                    if safe_get(row, 'tem_doenca_cronica') == 'Sim':
+                        doencas = safe_get(row, 'doencas_cronicas', '')
+                        condicoes.append(f"Doença Crônica: {doencas}" if doencas else "Doença Crônica")
+                    
+                    if safe_get(row, 'usa_medicamento_continuo') == 'Sim':
+                        medicamentos = safe_get(row, 'medicamentos', '')
+                        condicoes.append(f"Medicamento: {medicamentos}" if medicamentos else "Medicamento Contínuo")
+                    
+                    if safe_get(row, 'tem_doenca_mental') == 'Sim':
+                        doencas_mentais = safe_get(row, 'doencas_mentais', '')
+                        condicoes.append(f"Doença Mental: {doencas_mentais}" if doencas_mentais else "Doença Mental")
+                    
+                    if safe_get(row, 'tem_deficiencia') == 'Sim':
+                        deficiencias = safe_get(row, 'deficiencias', '')
+                        condicoes.append(f"Deficiência: {deficiencias}" if deficiencias else "Deficiência")
+                    
+                    if safe_get(row, 'precisa_cuidados_especiais') == 'Sim':
+                        cuidados = safe_get(row, 'cuidados_especiais', '')
+                        condicoes.append(f"Cuidados Especiais: {cuidados}" if cuidados else "Cuidados Especiais")
+                    
+                    condicoes_texto = "; ".join(condicoes) if condicoes else "Nenhuma"
+                    
+                    table_data.append([
+                        str(safe_get(row, 'nome_completo', '')),
+                        str(safe_get(row, 'nome_pessoa', '')),
+                        str(safe_get(row, 'idade', '')),
+                        str(safe_get(row, 'telefone', '')),
+                        str(safe_get(row, 'bairro', '')),
+                        condicoes_texto
+                    ])
+                
+                # Criar e adicionar tabela
+                table = Table(table_data, colWidths=[80, 80, 30, 60, 60, 150])
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 8),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 7),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP')
                 ]))
                 elements.append(table)
             elif tipo == 'simplificado':
