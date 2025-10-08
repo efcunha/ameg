@@ -38,7 +38,7 @@
         <a href="/dashboard">Dashboard</a>
         <a href="/cadastrar">Novo Cadastro</a>
         <a href="/relatorios">Relatórios</a>
-        <a href="/ficha_pdf/{{ cadastro[0] }}" class="print-btn">📋 Baixar PDF</a>
+        <a href="{{ url_for('relatorios.ficha_pdf', cadastro_id=cadastro[0]) }}" class="print-btn">📋 Baixar PDF</a>
         <a href="javascript:window.print()" class="print-btn">🖨️ Imprimir</a>
     </div>
     

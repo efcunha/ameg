@@ -319,6 +319,43 @@ def exportar():
         cursor.execute('SELECT nome_completo, telefone, bairro, renda_familiar FROM cadastros ORDER BY nome_completo')
         dados = cursor.fetchall()
         filename = 'relatorio_simplificado'
+    elif tipo == 'estatistico':
+        # Buscar dados estatísticos
+        cursor.execute('SELECT COUNT(*) as total FROM cadastros')
+        total = cursor.fetchone()['total']
+        
+        cursor.execute('SELECT bairro, COUNT(*) as quantidade FROM cadastros GROUP BY bairro ORDER BY COUNT(*) DESC')
+        por_bairro = cursor.fetchall()
+        
+        cursor.execute('SELECT genero, COUNT(*) as quantidade FROM cadastros GROUP BY genero')
+        por_genero = cursor.fetchall()
+        
+        cursor.execute('''SELECT 
+            CASE 
+                WHEN idade < 18 THEN 'Menor de 18'
+                WHEN idade BETWEEN 18 AND 30 THEN '18-30 anos'
+                WHEN idade BETWEEN 31 AND 50 THEN '31-50 anos'
+                WHEN idade BETWEEN 51 AND 65 THEN '51-65 anos'
+                ELSE 'Acima de 65'
+            END as faixa_etaria,
+            COUNT(*) as quantidade
+            FROM cadastros 
+            WHERE idade IS NOT NULL 
+            GROUP BY faixa_etaria''')
+        por_idade = cursor.fetchall()
+        
+        cursor.execute('SELECT AVG(renda_familiar) as renda_media FROM cadastros WHERE renda_familiar IS NOT NULL')
+        renda_media = cursor.fetchone()['renda_media'] or 0
+        
+        # Preparar dados para exportação
+        dados = {
+            'total': total,
+            'por_bairro': por_bairro,
+            'por_genero': por_genero,
+            'por_idade': por_idade,
+            'renda_media': renda_media
+        }
+        filename = 'relatorio_estatistico'
     elif tipo == 'caixa':
         filtro_tipo = request.args.get('filtro_tipo')
         
@@ -355,6 +392,30 @@ def exportar():
         # Cabeçalhos baseados no tipo
         if tipo == 'simplificado':
             writer.writerow(['Nome', 'Telefone', 'Bairro', 'Renda Familiar'])
+        elif tipo == 'estatistico':
+            # Escrever estatísticas em formato CSV
+            writer.writerow(['RELATÓRIO ESTATÍSTICO'])
+            writer.writerow([''])
+            writer.writerow(['Total de Cadastros', dados['total']])
+            writer.writerow(['Renda Média', f"R$ {dados['renda_media']:.2f}"])
+            writer.writerow([''])
+            
+            writer.writerow(['DISTRIBUIÇÃO POR BAIRRO'])
+            writer.writerow(['Bairro', 'Quantidade'])
+            for item in dados['por_bairro']:
+                writer.writerow([item['bairro'] or 'Não informado', item['quantidade']])
+            writer.writerow([''])
+            
+            writer.writerow(['DISTRIBUIÇÃO POR GÊNERO'])
+            writer.writerow(['Gênero', 'Quantidade'])
+            for item in dados['por_genero']:
+                writer.writerow([item['genero'] or 'Não informado', item['quantidade']])
+            writer.writerow([''])
+            
+            writer.writerow(['DISTRIBUIÇÃO POR FAIXA ETÁRIA'])
+            writer.writerow(['Faixa Etária', 'Quantidade'])
+            for item in dados['por_idade']:
+                writer.writerow([item['faixa_etaria'], item['quantidade']])
         elif tipo == 'caixa':
             writer.writerow(['ID', 'Tipo', 'Valor', 'Descrição', 'Titular Cadastro', 'Nome Pessoa', 
                            'Número Recibo', 'Observações', 'Data', 'Usuário'])
@@ -425,13 +486,74 @@ def exportar():
                 elements.append(Paragraph("Relatório Completo de Cadastros", title_style))
         elif tipo == 'simplificado':
             elements.append(Paragraph("Relatório Simplificado", title_style))
+        elif tipo == 'estatistico':
+            elements.append(Paragraph("Relatório Estatístico", title_style))
         elif tipo == 'caixa':
             elements.append(Paragraph("Relatório de Movimentações do Caixa", title_style))
         
         elements.append(Spacer(1, 12))
         
         # Preparar dados para tabela
-        if tipo == 'simplificado':
+        if tipo == 'estatistico':
+            # Adicionar informações gerais
+            elements.append(Paragraph(f"<b>Total de Cadastros:</b> {dados['total']}", styles['Normal']))
+            elements.append(Paragraph(f"<b>Renda Média:</b> R$ {dados['renda_media']:.2f}", styles['Normal']))
+            elements.append(Spacer(1, 12))
+            
+            # Tabela por bairro
+            elements.append(Paragraph("<b>Distribuição por Bairro</b>", styles['Heading2']))
+            bairro_data = [['Bairro', 'Quantidade']]
+            for item in dados['por_bairro']:
+                bairro_data.append([item['bairro'] or 'Não informado', str(item['quantidade'])])
+            
+            bairro_table = Table(bairro_data)
+            bairro_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(bairro_table)
+            elements.append(Spacer(1, 12))
+            
+            # Tabela por gênero
+            elements.append(Paragraph("<b>Distribuição por Gênero</b>", styles['Heading2']))
+            genero_data = [['Gênero', 'Quantidade']]
+            for item in dados['por_genero']:
+                genero_data.append([item['genero'] or 'Não informado', str(item['quantidade'])])
+            
+            genero_table = Table(genero_data)
+            genero_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(genero_table)
+            elements.append(Spacer(1, 12))
+            
+            # Tabela por faixa etária
+            elements.append(Paragraph("<b>Distribuição por Faixa Etária</b>", styles['Heading2']))
+            idade_data = [['Faixa Etária', 'Quantidade']]
+            for item in dados['por_idade']:
+                idade_data.append([item['faixa_etaria'], str(item['quantidade'])])
+            
+            idade_table = Table(idade_data)
+            idade_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(idade_table)
+            
+        elif tipo == 'simplificado':
             table_data = [['Nome', 'Telefone', 'Bairro', 'Renda Familiar']]
             for row in dados:
                 table_data.append([
@@ -461,22 +583,23 @@ def exportar():
                     f"R$ {row['renda_familiar']:.2f}" if row['renda_familiar'] else ''
                 ])
         
-        # Criar tabela
-        table = Table(table_data)
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
-        
-        elements.append(table)
+        # Criar tabela apenas para tipos que não sejam estatístico
+        if tipo != 'estatistico':
+            table = Table(table_data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            
+            elements.append(table)
         doc.build(elements)
         
         buffer.seek(0)
@@ -490,3 +613,141 @@ def exportar():
     # Fallback - não deveria chegar aqui
     flash('Formato de exportação não suportado.')
     return redirect(url_for('relatorios.relatorios'))
+
+@relatorios_bp.route('/ficha/<int:cadastro_id>')
+def ficha(cadastro_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
+        cadastro = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if not cadastro:
+            flash('Cadastro não encontrado.')
+            return redirect(url_for('relatorios.relatorios'))
+        
+        return render_template('ficha.html', cadastro=cadastro)
+        
+    except Exception as e:
+        logger.error(f"Erro ao carregar ficha: {e}")
+        flash('Erro ao carregar ficha.')
+        return redirect(url_for('relatorios.relatorios'))
+
+@relatorios_bp.route('/ficha_pdf/<int:cadastro_id>')
+def ficha_pdf(cadastro_id):
+    if 'usuario' not in session:
+        return redirect(url_for('auth.login'))
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
+        cadastro = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if not cadastro:
+            flash('Cadastro não encontrado.')
+            return redirect(url_for('relatorios.relatorios'))
+        
+        # Gerar PDF da ficha individual
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Título
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            spaceAfter=30,
+            alignment=1  # Center
+        )
+        elements.append(Paragraph(f"FICHA INDIVIDUAL - CADASTRO {cadastro_id}", title_style))
+        elements.append(Spacer(1, 20))
+        
+        # Dados pessoais
+        elements.append(Paragraph("<b>DADOS PESSOAIS</b>", styles['Heading2']))
+        dados_pessoais = [
+            ['Nome Completo:', str(cadastro['nome_completo'] or '')],
+            ['CPF:', str(cadastro['cpf'] or '')],
+            ['RG:', str(cadastro['rg'] or '')],
+            ['Telefone:', str(cadastro['telefone'] or '')],
+            ['Gênero:', str(cadastro['genero'] or '')],
+            ['Idade:', str(cadastro['idade'] or '')],
+            ['Estado Civil:', str(cadastro['estado_civil'] or '')],
+            ['Escolaridade:', str(cadastro['escolaridade'] or '')]
+        ]
+        
+        table_pessoais = Table(dados_pessoais, colWidths=[2*inch, 4*inch])
+        table_pessoais.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(table_pessoais)
+        elements.append(Spacer(1, 15))
+        
+        # Endereço
+        elements.append(Paragraph("<b>ENDEREÇO</b>", styles['Heading2']))
+        dados_endereco = [
+            ['Endereço:', str(cadastro['endereco'] or '')],
+            ['Número:', str(cadastro['numero'] or '')],
+            ['Bairro:', str(cadastro['bairro'] or '')],
+            ['CEP:', str(cadastro['cep'] or '')]
+        ]
+        
+        table_endereco = Table(dados_endereco, colWidths=[2*inch, 4*inch])
+        table_endereco.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(table_endereco)
+        elements.append(Spacer(1, 15))
+        
+        # Dados familiares
+        elements.append(Paragraph("<b>DADOS FAMILIARES</b>", styles['Heading2']))
+        dados_familia = [
+            ['Companheiro(a):', str(cadastro['companheiro'] or '')],
+            ['Renda Familiar:', f"R$ {cadastro['renda_familiar']:.2f}" if cadastro['renda_familiar'] else ''],
+            ['Benefícios Sociais:', str(cadastro['beneficios_sociais'] or '')]
+        ]
+        
+        table_familia = Table(dados_familia, colWidths=[2*inch, 4*inch])
+        table_familia.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(table_familia)
+        
+        doc.build(elements)
+        buffer.seek(0)
+        
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'ficha_cadastro_{cadastro_id}.pdf'
+        )
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar PDF da ficha: {e}")
+        flash('Erro ao gerar PDF da ficha.')
+        return redirect(url_for('relatorios.relatorios'))

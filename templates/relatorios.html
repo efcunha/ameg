@@ -80,7 +80,7 @@
                     <td>{{ cadastro[11] or '-' }}</td>
                     <td>{{ ("R$ %.2f"|format(cadastro[12])) if cadastro[12] else '-' }}</td>
                     <td>{{ cadastro[14] }}</td>
-                    <td><a href="/ficha/{{ cadastro[0] }}" style="color: #3498db; text-decoration: none;">👁️ Ver Ficha</a></td>
+                    <td><a href="{{ url_for('relatorios.ficha', cadastro_id=cadastro[0]) }}" style="color: #3498db; text-decoration: none;">👁️ Ver Ficha</a></td>
                 </tr>
                 {% endfor %}
             </tbody>
