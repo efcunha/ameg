@@ -903,55 +903,79 @@ def exportar():
                 ]))
                 elements.append(table)
             elif tipo == 'saude':
-                table_data = [['Nome Completo', 'Pessoa', 'Idade', 'Telefone', 'Bairro', 'Condições de Saúde']]
+                table_data = [['Nome Completo', 'Pessoa', 'Idade', 'Tel.', 'Bairro', 'Condições de Saúde']]
                 for row in dados:
-                    # Montar condições de saúde
+                    # Montar condições de saúde de forma mais compacta
                     condicoes = []
                     if safe_get(row, 'tem_doenca_cronica') == 'Sim':
                         doencas = safe_get(row, 'doencas_cronicas', '')
-                        condicoes.append(f"Doença Crônica: {doencas}" if doencas else "Doença Crônica")
+                        if doencas:
+                            condicoes.append(f"Doença: {doencas[:30]}...")
+                        else:
+                            condicoes.append("Doença Crônica")
                     
                     if safe_get(row, 'usa_medicamento_continuo') == 'Sim':
                         medicamentos = safe_get(row, 'medicamentos', '')
-                        condicoes.append(f"Medicamento: {medicamentos}" if medicamentos else "Medicamento Contínuo")
+                        if medicamentos:
+                            condicoes.append(f"Medicamento: {medicamentos[:25]}...")
+                        else:
+                            condicoes.append("Medicamento Contínuo")
                     
                     if safe_get(row, 'tem_doenca_mental') == 'Sim':
                         doencas_mentais = safe_get(row, 'doencas_mentais', '')
-                        condicoes.append(f"Doença Mental: {doencas_mentais}" if doencas_mentais else "Doença Mental")
+                        if doencas_mentais:
+                            condicoes.append(f"Mental: {doencas_mentais[:20]}...")
+                        else:
+                            condicoes.append("Doença Mental")
                     
                     if safe_get(row, 'tem_deficiencia') == 'Sim':
                         deficiencias = safe_get(row, 'deficiencias', '')
-                        condicoes.append(f"Deficiência: {deficiencias}" if deficiencias else "Deficiência")
+                        if deficiencias:
+                            condicoes.append(f"Deficiência: {deficiencias[:20]}...")
+                        else:
+                            condicoes.append("Deficiência")
                     
                     if safe_get(row, 'precisa_cuidados_especiais') == 'Sim':
-                        cuidados = safe_get(row, 'cuidados_especiais', '')
-                        condicoes.append(f"Cuidados Especiais: {cuidados}" if cuidados else "Cuidados Especiais")
+                        condicoes.append("Cuidados Especiais")
                     
-                    condicoes_texto = "; ".join(condicoes) if condicoes else "Nenhuma"
+                    # Quebrar condições em múltiplas linhas se necessário
+                    condicoes_texto = "\n".join(condicoes) if condicoes else "Nenhuma"
+                    
+                    # Limitar tamanhos dos textos
+                    nome = str(safe_get(row, 'nome_completo', ''))[:25]
+                    pessoa = str(safe_get(row, 'nome_pessoa', ''))[:20]
+                    telefone = str(safe_get(row, 'telefone', ''))[:12]
+                    bairro = str(safe_get(row, 'bairro', ''))[:15]
                     
                     table_data.append([
-                        str(safe_get(row, 'nome_completo', '')),
-                        str(safe_get(row, 'nome_pessoa', '')),
+                        nome,
+                        pessoa,
                         str(safe_get(row, 'idade', '')),
-                        str(safe_get(row, 'telefone', '')),
-                        str(safe_get(row, 'bairro', '')),
+                        telefone,
+                        bairro,
                         condicoes_texto
                     ])
                 
-                # Criar e adicionar tabela
-                table = Table(table_data, colWidths=[80, 80, 30, 60, 60, 150])
+                # Criar e adicionar tabela com larguras ajustadas
+                table = Table(table_data, colWidths=[100, 80, 25, 50, 60, 200])
                 table.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                     ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 8),
-                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('FONTSIZE', (0, 0), (-1, 0), 9),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                    ('TOPPADDING', (0, 0), (-1, 0), 8),
                     ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
                     ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 1), (-1, -1), 7),
+                    ('FONTSIZE', (0, 1), (-1, -1), 8),
                     ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP')
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                    ('TOPPADDING', (0, 1), (-1, -1), 6),
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), 6)
                 ]))
                 elements.append(table)
             elif tipo == 'simplificado':
