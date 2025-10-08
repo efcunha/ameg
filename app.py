@@ -59,6 +59,12 @@ app.register_blueprint(relatorios_bp)
 app.register_blueprint(usuarios_bp)
 app.register_blueprint(caixa_bp)
 
+# Registrar API REST apenas se habilitada
+if os.getenv('API_ENABLED', 'false').lower() == 'true':
+    from blueprints.api import api_bp
+    app.register_blueprint(api_bp)
+    logger.info("🔌 API REST habilitada em /api/v1")
+
 # Headers de segurança
 @app.after_request
 def add_security_headers(response):

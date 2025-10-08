@@ -40,6 +40,14 @@ Sistema web completo para cadastro familiar da Associação dos Ambulantes e Tra
 - **Reset administrativo** - limpeza completa do sistema
 - **Proteções especiais** - admin ID 1 não pode ser removido/rebaixado
 
+### **API REST para Integração**
+- **Autenticação JWT** - tokens seguros com expiração de 24h
+- **Endpoints de leitura** - cadastros, estatísticas, health check
+- **Paginação otimizada** - até 100 registros por consulta
+- **Ativação condicional** - habilitada via variável de ambiente
+- **Zero downtime** - rollback instantâneo sem indisponibilidade
+- **Documentação completa** - guia de integração em API_REST.md
+
 ### **Performance e Otimização**
 - **Compressão automática** - CSS/JS minificados + Gzip (60-70% redução)
 - **Lazy loading** - carregamento inteligente de imagens
