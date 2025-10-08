@@ -58,15 +58,15 @@ async function loadAllCharts() {
         const periodo = document.getElementById('filtro-periodo')?.value || 'todos';
         const bairro = document.getElementById('filtro-bairro')?.value || 'todos';
         
-        // Construir query string com filtros
+        // Construir query string com filtros apenas se não for "todos"
         const params = new URLSearchParams();
-        if (periodo !== 'todos') params.append('periodo', periodo);
-        if (bairro !== 'todos') params.append('bairro', bairro);
+        if (periodo && periodo !== 'todos') params.append('periodo', periodo);
+        if (bairro && bairro !== 'todos') params.append('bairro', bairro);
         
         const queryString = params.toString();
         const urlSuffix = queryString ? `?${queryString}` : '';
         
-        console.log('Aplicando filtros:', { periodo, bairro, queryString });
+        console.log('Aplicando filtros:', { periodo, bairro, queryString, urlSuffix });
         
         // Carregar dados em paralelo
         const [demografiaData, saudeData, socioeconomicoData, trabalhoData] = await Promise.all([

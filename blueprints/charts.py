@@ -108,23 +108,22 @@ def demografia_data():
     periodo = request.args.get('periodo', 'todos')
     bairro = request.args.get('bairro', 'todos')
     
-    logger.info(f"🔍 Filtros aplicados - Período: {periodo}, Bairro: {bairro}")
+    logger.info(f"🔍 Filtros recebidos - Período: {periodo}, Bairro: {bairro}")
     
     try:
-        # Construir filtros WHERE
-        where_conditions = []
+        # Construir condições WHERE
+        conditions = ["1=1"]  # Base sempre verdadeira
         
-        # Filtro de período
         if periodo == '6m':
-            where_conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '6 months'")
+            conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '6 months'")
         elif periodo == '1a':
-            where_conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '1 year'")
+            conditions.append("data_cadastro >= CURRENT_DATE - INTERVAL '1 year'")
         
-        # Filtro de bairro
-        if bairro != 'todos':
-            where_conditions.append(f"bairro = '{bairro}'")
+        if bairro and bairro != 'todos':
+            conditions.append(f"bairro = '{bairro}'")
         
-        where_clause = " AND " + " AND ".join(where_conditions) if where_conditions else ""
+        where_clause = " AND ".join(conditions)
+        logger.info(f"🔍 WHERE clause: {where_clause}")
         
         # Faixa etária
         logger.info("🎂 Executando query de faixa etária...")
@@ -138,7 +137,7 @@ def demografia_data():
             END as faixa,
             COUNT(*) as total
         FROM cadastros 
-        WHERE data_nascimento IS NOT NULL{where_clause}
+        WHERE data_nascimento IS NOT NULL AND {where_clause}
         GROUP BY faixa
         ORDER BY faixa
         """
@@ -150,7 +149,7 @@ def demografia_data():
             idade_fallback_query = f"""
             SELECT 'Dados disponíveis' as faixa, COUNT(*) as total
             FROM cadastros
-            WHERE 1=1{where_clause}
+            WHERE {where_clause}
             """
             idade_data = execute_query(idade_fallback_query)
         
@@ -161,7 +160,7 @@ def demografia_data():
         bairro_query = f"""
         SELECT bairro, COUNT(*) as total
         FROM cadastros 
-        WHERE bairro IS NOT NULL AND bairro != ''{where_clause}
+        WHERE bairro IS NOT NULL AND bairro != '' AND {where_clause}
         GROUP BY bairro
         ORDER BY total DESC
         LIMIT 10
@@ -176,7 +175,7 @@ def demografia_data():
             TO_CHAR(data_cadastro, 'YYYY-MM') as mes,
             COUNT(*) as total
         FROM cadastros 
-        WHERE data_cadastro IS NOT NULL{where_clause}
+        WHERE data_cadastro IS NOT NULL AND {where_clause}
         GROUP BY mes
         ORDER BY mes DESC
         LIMIT 12
