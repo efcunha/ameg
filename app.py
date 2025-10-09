@@ -93,6 +93,11 @@ app.register_blueprint(caixa_bp)
 app.register_blueprint(charts_bp)
 app.register_blueprint(notifications_bp)
 
+# Log de todas as rotas registradas
+logger.info("🔍 ROTAS REGISTRADAS:")
+for rule in app.url_map.iter_rules():
+    logger.info(f"  {rule.rule} -> {rule.endpoint} [{', '.join(rule.methods)}]")
+
 # Registrar API REST apenas se habilitada
 if os.getenv('API_ENABLED', 'false').lower() == 'true':
     from blueprints.api import api_bp
