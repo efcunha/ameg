@@ -104,7 +104,8 @@ def cadastrar():
             logger.warning(f"❌ Validação falhou: {len(validation_errors)} erros encontrados")
             for error in validation_errors:
                 flash(f"Erro de validação: {error}", 'error')
-            return render_template('cadastrar.html')
+            tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+            return render_template('cadastrar.html', tem_permissao_caixa=tem_permissao_caixa)
         
         try:
             conn = get_db_connection()
@@ -321,7 +322,8 @@ def cadastrar():
             flash('Erro ao salvar cadastro. Tente novamente.')
             return redirect(url_for('cadastros.cadastrar'))
     
-    return render_template('cadastrar.html')
+    tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+    return render_template('cadastrar.html', tem_permissao_caixa=tem_permissao_caixa)
 
 @cadastros_bp.route('/editar_cadastro/<int:cadastro_id>')
 def editar_cadastro(cadastro_id):
