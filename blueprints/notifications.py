@@ -63,7 +63,9 @@ def notificacoes_simples():
         conn.close()
         
         logger.info("🔄 Renderizando template...")
-        return render_template('historico_notificacoes.html', notificacoes=notificacoes)
+        # Verificar permissão do caixa
+        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+        return render_template('historico_notificacoes.html', notificacoes=notificacoes, tem_permissao_caixa=tem_permissao_caixa)
     
     except Exception as e:
         logger.error(f"❌ ERRO: {str(e)}")
@@ -106,7 +108,9 @@ def historico_notificacoes():
         cursor.close()
         conn.close()
         
-        return render_template('historico_notificacoes.html', notificacoes=notificacoes)
+        # Verificar permissão do caixa
+        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+        return render_template('historico_notificacoes.html', notificacoes=notificacoes, tem_permissao_caixa=tem_permissao_caixa)
     
     except Exception as e:
         return f"Erro: {str(e)}"
