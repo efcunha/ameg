@@ -116,8 +116,8 @@ def tem_permissao_caixa(usuario,):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Verificar se é admin
-        cursor.execute('SELECT tipo_usuario FROM usuarios WHERE usuario = %s', (usuario,))
+        # Verificar se é admin (campo correto é 'tipo', não 'tipo_usuario')
+        cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (usuario,))
         user_data = cursor.fetchone()
         
         if user_data and user_data[0] == 'admin':
