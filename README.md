@@ -387,5 +387,4 @@ DATABASE_URL=<configurada_automaticamente>
 - [ ] Monitoramento avançado
 
 ---
-
 **Sistema AMEG** - Desenvolvido com foco em segurança, performance e usabilidade para atender às necessidades da Associação dos Ambulantes e Trabalhadores em Geral da Paraíba.
