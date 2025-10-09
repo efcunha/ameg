@@ -79,7 +79,7 @@ def get_notifications():
 @notifications_bp.route('/historico-notificacoes')
 def historico_notificacoes():
     if 'user_id' not in session:
-        return redirect(url_for('auth.login'))
+        return redirect('/login')
     
     conn = get_db_connection()
     cursor = conn.cursor()
