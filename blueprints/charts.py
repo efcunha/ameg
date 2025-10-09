@@ -55,7 +55,7 @@ def execute_query(query):
         logger.error(f"📝 Query que falhou: {query}")
         return []
 
-def build_where_clause(periodo, bairro):
+def build_where_clause(periodo, bairro, idade=None):
     """Constrói cláusula WHERE baseada nos filtros"""
     conditions = []
     
@@ -68,6 +68,17 @@ def build_where_clause(periodo, bairro):
     # Filtro de bairro
     if bairro and bairro != 'todos':
         conditions.append(f"bairro = '{bairro}'")
+    
+    # Filtro de idade
+    if idade and idade != 'todos':
+        if idade == 'menor18':
+            conditions.append("EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento)) < 18")
+        elif idade == '18-29':
+            conditions.append("EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento)) BETWEEN 18 AND 29")
+        elif idade == '30-49':
+            conditions.append("EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento)) BETWEEN 30 AND 49")
+        elif idade == '50+':
+            conditions.append("EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento)) >= 50")
     
     # Construir WHERE clause
     if conditions:
@@ -129,11 +140,12 @@ def demografia_data():
     # Obter filtros da query string
     periodo = request.args.get('periodo', 'todos')
     bairro = request.args.get('bairro', 'todos')
+    idade = request.args.get('idade', 'todos')
     
-    logger.info(f"🔍 Filtros recebidos - Período: {periodo}, Bairro: {bairro}")
+    logger.info(f"🔍 Filtros recebidos - Período: {periodo}, Bairro: {bairro}, Idade: {idade}")
     
     try:
-        where_clause = build_where_clause(periodo, bairro)
+        where_clause = build_where_clause(periodo, bairro, idade)
         
         # Faixa etária
         logger.info("🎂 Executando query de faixa etária...")

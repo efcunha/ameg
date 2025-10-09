@@ -66,7 +66,18 @@
                     <option value="todos">Todos os bairros</option>
                 </select>
             </div>
+            <div class="filter-group">
+                <label>👥 Faixa Etária:</label>
+                <select id="filtro-idade">
+                    <option value="todos">Todas as idades</option>
+                    <option value="menor18">Menor de 18 anos</option>
+                    <option value="18-29">18 a 29 anos</option>
+                    <option value="30-49">30 a 49 anos</option>
+                    <option value="50+">50 anos ou mais</option>
+                </select>
+            </div>
             <button onclick="aplicarFiltros()" class="btn-primary">🔄 Aplicar Filtros</button>
+            <button onclick="limparFiltros()" class="btn-primary" style="background: linear-gradient(45deg, #e74c3c, #c0392b);">🗑️ Limpar</button>
         </div>
 
         <!-- Header do Dashboard -->
@@ -158,10 +169,12 @@
             try {
                 const periodo = document.getElementById('filtro-periodo').value;
                 const bairro = document.getElementById('filtro-bairro').value;
+                const idade = document.getElementById('filtro-idade').value;
                 
                 const params = new URLSearchParams();
                 if (periodo !== 'todos') params.append('periodo', periodo);
                 if (bairro !== 'todos') params.append('bairro', bairro);
+                if (idade !== 'todos') params.append('idade', idade);
                 
                 const suffix = params.toString() ? `?${params.toString()}` : '';
                 
@@ -180,7 +193,13 @@
                 
                 // Atualizar subtitle
                 const total = data.idade.reduce((sum, item) => sum + item.total, 0);
-                document.getElementById('dashboard-subtitle').textContent = `${total} cadastros • ${periodo === 'todos' ? 'Todos os períodos' : periodo} • ${bairro === 'todos' ? 'Todos os bairros' : bairro}`;
+                const filtrosAtivos = [];
+                if (periodo !== 'todos') filtrosAtivos.push(periodo === '6m' ? 'Últimos 6 meses' : 'Último ano');
+                if (bairro !== 'todos') filtrosAtivos.push(bairro);
+                if (idade !== 'todos') filtrosAtivos.push(idade);
+                
+                const filtrosTexto = filtrosAtivos.length > 0 ? filtrosAtivos.join(' • ') : 'Todos os dados';
+                document.getElementById('dashboard-subtitle').textContent = `${total} cadastros • ${filtrosTexto}`;
                 
                 document.getElementById('status-message').style.display = 'block';
                 
@@ -418,6 +437,14 @@
         
         function aplicarFiltros() {
             console.log('🔄 Aplicando filtros...');
+            loadAllCharts();
+        }
+        
+        function limparFiltros() {
+            console.log('🗑️ Limpando filtros...');
+            document.getElementById('filtro-periodo').value = 'todos';
+            document.getElementById('filtro-bairro').value = 'todos';
+            document.getElementById('filtro-idade').value = 'todos';
             loadAllCharts();
         }
     </script>
