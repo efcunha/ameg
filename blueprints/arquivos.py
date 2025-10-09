@@ -61,7 +61,9 @@ def arquivos_cadastros():
         cursor.close()
         conn.close()
         
-        return render_template('arquivos_cadastros.html', cadastros=cadastros)
+        # Verificar permissão do caixa
+        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+        return render_template('arquivos_cadastros.html', cadastros=cadastros, tem_permissao_caixa=tem_permissao_caixa)
         
     except Exception as e:
         logger.error(f"Erro em arquivos_cadastros: {e}")
