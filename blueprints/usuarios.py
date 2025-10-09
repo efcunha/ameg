@@ -552,15 +552,36 @@ def admin_reset_execute():
     try:
         logger.warning(f"🚨 RESET INICIADO pelo admin ID 1: {session['usuario']}")
         
-        # Zerar tabelas (mantém estrutura)
-        cursor.execute('TRUNCATE TABLE arquivos_saude RESTART IDENTITY CASCADE')
-        cursor.execute('TRUNCATE TABLE auditoria RESTART IDENTITY CASCADE')
-        cursor.execute('TRUNCATE TABLE cadastros RESTART IDENTITY CASCADE')
+        # Zerar todas as tabelas (mantém estrutura)
+        tabelas_reset = [
+            'comprovantes_caixa',
+            'movimentacoes_caixa', 
+            'historico_notificacoes',
+            'permissoes_usuario',
+            'dados_saude_pessoa',
+            'arquivos_saude',
+            'auditoria',
+            'cadastros'
+        ]
+        
+        for tabela in tabelas_reset:
+            cursor.execute(f'TRUNCATE TABLE {tabela} RESTART IDENTITY CASCADE')
+            logger.info(f"✅ Tabela {tabela} resetada")
         
         # Resetar sequences manualmente (garantia)
-        cursor.execute('ALTER SEQUENCE arquivos_saude_id_seq RESTART WITH 1')
-        cursor.execute('ALTER SEQUENCE auditoria_id_seq RESTART WITH 1')
-        cursor.execute('ALTER SEQUENCE cadastros_id_seq RESTART WITH 1')
+        sequences_reset = [
+            'comprovantes_caixa_id_seq',
+            'movimentacoes_caixa_id_seq',
+            'historico_notificacoes_id_seq', 
+            'permissoes_usuario_id_seq',
+            'dados_saude_pessoa_id_seq',
+            'arquivos_saude_id_seq',
+            'auditoria_id_seq',
+            'cadastros_id_seq'
+        ]
+        
+        for sequence in sequences_reset:
+            cursor.execute(f'ALTER SEQUENCE {sequence} RESTART WITH 1')
         
         conn.commit()
         
@@ -569,7 +590,7 @@ def admin_reset_execute():
             usuario=session['usuario'],
             acao='RESET',
             tabela='SISTEMA',
-            dados_novos='Reset completo das tabelas: cadastros, arquivos_saude, auditoria',
+            dados_novos='Reset completo de todas as tabelas: cadastros, arquivos_saude, auditoria, movimentacoes_caixa, comprovantes_caixa, historico_notificacoes, permissoes_usuario, dados_saude_pessoa',
             ip_address=request.remote_addr,
             user_agent=request.headers.get('User-Agent')
         )
