@@ -13,43 +13,35 @@ def get_notifications():
     
     notifications = []
     
-    # Alertas de saúde críticos
+    # Buscar dados de saúde da tabela dados_saude_pessoa
     cursor.execute("""
-        SELECT nome_completo, tem_deficiencia, medicamentos_alto_custo, 
-               doencas_cronicas, acesso_medicamentos
-        FROM cadastros 
-        WHERE tem_deficiencia = 'Sim' 
-           OR medicamentos_alto_custo = 'Sim'
-           OR acesso_medicamentos = 'Não'
-           OR doencas_cronicas ILIKE '%diabetes%'
-           OR doencas_cronicas ILIKE '%hipertensão%'
-        ORDER BY data_cadastro DESC LIMIT 10
+        SELECT c.nome_completo, dsp.tem_deficiencia, dsp.deficiencias,
+               dsp.doencas_cronicas, dsp.medicamentos
+        FROM cadastros c
+        JOIN dados_saude_pessoa dsp ON c.id = dsp.cadastro_id
+        WHERE dsp.tem_deficiencia = 'Sim' 
+           OR dsp.doencas_cronicas ILIKE '%diabetes%'
+           OR dsp.doencas_cronicas ILIKE '%hipertensão%'
+           OR dsp.doencas_cronicas ILIKE '%cardíaca%'
+        ORDER BY c.data_cadastro DESC LIMIT 10
     """)
     
     for row in cursor.fetchall():
-        nome, deficiencia, alto_custo, doencas, acesso = row
+        nome, deficiencia, tipo_def, doencas, medicamentos = row
         
         if deficiencia == 'Sim':
             notifications.append({
                 'type': 'health',
                 'priority': 'high',
-                'message': f'{nome} - Pessoa com deficiência cadastrada',
+                'message': f'{nome} - Pessoa com deficiência: {tipo_def or "Não especificada"}',
                 'icon': '♿'
             })
-        
-        if alto_custo == 'Sim':
-            notifications.append({
-                'type': 'health', 
-                'priority': 'medium',
-                'message': f'{nome} - Medicamento de alto custo',
-                'icon': '💊'
-            })
             
-        if acesso == 'Não':
+        if doencas and any(d in doencas.lower() for d in ['diabetes', 'hipertensão', 'cardíaca']):
             notifications.append({
                 'type': 'health',
                 'priority': 'urgent', 
-                'message': f'{nome} - Sem acesso a medicamentos',
+                'message': f'{nome} - Doença crônica grave: {doencas[:30]}...',
                 'icon': '🚨'
             })
     

@@ -128,6 +128,7 @@ def init_db_tables():
                 doencas_mentais TEXT,
                 tem_deficiencia VARCHAR(10),
                 tipo_deficiencia TEXT,
+                medicamento_alto_custo VARCHAR(10),
                 precisa_cuidados_especiais VARCHAR(10),
                 cuidados_especiais TEXT,
                 data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

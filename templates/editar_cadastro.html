@@ -508,6 +508,10 @@
                                             <input type="checkbox" id="medicamento_{{ loop.index }}" name="saude_condicoes_{{ loop.index }}[]" value="medicamento" {{ 'checked' if pessoa.usa_medicamento_continuo == 'Sim' else '' }} onchange="toggleEspecificacao(this, 'spec_medicamento_{{ loop.index }}')">
                                             <label for="medicamento_{{ loop.index }}">Usa medicamento contínuo?</label>
                                             <input type="text" id="spec_medicamento_{{ loop.index }}" name="saude_medicamentos_{{ loop.index }}" value="{{ pessoa.medicamentos or '' }}" placeholder="Especificar medicamentos" {{ 'disabled' if pessoa.usa_medicamento_continuo != 'Sim' else '' }}>
+                                            <div style="margin-top: 5px;">
+                                                <input type="checkbox" id="medicamento_alto_custo_{{ loop.index }}" name="medicamento_alto_custo_{{ loop.index }}" {{ 'disabled' if pessoa.usa_medicamento_continuo != 'Sim' else '' }}>
+                                                <label for="medicamento_alto_custo_{{ loop.index }}" style="font-size: 12px;">É medicamento de alto custo?</label>
+                                            </div>
                                         </div>
                                         
                                         <div class="checkbox-item">
@@ -560,6 +564,10 @@
                                             <input type="checkbox" id="medicamento_1" name="saude_condicoes_1[]" value="medicamento" onchange="toggleEspecificacao(this, 'spec_medicamento_1')">
                                             <label for="medicamento_1">Usa medicamento contínuo?</label>
                                             <input type="text" id="spec_medicamento_1" name="saude_medicamentos_1" placeholder="Especificar medicamentos" disabled>
+                                            <div style="margin-top: 5px;">
+                                                <input type="checkbox" id="medicamento_alto_custo_1" name="medicamento_alto_custo_1" disabled>
+                                                <label for="medicamento_alto_custo_1" style="font-size: 12px; opacity: 0.5;">É medicamento de alto custo?</label>
+                                            </div>
                                         </div>
                                         
                                         <div class="checkbox-item">
@@ -602,12 +610,33 @@
                         target.required = true;
                         target.style.borderColor = '#e74c3c';
                         target.style.backgroundColor = '#fff5f5';
+                        
+                        // Habilitar checkbox de alto custo se for medicamento
+                        if (checkbox.id.includes('medicamento')) {
+                            const altoCustoId = `medicamento_alto_custo_${pessoaNum}`;
+                            const altoCusto = document.getElementById(altoCustoId);
+                            if (altoCusto) {
+                                altoCusto.disabled = false;
+                                altoCusto.parentElement.style.opacity = '1';
+                            }
+                        }
                     } else {
                         target.disabled = true;
                         target.required = false;
                         target.value = '';
                         target.style.borderColor = '';
                         target.style.backgroundColor = '';
+                        
+                        // Desabilitar checkbox de alto custo se for medicamento
+                        if (checkbox.id.includes('medicamento')) {
+                            const altoCustoId = `medicamento_alto_custo_${pessoaNum}`;
+                            const altoCusto = document.getElementById(altoCustoId);
+                            if (altoCusto) {
+                                altoCusto.disabled = true;
+                                altoCusto.checked = false;
+                                altoCusto.parentElement.style.opacity = '0.5';
+                            }
+                        }
                     }
                     
                     // Se não for o campo medicamento, verificar disponibilidade do medicamento
@@ -677,6 +706,10 @@
                                         <input type="checkbox" id="medicamento_${contadorPessoas}" name="saude_condicoes_${contadorPessoas}[]" value="medicamento" onchange="toggleEspecificacao(this, 'spec_medicamento_${contadorPessoas}')">
                                         <label for="medicamento_${contadorPessoas}">Usa medicamento contínuo?</label>
                                         <input type="text" id="spec_medicamento_${contadorPessoas}" name="saude_medicamentos_${contadorPessoas}" placeholder="Especificar medicamentos" disabled>
+                                        <div style="margin-top: 5px;">
+                                            <input type="checkbox" id="medicamento_alto_custo_${contadorPessoas}" name="medicamento_alto_custo_${contadorPessoas}" disabled>
+                                            <label for="medicamento_alto_custo_${contadorPessoas}" style="font-size: 12px; opacity: 0.5;">É medicamento de alto custo?</label>
+                                        </div>
                                     </div>
                                     
                                     <div class="checkbox-item">
