@@ -351,7 +351,7 @@ DATABASE_URL=<configurada_automaticamente>
 
 ### **Fase 4 - Escalabilidade**
 - [ ] Cache Redis para sessões
-- [ ] CDN para assets estáticos
+- [X] CDN para assets estáticos
 - [ ] Load balancing
 - [ ] Monitoramento avançado
 
