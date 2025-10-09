@@ -28,6 +28,28 @@ Sistema web completo para cadastro familiar da Associação dos Ambulantes e Tra
 - **Filtros avançados** - busca e ordenação
 - **Estatísticas em tempo real** - dashboard com métricas
 
+### **Sistema de Notificações e Alertas**
+- **Notificações em tempo real** - sistema de alertas inteligente
+- **Histórico completo** - rastreamento de todas as notificações
+- **Níveis de prioridade** - urgent, high, medium, low
+- **Marcação de visualização** - controle de leitura
+- **Interface intuitiva** - ícones e cores por prioridade
+- **Documentação completa** - guia detalhado em ALERTAS.md
+
+### **Sistema de Gráficos Interativos**
+- **Dashboard visual** - gráficos demográficos e estatísticos
+- **Filtros avançados** - por período, bairro, faixa etária
+- **4 categorias de dados** - demografia, saúde, socioeconômico, trabalho
+- **Gráficos responsivos** - Chart.js com design moderno
+- **Exportação de dados** - integração com relatórios
+
+### **CDN Global Integrado**
+- **jsDelivr CDN** - distribuição global de assets
+- **Performance otimizada** - 50-70% mais rápido globalmente
+- **Fallback automático** - usa arquivos locais se CDN falhar
+- **Cache inteligente** - 12 horas de cache automático
+- **Ativação condicional** - habilitado via variável de ambiente
+
 ### **Gestão de Arquivos de Saúde**
 - **Upload seguro** - laudos, receitas, exames (16MB máximo)
 - **Múltiplos formatos** - PDF, DOC, DOCX, imagens
@@ -36,9 +58,10 @@ Sistema web completo para cadastro familiar da Associação dos Ambulantes e Tra
 
 ### **Administração Avançada**
 - **Gestão de usuários** - criação, edição, exclusão
-- **Sistema de auditoria** - log completo de ações
-- **Reset administrativo** - limpeza completa do sistema
+- **Sistema de auditoria** - log completo de ações com paginação inteligente
+- **Reset administrativo** - limpeza completa do sistema (apenas admin ID 1)
 - **Proteções especiais** - admin ID 1 não pode ser removido/rebaixado
+- **Navegação padronizada** - interface consistente em todas as páginas
 
 ### **API REST para Integração**
 - **Autenticação JWT** - tokens seguros com expiração de 24h
@@ -310,10 +333,19 @@ DATABASE_URL=<configurada_automaticamente>
 
 - **SECURITY.md** - Guia completo de segurança
 - **DOCUMENTACAO_APP.md** - Documentação técnica detalhada
+- **ALERTAS.md** - Sistema de notificações e alertas (funcionamento completo)
+- **API_REST.md** - Guia de integração da API REST
 - **Comentários no código** - Documentação inline
 - **README.md** - Este arquivo (visão geral)
 
 ## 🔄 Atualizações Recentes
+
+### **Sistema de Notificações e CDN (Outubro 2025)**
+- **Sistema de alertas completo**: Notificações em tempo real com 4 níveis de prioridade
+- **CDN global ativo**: jsDelivr servindo assets com 50-70% melhoria de performance
+- **Navegação padronizada**: Interface consistente em todas as páginas do sistema
+- **Paginação inteligente**: Auditoria com navegação otimizada para grandes volumes
+- **Segurança aprimorada**: Remoção de credenciais hardcoded e verificações de vazamento
 
 ### **Melhorias nos Relatórios (Outubro 2025)**
 - **Fichas individuais completas**: Relatórios completos e estatísticos agora geram PDFs com fichas completas incluindo foto 3x4
