@@ -133,26 +133,38 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-top: 20px;
-            gap: 10px;
+            margin: 30px 0;
+            gap: 5px;
+            flex-wrap: wrap;
         }
 
         .pagination a, .pagination span {
-            padding: 8px 12px;
+            padding: 10px 15px;
             border: 1px solid #ddd;
             border-radius: 5px;
             text-decoration: none;
             color: #2c3e50;
+            min-width: 40px;
+            text-align: center;
+            transition: all 0.3s;
         }
 
         .pagination a:hover {
-            background: #f0f0f0;
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
         }
 
         .pagination .current {
             background: #3498db;
             color: white;
             border-color: #3498db;
+            font-weight: bold;
+        }
+
+        .pagination span:not(.current) {
+            border: none;
+            color: #999;
         }
 
         .alert {
@@ -312,14 +324,25 @@
             </tbody>
         </table>
 
-        <!-- Paginação -->
+        <!-- Paginação Melhorada -->
         {% if total_pages > 1 %}
         <div class="pagination">
             {% if page > 1 %}
-                <a href="?{{ query_params }}&page={{ page - 1 }}">« Anterior</a>
+                <a href="?{{ query_params }}&page=1">« Primeira</a>
+                <a href="?{{ query_params }}&page={{ page - 1 }}">‹ Anterior</a>
             {% endif %}
             
-            {% for p in range(1, total_pages + 1) %}
+            {% set start_page = [1, page - 2]|max %}
+            {% set end_page = [total_pages, page + 2]|min %}
+            
+            {% if start_page > 1 %}
+                <a href="?{{ query_params }}&page=1">1</a>
+                {% if start_page > 2 %}
+                    <span>...</span>
+                {% endif %}
+            {% endif %}
+            
+            {% for p in range(start_page, end_page + 1) %}
                 {% if p == page %}
                     <span class="current">{{ p }}</span>
                 {% else %}
@@ -327,8 +350,24 @@
                 {% endif %}
             {% endfor %}
             
+            {% if end_page < total_pages %}
+                {% if end_page < total_pages - 1 %}
+                    <span>...</span>
+                {% endif %}
+                <a href="?{{ query_params }}&page={{ total_pages }}">{{ total_pages }}</a>
+            {% endif %}
+            
             {% if page < total_pages %}
-                <a href="?{{ query_params }}&page={{ page + 1 }}">Próxima »</a>
+                <a href="?{{ query_params }}&page={{ page + 1 }}">Próxima ›</a>
+                <a href="?{{ query_params }}&page={{ total_pages }}">Última »</a>
+            {% endif %}
+        </div>
+        
+        <!-- Info da Paginação -->
+        <div style="text-align: center; margin-top: 10px; color: #666; font-size: 14px;">
+            Página {{ page }} de {{ total_pages }} 
+            {% if auditorias %}
+                ({{ ((page-1) * 50 + 1) }} - {{ ((page-1) * 50 + auditorias|length) }} registros)
             {% endif %}
         </div>
         {% endif %}
