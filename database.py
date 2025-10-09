@@ -505,7 +505,15 @@ def create_admin_user():
             return
         
         # Criar admin com proteção adicional
-        admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin@2024!Secure')
+        # Usar senha do ambiente ou gerar uma aleatória
+        admin_password = os.environ.get('ADMIN_PASSWORD')
+        if not admin_password:
+            # Gerar senha aleatória se não estiver no ambiente
+            import secrets
+            import string
+            chars = string.ascii_letters + string.digits + "!@#$%"
+            admin_password = ''.join(secrets.choice(chars) for _ in range(16))
+            logger.warning(f"⚠️  ADMIN_PASSWORD não definida! Senha gerada: {admin_password}")
         logger.debug(f"Senha admin configurada: {bool(admin_password)}")
         
         # Usar security manager se disponível
