@@ -130,7 +130,7 @@ def relatorio_caixa():
                              filtro_tipo=tipo,
                              filtro_data_inicio=data_inicio,
                              filtro_data_fim=data_fim,
-                             tem_permissao_caixa=True)
+                             )
     
     except Exception as e:
         logger.error(f"Erro ao gerar relatório de caixa: {e}")
@@ -151,7 +151,7 @@ def excluir_movimentacao(movimentacao_id):
         cursor = conn.cursor()
         
         # Buscar dados da movimentação para auditoria
-        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id))
         movimentacao = cursor.fetchone()
         
         if not movimentacao:
@@ -159,7 +159,7 @@ def excluir_movimentacao(movimentacao_id):
             return redirect(url_for('caixa.caixa'))
         
         # Excluir movimentação (comprovantes são excluídos automaticamente por CASCADE)
-        cursor.execute('DELETE FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+        cursor.execute('DELETE FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id))
         
         conn.commit()
         cursor.close()
@@ -194,7 +194,7 @@ def editar_movimentacao(movimentacao_id):
         
         if request.method == 'GET':
             # Buscar dados da movimentação
-            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id))
             movimentacao = cursor.fetchone()
             
             if not movimentacao:
@@ -213,7 +213,7 @@ def editar_movimentacao(movimentacao_id):
         
         elif request.method == 'POST':
             # Buscar dados atuais para auditoria
-            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id))
             dados_anteriores = cursor.fetchone()
             
             if not dados_anteriores:
@@ -301,7 +301,7 @@ def visualizar_comprovantes(movimentacao_id):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         # Buscar dados da movimentação
-        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
+        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id))
         movimentacao = cursor.fetchone()
         
         if not movimentacao:
@@ -340,7 +340,7 @@ def download_comprovante(comprovante_id):
             SELECT nome_arquivo, tipo_arquivo, arquivo_dados
             FROM comprovantes_caixa
             WHERE id = %s
-        ''', (comprovante_id,))
+        ''', (comprovante_id))
         
         comprovante = cursor.fetchone()
         cursor.close()
@@ -385,7 +385,7 @@ def exportar_comprovantes_pdf(movimentacao_id):
             
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute('SELECT arquivo_dados FROM comprovantes_caixa WHERE id = %s', (comp['id'],))
+            cursor.execute('SELECT arquivo_dados FROM comprovantes_caixa WHERE id = %s', (comp['id']))
             arquivo_dados = cursor.fetchone()[0]
             cursor.close()
             conn.close()
@@ -406,7 +406,7 @@ def exportar_comprovantes_pdf(movimentacao_id):
             cursor = conn.cursor()
             
             for comp in comprovantes:
-                cursor.execute('SELECT arquivo_dados FROM comprovantes_caixa WHERE id = %s', (comp['id'],))
+                cursor.execute('SELECT arquivo_dados FROM comprovantes_caixa WHERE id = %s', (comp['id']))
                 arquivo_dados = cursor.fetchone()[0]
                 
                 zip_file.writestr(comp['nome_arquivo'], arquivo_dados)

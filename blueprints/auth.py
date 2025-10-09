@@ -37,7 +37,7 @@ def fazer_login():
     cursor = conn.cursor()
     
     # No Railway sempre será PostgreSQL
-    cursor.execute('SELECT senha, tipo FROM usuarios WHERE usuario = %s', (usuario,))
+    cursor.execute('SELECT senha, tipo FROM usuarios WHERE usuario = %s', (usuario))
     
     user = cursor.fetchone()
     cursor.close()

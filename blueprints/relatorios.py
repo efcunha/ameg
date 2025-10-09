@@ -32,8 +32,7 @@ def safe_get(row, key_or_index, default=''):
 def relatorios():
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
-    tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
-    return render_template('tipos_relatorios.html', tem_permissao_caixa=tem_permissao_caixa)
+    return render_template('tipos_relatorios.html')
 
 @relatorios_bp.route('/relatorio_completo')
 def relatorio_completo():
@@ -89,8 +88,7 @@ def relatorio_simplificado():
         cursor.close()
         conn.close()
         
-        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
-        return render_template('relatorio_simplificado.html', cadastros=cadastros, tem_permissao_caixa=tem_permissao_caixa)
+        return render_template('relatorio_simplificado.html', cadastros=cadastros)
         
     except Exception as e:
         logger.error(f"Erro em relatorio_simplificado: {e}")
@@ -143,8 +141,7 @@ def relatorio_estatistico():
             'por_idade': por_idade
         }
         
-        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
-        return render_template('relatorio_estatistico.html', stats=stats, tem_permissao_caixa=tem_permissao_caixa)
+        return render_template('relatorio_estatistico.html', stats=stats)
         
     except Exception as e:
         logger.error(f"Erro em relatorio_estatistico: {e}")
@@ -173,13 +170,11 @@ def relatorio_por_bairro():
         cursor.close()
         conn.close()
         
-        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
-        return render_template('relatorio_por_bairro.html', bairros=bairros, tem_permissao_caixa=tem_permissao_caixa)
+        return render_template('relatorio_por_bairro.html', bairros=bairros)
         
     except Exception as e:
         logger.error(f"Erro em relatorio_por_bairro: {e}")
-        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
-        return render_template('relatorio_por_bairro.html', bairros=[], erro=f"Erro: {str(e)}", tem_permissao_caixa=tem_permissao_caixa)
+        return render_template('relatorio_por_bairro.html', bairros=[], erro=f"Erro: {str(e)}")
 
 @relatorios_bp.route('/relatorio_renda')
 def relatorio_renda():
@@ -219,8 +214,7 @@ def relatorio_renda():
         cursor.close()
         conn.close()
         
-        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
-        return render_template('relatorio_renda.html', faixas_renda=faixas_renda, renda_bairro=renda_bairro, tem_permissao_caixa=tem_permissao_caixa)
+        return render_template('relatorio_renda.html', faixas_renda=faixas_renda, renda_bairro=renda_bairro)
         
     except Exception as e:
         logger.error(f"Erro em relatorio_renda: {e}")
@@ -240,19 +234,19 @@ def relatorio_saude():
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
     # Estatísticas usando a nova tabela dados_saude_pessoa
-    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE tem_doenca_cronica = %s', ('Sim',))
+    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE tem_doenca_cronica = %s', ('Sim'))
     com_doenca_cronica = cursor.fetchone()['count']
     
-    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE usa_medicamento_continuo = %s', ('Sim',))
+    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE usa_medicamento_continuo = %s', ('Sim'))
     usa_medicamento = cursor.fetchone()['count']
     
-    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE tem_doenca_mental = %s', ('Sim',))
+    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE tem_doenca_mental = %s', ('Sim'))
     com_doenca_mental = cursor.fetchone()['count']
     
-    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE tem_deficiencia = %s', ('Sim',))
+    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE tem_deficiencia = %s', ('Sim'))
     com_deficiencia = cursor.fetchone()['count']
     
-    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE precisa_cuidados_especiais = %s', ('Sim',))
+    cursor.execute('SELECT COUNT(DISTINCT cadastro_id) FROM dados_saude_pessoa WHERE precisa_cuidados_especiais = %s', ('Sim'))
     precisa_cuidados = cursor.fetchone()['count']
     
     # Query principal - buscar cadastros com dados de saúde e suas pessoas
@@ -290,7 +284,7 @@ def relatorio_saude():
                          AND (tem_doenca_cronica = 'Sim' OR usa_medicamento_continuo = 'Sim' 
                          OR tem_doenca_mental = 'Sim' OR tem_deficiencia = 'Sim' 
                          OR precisa_cuidados_especiais = 'Sim')
-                         ORDER BY nome_pessoa""", (cadastro['id'],))
+                         ORDER BY nome_pessoa""", (cadastro['id']))
         pessoas_saude = cursor.fetchall()
         
         if pessoas_saude:  # Só adicionar se tem pessoas com condições de saúde
@@ -310,8 +304,7 @@ def relatorio_saude():
         'precisa_cuidados': precisa_cuidados
     }
     
-    tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
-    return render_template('relatorio_saude.html', stats=stats, cadastros=cadastros_saude, tem_permissao_caixa=tem_permissao_caixa)
+    return render_template('relatorio_saude.html', stats=stats, cadastros=cadastros_saude)
 
 @relatorios_bp.route('/exportar')
 def exportar():
@@ -327,7 +320,7 @@ def exportar():
     
     if tipo == 'completo':
         if cadastro_id:
-            cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
+            cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id))
             dados = cursor.fetchall()
             filename = f'cadastro_{cadastro_id}'
         else:
@@ -441,7 +434,7 @@ def exportar():
                              dsp.precisa_cuidados_especiais, dsp.cuidados_especiais
                              FROM cadastros c
                              LEFT JOIN dados_saude_pessoa dsp ON c.id = dsp.cadastro_id
-                             WHERE c.id = %s''', (cadastro_id,))
+                             WHERE c.id = %s''', (cadastro_id))
             dados = cursor.fetchall()
             filename = f'relatorio_saude_cadastro_{cadastro_id}'
         else:
@@ -1518,7 +1511,7 @@ def ficha(cadastro_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
+        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id))
         cadastro = cursor.fetchone()
         cursor.close()
         conn.close()
@@ -1542,7 +1535,7 @@ def ficha_pdf(cadastro_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
+        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id))
         cadastro = cursor.fetchone()
         cursor.close()
         conn.close()

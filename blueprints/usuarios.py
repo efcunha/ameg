@@ -15,7 +15,7 @@ def is_admin_user(username):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (username,))
+        cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (username))
         result = cursor.fetchone()
         cursor.close()
         conn.close()
@@ -63,15 +63,13 @@ def usuarios():
         conn.close()
         
         # Verificar permissão do caixa
-        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
-        return render_template('usuarios.html', usuarios=usuarios_lista, tem_permissao_caixa=tem_permissao_caixa)
+        return render_template('usuarios.html', usuarios=usuarios_lista)
         
     except Exception as e:
         logger.error(f"Erro ao carregar usuários: {e}")
         flash('Erro ao carregar lista de usuários.')
         # Verificar permissão do caixa
-        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
-        return render_template('usuarios.html', usuarios=[], tem_permissao_caixa=tem_permissao_caixa)
+        return render_template('usuarios.html', usuarios=[])
 
 @usuarios_bp.route('/criar_usuario', methods=['GET', 'POST'])
 def criar_usuario():
@@ -100,7 +98,7 @@ def criar_usuario():
     
     try:
         # Verificar se usuário já existe
-        cursor.execute('SELECT id FROM usuarios WHERE usuario = %s', (novo_usuario,))
+        cursor.execute('SELECT id FROM usuarios WHERE usuario = %s', (novo_usuario))
         existing_user = cursor.fetchone()
         
         if existing_user:
@@ -149,7 +147,7 @@ def excluir_usuario(usuario_id):
         cursor = conn.cursor()
         
         # Verificar se é o admin
-        cursor.execute('SELECT usuario FROM usuarios WHERE id = %s', (usuario_id,))
+        cursor.execute('SELECT usuario FROM usuarios WHERE id = %s', (usuario_id))
         user_data = cursor.fetchone()
         
         if not user_data:
@@ -167,7 +165,7 @@ def excluir_usuario(usuario_id):
             return redirect(url_for('usuarios.usuarios'))
         
         # Excluir usuário
-        cursor.execute('DELETE FROM usuarios WHERE id = %s', (usuario_id,))
+        cursor.execute('DELETE FROM usuarios WHERE id = %s', (usuario_id))
         usuarios_deletados = cursor.rowcount
         
         if usuarios_deletados > 0:
@@ -203,7 +201,7 @@ def promover_usuario(usuario_id):
         cursor = conn.cursor()
         
         # Verificar se usuário existe
-        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
+        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id))
         user_data = cursor.fetchone()
         
         if not user_data:
@@ -258,7 +256,7 @@ def rebaixar_usuario(usuario_id):
         cursor = conn.cursor()
         
         # Verificar se usuário existe
-        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
+        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id))
         user_data = cursor.fetchone()
         
         if not user_data:
@@ -329,7 +327,7 @@ def editar_usuario(usuario_id):
         
         if request.method == 'GET':
             # Buscar dados do usuário
-            cursor.execute('SELECT id, usuario, COALESCE(tipo, \'usuario\') as tipo FROM usuarios WHERE id = %s', (usuario_id,))
+            cursor.execute('SELECT id, usuario, COALESCE(tipo, \'usuario\') as tipo FROM usuarios WHERE id = %s', (usuario_id))
             user_data = cursor.fetchone()
             
             if not user_data:
@@ -353,7 +351,7 @@ def editar_usuario(usuario_id):
             nova_senha = request.form.get('nova_senha', '').strip()
             
             # Buscar dados atuais
-            cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
+            cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id))
             user_data = cursor.fetchone()
             
             if not user_data:
@@ -499,14 +497,13 @@ def auditoria():
         conn.close()
         
         # Verificar permissão do caixa
-        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
         return render_template('auditoria.html', 
                              auditorias=auditorias,
                              stats=stats,
                              page=page,
                              total_pages=total_pages,
                              query_params=query_params,
-                             tem_permissao_caixa=tem_permissao_caixa)
+                             )
         
     except Exception as e:
         logger.error(f"Erro ao carregar auditoria: {e}")
@@ -521,7 +518,7 @@ def admin_reset():
     # Verificar se é o admin ID 1
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario'],))
+    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario']))
     admin_check = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -540,7 +537,7 @@ def admin_reset_execute():
     # Verificar se é o admin ID 1
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario'],))
+    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario']))
     admin_check = cursor.fetchone()
     
     if not admin_check:

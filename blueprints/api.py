@@ -99,7 +99,7 @@ def get_cadastro(cadastro_id):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute("SELECT * FROM cadastros WHERE id = %s", (cadastro_id,))
+        cursor.execute("SELECT * FROM cadastros WHERE id = %s", (cadastro_id))
         row = cursor.fetchone()
         
         if not row:

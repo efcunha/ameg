@@ -36,7 +36,7 @@
         <a href="/relatorios">Relatórios</a>
         <a href="/notificacoes">🔔 Notificações</a>
         <a href="/charts">📊 Gráficos</a>
-        {% if tem_permissao_caixa %}
+        {% if tem_permissao_caixa(session.usuario) %}
         <a href="/caixa">💰 Caixa</a>
         {% endif %}
         <a href="/arquivos_cadastros">📁 Arquivos</a>

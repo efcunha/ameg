@@ -104,8 +104,7 @@ def cadastrar():
             logger.warning(f"❌ Validação falhou: {len(validation_errors)} erros encontrados")
             for error in validation_errors:
                 flash(f"Erro de validação: {error}", 'error')
-            tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
-            return render_template('cadastrar.html', tem_permissao_caixa=tem_permissao_caixa)
+            return render_template('cadastrar.html')
         
         try:
             conn = get_db_connection()
@@ -322,8 +321,7 @@ def cadastrar():
             flash('Erro ao salvar cadastro. Tente novamente.')
             return redirect(url_for('cadastros.cadastrar'))
     
-    tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
-    return render_template('cadastrar.html', tem_permissao_caixa=tem_permissao_caixa)
+    return render_template('cadastrar.html')
 
 @cadastros_bp.route('/editar_cadastro/<int:cadastro_id>')
 def editar_cadastro(cadastro_id):
@@ -334,16 +332,16 @@ def editar_cadastro(cadastro_id):
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
-        cursor.execute('SELECT *, foto_base64 FROM cadastros WHERE id = %s', (cadastro_id,))
+        cursor.execute('SELECT *, foto_base64 FROM cadastros WHERE id = %s', (cadastro_id))
         cadastro = cursor.fetchone()
         
         arquivos_saude = []
         dados_saude_pessoas = []
         if cadastro:
-            cursor.execute('SELECT id, nome_arquivo, tipo_arquivo, descricao, data_upload FROM arquivos_saude WHERE cadastro_id = %s ORDER BY data_upload DESC', (cadastro_id,))
+            cursor.execute('SELECT id, nome_arquivo, tipo_arquivo, descricao, data_upload FROM arquivos_saude WHERE cadastro_id = %s ORDER BY data_upload DESC', (cadastro_id))
             arquivos_saude = cursor.fetchall()
             
-            cursor.execute('SELECT * FROM dados_saude_pessoa WHERE cadastro_id = %s ORDER BY id', (cadastro_id,))
+            cursor.execute('SELECT * FROM dados_saude_pessoa WHERE cadastro_id = %s ORDER BY id', (cadastro_id))
             dados_saude_pessoas = cursor.fetchall()
         
         cursor.close()
@@ -462,7 +460,7 @@ def atualizar_cadastro(cadastro_id):
                         uploaded_files.append(f"{file_type}: {file.filename}")
             
             # Processar dados de saúde por pessoa
-            cursor.execute('DELETE FROM dados_saude_pessoa WHERE cadastro_id = %s', (cadastro_id,))
+            cursor.execute('DELETE FROM dados_saude_pessoa WHERE cadastro_id = %s', (cadastro_id))
             
             pessoas_saude = []
             for key in request.form.keys():
@@ -544,10 +542,10 @@ def deletar_cadastro(cadastro_id):
         cursor = conn.cursor()
         
         # Deletar arquivos de saúde relacionados primeiro
-        cursor.execute('DELETE FROM arquivos_saude WHERE cadastro_id = %s', (cadastro_id,))
+        cursor.execute('DELETE FROM arquivos_saude WHERE cadastro_id = %s', (cadastro_id))
         
         # Deletar o cadastro
-        cursor.execute('DELETE FROM cadastros WHERE id = %s', (cadastro_id,))
+        cursor.execute('DELETE FROM cadastros WHERE id = %s', (cadastro_id))
         cadastros_deletados = cursor.rowcount
         
         if cadastros_deletados > 0:

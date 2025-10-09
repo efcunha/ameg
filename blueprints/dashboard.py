@@ -36,7 +36,7 @@ def get_cached_stats():
         cursor.execute('SELECT COUNT(*) FROM arquivos_saude')
         total_arquivos = cursor.fetchone()[0]
         
-        cursor.execute('SELECT COUNT(*) FROM usuarios WHERE tipo = %s', ('admin',))
+        cursor.execute('SELECT COUNT(*) FROM usuarios WHERE tipo = %s', ('admin'))
         total_admins = cursor.fetchone()[0]
         
         cursor.close()
@@ -83,7 +83,7 @@ def dashboard():
     return render_template('dashboard.html', 
                          total=stats['total'], 
                          ultimos=ultimos,
-                         tem_permissao_caixa=tem_permissao_caixa)
+                         )
 
 @dashboard_bp.route('/api/stats')
 def api_stats():
