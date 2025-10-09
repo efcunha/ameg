@@ -439,6 +439,23 @@ def init_db_tables():
         ''')
         logger.debug("✅ Tabela permissoes_usuario criada")
         
+        # Tabela histórico de notificações
+        logger.debug("Criando tabela historico_notificacoes...")
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS historico_notificacoes (
+                id SERIAL PRIMARY KEY,
+                tipo VARCHAR(20) NOT NULL,
+                prioridade VARCHAR(10) NOT NULL,
+                mensagem TEXT NOT NULL,
+                icone VARCHAR(10),
+                cadastro_id INTEGER REFERENCES cadastros(id) ON DELETE CASCADE,
+                visualizada BOOLEAN DEFAULT FALSE,
+                data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                data_visualizacao TIMESTAMP
+            )
+        ''')
+        logger.debug("✅ Tabela historico_notificacoes criada")
+        
         # Índices para tabelas de caixa
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_caixa_tipo ON movimentacoes_caixa(tipo)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_caixa_data ON movimentacoes_caixa(data_movimentacao)')
@@ -449,6 +466,11 @@ def init_db_tables():
         # Índices para tabela permissoes_usuario
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_permissoes_usuario ON permissoes_usuario(usuario_id)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_permissoes_permissao ON permissoes_usuario(permissao)')
+        
+        # Índices para tabela historico_notificacoes
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_notificacoes_tipo ON historico_notificacoes(tipo)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_notificacoes_visualizada ON historico_notificacoes(visualizada)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_notificacoes_data ON historico_notificacoes(data_criacao)')
         
         conn.commit()
         logger.debug("✅ Commit realizado")
