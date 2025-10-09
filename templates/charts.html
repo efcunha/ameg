@@ -19,8 +19,8 @@
         .filter-group select { padding: 10px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; }
         .btn-primary { background: linear-gradient(45deg, #3498db, #2980b9); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4); }
-        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin-bottom: 30px; }
-        .chart-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px; }
+        .chart-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); min-height: 350px; }
         .chart-title { font-size: 1.3em; font-weight: 600; color: #2c3e50; margin-bottom: 20px; display: flex; align-items: center; }
         .chart-icon { background: linear-gradient(45deg, #3498db, #2980b9); color: white; padding: 8px; border-radius: 50%; margin-right: 12px; font-size: 0.9em; }
         .full-width { grid-column: 1 / -1; }
@@ -83,7 +83,7 @@
                     <span class="chart-icon" style="background: linear-gradient(45deg, #FF6B6B, #FF5252);">👥</span>
                     Distribuição por Faixa Etária
                 </div>
-                <canvas id="idadeChart" width="300" height="200"></canvas>
+                <canvas id="idadeChart" width="400" height="300"></canvas>
             </div>
 
             <!-- Bairros -->
@@ -92,7 +92,7 @@
                     <span class="chart-icon" style="background: linear-gradient(45deg, #4ECDC4, #26C6DA);">🏘️</span>
                     Top Bairros
                 </div>
-                <canvas id="bairrosChart" width="300" height="200"></canvas>
+                <canvas id="bairrosChart" width="400" height="300"></canvas>
             </div>
 
             <!-- Evolução -->
@@ -207,8 +207,8 @@
             
             let currentAngle = -Math.PI / 2;
             const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2 - 20;
-            const radius = Math.min(centerX, centerY) - 40;
+            const centerY = canvas.height / 2 - 30;
+            const radius = Math.min(centerX, centerY) - 50;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
@@ -229,7 +229,7 @@
             });
             
             // Legenda horizontal embaixo
-            const legendY = canvas.height - 40;
+            const legendY = canvas.height - 50;
             const legendItemWidth = canvas.width / data.length;
             
             data.forEach((item, index) => {
