@@ -32,7 +32,8 @@ def safe_get(row, key_or_index, default=''):
 def relatorios():
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
-    return render_template('tipos_relatorios.html')
+    tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+    return render_template('tipos_relatorios.html', tem_permissao_caixa=tem_permissao_caixa)
 
 @relatorios_bp.route('/relatorio_completo')
 def relatorio_completo():
@@ -88,7 +89,8 @@ def relatorio_simplificado():
         cursor.close()
         conn.close()
         
-        return render_template('relatorio_simplificado.html', cadastros=cadastros)
+        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+        return render_template('relatorio_simplificado.html', cadastros=cadastros, tem_permissao_caixa=tem_permissao_caixa)
         
     except Exception as e:
         logger.error(f"Erro em relatorio_simplificado: {e}")
@@ -141,7 +143,8 @@ def relatorio_estatistico():
             'por_idade': por_idade
         }
         
-        return render_template('relatorio_estatistico.html', stats=stats)
+        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+        return render_template('relatorio_estatistico.html', stats=stats, tem_permissao_caixa=tem_permissao_caixa)
         
     except Exception as e:
         logger.error(f"Erro em relatorio_estatistico: {e}")
@@ -170,11 +173,13 @@ def relatorio_por_bairro():
         cursor.close()
         conn.close()
         
-        return render_template('relatorio_por_bairro.html', bairros=bairros)
+        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+        return render_template('relatorio_por_bairro.html', bairros=bairros, tem_permissao_caixa=tem_permissao_caixa)
         
     except Exception as e:
         logger.error(f"Erro em relatorio_por_bairro: {e}")
-        return render_template('relatorio_por_bairro.html', bairros=[], erro=f"Erro: {str(e)}")
+        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+        return render_template('relatorio_por_bairro.html', bairros=[], erro=f"Erro: {str(e)}", tem_permissao_caixa=tem_permissao_caixa)
 
 @relatorios_bp.route('/relatorio_renda')
 def relatorio_renda():
@@ -214,7 +219,8 @@ def relatorio_renda():
         cursor.close()
         conn.close()
         
-        return render_template('relatorio_renda.html', faixas_renda=faixas_renda, renda_bairro=renda_bairro)
+        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+    return render_template('relatorio_renda.html', faixas_renda=faixas_renda, renda_bairro=renda_bairro, tem_permissao_caixa=tem_permissao_caixa)
         
     except Exception as e:
         logger.error(f"Erro em relatorio_renda: {e}")
@@ -304,7 +310,8 @@ def relatorio_saude():
         'precisa_cuidados': precisa_cuidados
     }
     
-    return render_template('relatorio_saude.html', stats=stats, cadastros=cadastros_saude)
+    tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+    return render_template('relatorio_saude.html', stats=stats, cadastros=cadastros_saude, tem_permissao_caixa=tem_permissao_caixa)
 
 @relatorios_bp.route('/exportar')
 def exportar():

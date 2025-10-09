@@ -129,7 +129,8 @@ def relatorio_caixa():
                              saldo_total=saldo_total,
                              filtro_tipo=tipo,
                              filtro_data_inicio=data_inicio,
-                             filtro_data_fim=data_fim)
+                             filtro_data_fim=data_fim,
+                             tem_permissao_caixa=True)
     
     except Exception as e:
         logger.error(f"Erro ao gerar relatório de caixa: {e}")

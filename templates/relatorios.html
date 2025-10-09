@@ -27,11 +27,21 @@
         <a href="/logout" class="logout">Sair</a>
     </div>
     
-    <div class="nav">
+        <div class="nav">
         <a href="/dashboard">Dashboard</a>
         <a href="/cadastrar">Novo Cadastro</a>
         <a href="/relatorios">Relatórios</a>
-        <a href="/exportar">Exportar CSV</a>
+        <a href="/notificacoes">🔔 Notificações</a>
+        <a href="/charts">📊 Gráficos</a>
+        {% if tem_permissao_caixa %}
+        <a href="/caixa">💰 Caixa</a>
+        {% endif %}
+        <a href="/arquivos_cadastros">📁 Arquivos</a>
+        {% if is_admin_user(session.usuario) %}
+        <a href="/usuarios">👥 Usuários</a>
+        <a href="/auditoria">🔍 Auditoria</a>
+        <a href="/admin_reset">🔄 Reset</a>
+        {% endif %}
     </div>
     
     <div class="container">
