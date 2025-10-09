@@ -11,10 +11,10 @@ notifications_bp = Blueprint('notifications', __name__)
 @notifications_bp.route('/notificacoes', methods=['GET', 'POST'])
 def notificacoes_simples():
     logger.info("🔔 ACESSO À ROTA /notificacoes")
-    logger.info(f"Método HTTP: {request.method if 'request' in globals() else 'N/A'}")
+    logger.info(f"Método HTTP: {request.method}")
     logger.info(f"Sessão: {session}")
     
-    if 'user_id' not in session:
+    if 'usuario' not in session:  # CORRIGIDO: era 'user_id', agora é 'usuario'
         logger.warning("❌ Usuário não logado, redirecionando para login")
         return redirect('/login')
     
