@@ -81,6 +81,7 @@ from blueprints.relatorios import relatorios_bp
 from blueprints.usuarios import usuarios_bp
 from blueprints.caixa import caixa_bp
 from blueprints.charts import charts_bp
+from blueprints.notifications import notifications_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(dashboard_bp)
@@ -90,6 +91,7 @@ app.register_blueprint(relatorios_bp)
 app.register_blueprint(usuarios_bp)
 app.register_blueprint(caixa_bp)
 app.register_blueprint(charts_bp)
+app.register_blueprint(notifications_bp)
 
 # Registrar API REST apenas se habilitada
 if os.getenv('API_ENABLED', 'false').lower() == 'true':
