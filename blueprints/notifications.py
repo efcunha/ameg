@@ -76,6 +76,10 @@ def get_notifications():
     
     return jsonify(notifications[:5])  # Máximo 5 notificações
 
+@notifications_bp.route('/notificacoes')
+def notificacoes_simples():
+    return "Página de notificações funcionando!"
+
 @notifications_bp.route('/historico-notificacoes', methods=['GET'])
 def historico_notificacoes():
     if 'user_id' not in session:
