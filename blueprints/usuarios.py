@@ -557,7 +557,6 @@ def admin_reset_execute():
             'comprovantes_caixa',
             'movimentacoes_caixa', 
             'historico_notificacoes',
-            'permissoes_usuario',
             'dados_saude_pessoa',
             'arquivos_saude',
             'auditoria',
@@ -573,7 +572,6 @@ def admin_reset_execute():
             'comprovantes_caixa_id_seq',
             'movimentacoes_caixa_id_seq',
             'historico_notificacoes_id_seq', 
-            'permissoes_usuario_id_seq',
             'dados_saude_pessoa_id_seq',
             'arquivos_saude_id_seq',
             'auditoria_id_seq',
@@ -590,7 +588,7 @@ def admin_reset_execute():
             usuario=session['usuario'],
             acao='RESET',
             tabela='SISTEMA',
-            dados_novos='Reset completo de todas as tabelas: cadastros, arquivos_saude, auditoria, movimentacoes_caixa, comprovantes_caixa, historico_notificacoes, permissoes_usuario, dados_saude_pessoa',
+            dados_novos='Reset completo de todas as tabelas: cadastros, arquivos_saude, auditoria, movimentacoes_caixa, comprovantes_caixa, historico_notificacoes, dados_saude_pessoa (exceto permissoes_usuario)',
             ip_address=request.remote_addr,
             user_agent=request.headers.get('User-Agent')
         )
