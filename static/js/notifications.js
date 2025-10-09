@@ -8,7 +8,7 @@ class NotificationSystem {
     init() {
         this.createContainer();
         this.loadNotifications();
-        setInterval(() => this.loadNotifications(), 30000); // Atualiza a cada 30s
+        setInterval(() => this.loadNotifications(), 120000); // Atualiza a cada 2 minutos
     }
     
     createContainer() {

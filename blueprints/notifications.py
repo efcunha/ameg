@@ -1,10 +1,15 @@
 from flask import Blueprint, jsonify, session, render_template, redirect, url_for, request
 from database import get_db_connection
 import logging
+import os
 
-# Configurar logging específico para notificações
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+# Configurar logging apenas para desenvolvimento
+if not os.environ.get('RAILWAY_ENVIRONMENT'):
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+else:
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.WARNING)  # Apenas warnings em produção
 
 notifications_bp = Blueprint('notifications', __name__)
 
