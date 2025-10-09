@@ -28,13 +28,12 @@ Sistema web completo para cadastro familiar da Associação dos Ambulantes e Tra
 - **Filtros avançados** - busca e ordenação
 - **Estatísticas em tempo real** - dashboard com métricas
 
-### **Sistema de Notificações e Alertas**
-- **Notificações em tempo real** - sistema de alertas inteligente
-- **Histórico completo** - rastreamento de todas as notificações
-- **Níveis de prioridade** - urgent, high, medium, low
-- **Marcação de visualização** - controle de leitura
-- **Interface intuitiva** - ícones e cores por prioridade
-- **Documentação completa** - guia detalhado em ALERTAS.md
+### **Sistema de Notificações**
+- **Histórico de notificações** - Interface para alertas de saúde e eventos importantes
+- **Estrutura preparada** - Banco de dados e templates prontos para expansão
+- **Navegação integrada** - Aba acessível em todas as páginas
+- **Interface responsiva** - Estado vazio informativo quando sem notificações
+- **Documentação completa** - Guia detalhado em ALERTAS.md
 
 ### **Sistema de Gráficos Interativos**
 - **Dashboard visual** - gráficos demográficos e estatísticos
@@ -341,7 +340,7 @@ DATABASE_URL=<configurada_automaticamente>
 ## 🔄 Atualizações Recentes
 
 ### **Sistema de Notificações e CDN (Outubro 2025)**
-- **Sistema de alertas completo**: Notificações em tempo real com 4 níveis de prioridade
+- **Sistema de notificações**: Histórico de alertas de saúde e eventos importantes
 - **CDN global ativo**: jsDelivr servindo assets com 50-70% melhoria de performance
 - **Navegação padronizada**: Interface consistente em todas as páginas do sistema
 - **Paginação inteligente**: Auditoria com navegação otimizada para grandes volumes

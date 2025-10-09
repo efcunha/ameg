@@ -1,81 +1,35 @@
-# Sistema de Alertas e Notificações AMEG
+# Sistema de Notificações AMEG
 
-Sistema completo de notificações em tempo real para o sistema AMEG, com níveis de prioridade, histórico e interface intuitiva.
+Sistema de histórico de notificações para alertas de saúde e eventos importantes do sistema AMEG.
 
 ## 📋 Visão Geral
 
-O sistema de alertas do AMEG permite criar, gerenciar e visualizar notificações importantes para os usuários do sistema, garantindo que informações críticas sejam comunicadas de forma eficiente.
+O sistema de notificações do AMEG atualmente implementa um **histórico de notificações** que exibe alertas de saúde e outros eventos importantes quando disponíveis.
 
-## 🎯 Funcionalidades Principais
+## 🎯 Funcionalidade Atual
 
-### **Criação de Notificações**
-- **Interface simples** - Formulário intuitivo para criar alertas
-- **Níveis de prioridade** - 4 níveis distintos com cores e ícones
-- **Validação automática** - Campos obrigatórios e limites de caracteres
-- **Timestamp automático** - Data e hora de criação registradas
-
-### **Visualização e Controle**
-- **Histórico completo** - Lista todas as notificações criadas
-- **Marcação de leitura** - Sistema de visualização individual
-- **Filtros visuais** - Cores e ícones por prioridade
+### **Histórico de Notificações**
+- **Página dedicada** - Aba "🔔 Notificações" no menu principal
+- **Lista de notificações** - Exibe alertas quando disponíveis
+- **Estado vazio** - Mensagem informativa quando não há notificações
 - **Interface responsiva** - Funciona em desktop e mobile
 
-### **Gerenciamento**
-- **Persistência** - Armazenamento em banco PostgreSQL
-- **Auditoria** - Log de criação e visualização
-- **Segurança** - Acesso controlado por login
+## 🖥️ Interface Atual
 
-## 🚨 Níveis de Prioridade
+### **Página de Notificações**
+```
+📋 Histórico de Notificações
 
-### **🔴 URGENT (Urgente)**
-- **Cor**: Vermelho (#dc3545)
-- **Ícone**: ⚠️
-- **Uso**: Problemas críticos, falhas de sistema, emergências
-- **Exemplo**: "Sistema de backup falhou - ação imediata necessária"
+📭 Nenhuma notificação encontrada
 
-### **🟠 HIGH (Alta)**
-- **Cor**: Laranja (#fd7e14)
-- **Ícone**: 🔥
-- **Uso**: Problemas importantes que precisam de atenção rápida
-- **Exemplo**: "Espaço em disco baixo - 85% utilizado"
+Quando houver alertas de saúde ou outros eventos importantes, 
+eles aparecerão aqui.
+```
 
-### **🟡 MEDIUM (Média)**
-- **Cor**: Amarelo (#ffc107)
-- **Ícone**: 📢
-- **Uso**: Informações importantes mas não críticas
-- **Exemplo**: "Nova funcionalidade disponível no sistema"
-
-### **🟢 LOW (Baixa)**
-- **Cor**: Verde (#28a745)
-- **Ícone**: ℹ️
-- **Uso**: Informações gerais, lembretes, dicas
-- **Exemplo**: "Lembrete: Backup semanal será executado hoje"
-
-## 🛠️ Como Usar
-
-### **1. Criar Nova Notificação**
-
-1. Acesse a aba **🔔 Notificações** no menu principal
-2. Clique em **"➕ Nova Notificação"**
-3. Preencha os campos:
-   - **Tipo**: Selecione o nível de prioridade
-   - **Título**: Título conciso da notificação (máx. 200 caracteres)
-   - **Mensagem**: Descrição detalhada (máx. 1000 caracteres)
-4. Clique em **"Criar Notificação"**
-
-### **2. Visualizar Notificações**
-
-- **Lista completa**: Todas as notificações aparecem na página principal
-- **Ordenação**: Mais recentes primeiro
-- **Status visual**: 
-  - **Não lida**: Fundo branco, texto normal
-  - **Lida**: Fundo acinzentado, opacidade reduzida
-
-### **3. Marcar como Lida**
-
-- Clique no **ícone do olho** (👁️) ao lado da notificação
-- A notificação será marcada como visualizada
-- O status muda visualmente para indicar leitura
+### **Navegação**
+- Acessível via aba **🔔 Notificações** no menu principal
+- Disponível para todos os usuários logados
+- Interface consistente com o resto do sistema
 
 ## 🗄️ Estrutura do Banco de Dados
 
@@ -84,7 +38,7 @@ O sistema de alertas do AMEG permite criar, gerenciar e visualizar notificaçõe
 ```sql
 CREATE TABLE historico_notificacoes (
     id SERIAL PRIMARY KEY,
-    tipo VARCHAR(20) NOT NULL,           -- urgent, high, medium, low
+    tipo VARCHAR(20) NOT NULL,           -- Tipo da notificação
     titulo VARCHAR(200) NOT NULL,        -- Título da notificação
     mensagem TEXT NOT NULL,              -- Conteúdo da mensagem
     data_criacao TIMESTAMP DEFAULT NOW(), -- Data de criação
@@ -95,216 +49,92 @@ CREATE TABLE historico_notificacoes (
 );
 ```
 
-### **Índices para Performance**
-```sql
-CREATE INDEX idx_notificacoes_tipo ON historico_notificacoes(tipo);
-CREATE INDEX idx_notificacoes_data ON historico_notificacoes(data_criacao);
-CREATE INDEX idx_notificacoes_visualizada ON historico_notificacoes(visualizada);
-```
-
-## 🎨 Interface Visual
-
-### **Cores e Estilos**
-
-```css
-/* Urgent - Vermelho */
-.notification-item.urgent {
-    border-left: 4px solid #dc3545;
-    background: #fff5f5;
-}
-
-/* High - Laranja */
-.notification-item.high {
-    border-left: 4px solid #fd7e14;
-    background: #fff8f0;
-}
-
-/* Medium - Amarelo */
-.notification-item.medium {
-    border-left: 4px solid #ffc107;
-    background: #fffbf0;
-}
-
-/* Low - Verde */
-.notification-item.low {
-    border-left: 4px solid #28a745;
-    background: #f0fff4;
-}
-
-/* Visualizada */
-.notification-item.visualizada {
-    opacity: 0.7;
-    background: #f8f9fa;
-}
-```
-
-### **Ícones por Prioridade**
-- **Urgent**: ⚠️ (Triângulo de aviso)
-- **High**: 🔥 (Fogo)
-- **Medium**: 📢 (Megafone)
-- **Low**: ℹ️ (Informação)
-
 ## 🔧 Implementação Técnica
 
 ### **Backend (Flask)**
 
-#### **Rota de Criação**
-```python
-@notifications_bp.route('/notificacoes', methods=['POST'])
-@login_required
-def criar_notificacao():
-    # Validação e inserção no banco
-    # Registro de auditoria
-    # Redirecionamento com feedback
-```
-
-#### **Rota de Listagem**
+#### **Rota Principal**
 ```python
 @notifications_bp.route('/notificacoes')
 @login_required
-def listar_notificacoes():
-    # Busca paginada
-    # Ordenação por data
-    # Renderização do template
+def notificacoes_simples():
+    # Busca notificações no banco
+    # Renderiza template com lista
+    # Exibe mensagem se vazio
 ```
 
-#### **Rota de Marcação**
-```python
-@notifications_bp.route('/api/marcar-visualizada/<int:notif_id>')
-@login_required
-def marcar_visualizada(notif_id):
-    # Atualização do status
-    # Registro de quem visualizou
-    # Resposta JSON
-```
+#### **Blueprint: `notifications.py`**
+- Localizado em `blueprints/notifications.py`
+- Gerencia rotas de notificações
+- Integrado ao sistema principal
 
-### **Frontend (HTML/CSS/JS)**
+### **Frontend**
 
-#### **Formulário de Criação**
+#### **Template: `historico_notificacoes.html`**
+- Interface para exibir notificações
+- Estado vazio com mensagem informativa
+- Navegação padronizada
+- Estilos responsivos
+
+#### **Navegação Integrada**
 ```html
-<form method="POST">
-    <select name="tipo" required>
-        <option value="urgent">🔴 Urgente</option>
-        <option value="high">🟠 Alta</option>
-        <option value="medium">🟡 Média</option>
-        <option value="low">🟢 Baixa</option>
-    </select>
-    <input name="titulo" maxlength="200" required>
-    <textarea name="mensagem" maxlength="1000" required></textarea>
-    <button type="submit">Criar Notificação</button>
-</form>
+<a href="/notificacoes">🔔 Notificações</a>
 ```
 
-#### **Lista de Notificações**
-```html
-<div class="notification-item {{ notificacao.tipo }} {{ 'visualizada' if notificacao.visualizada }}">
-    <div class="notification-header">
-        <span class="notification-icon">{{ icon }}</span>
-        <span class="notification-title">{{ notificacao.titulo }}</span>
-        <span class="notification-date">{{ notificacao.data_criacao }}</span>
-    </div>
-    <div class="notification-message">{{ notificacao.mensagem }}</div>
-    <div class="notification-actions">
-        <button onclick="marcarVisualizada({{ notificacao.id }})">👁️</button>
-    </div>
-</div>
-```
+## 📊 Estado Atual
 
-## 📊 Estatísticas e Métricas
+### **Funcionalidades Implementadas**
+- ✅ **Página de histórico** - Interface completa
+- ✅ **Navegação integrada** - Aba em todos os menus
+- ✅ **Banco de dados** - Estrutura preparada
+- ✅ **Template responsivo** - Interface adaptável
+- ✅ **Estado vazio** - Mensagem quando sem notificações
 
-### **Dados Coletados**
-- **Total de notificações** por período
-- **Distribuição por prioridade** (urgent, high, medium, low)
-- **Taxa de visualização** (lidas vs não lidas)
-- **Tempo médio** entre criação e visualização
-- **Usuários mais ativos** na criação de alertas
+### **Funcionalidades Preparadas (Estrutura Pronta)**
+- 🔄 **Criação de notificações** - Banco preparado
+- 🔄 **Tipos de prioridade** - Campo tipo implementado
+- 🔄 **Marcação de leitura** - Campos visualizada/data_visualizacao
+- 🔄 **Auditoria** - Campos usuario_criador/visualizador
 
-### **Relatórios Disponíveis**
-- **Dashboard de notificações** - Visão geral em tempo real
-- **Histórico detalhado** - Lista completa com filtros
-- **Análise de engajamento** - Quais tipos são mais visualizados
+## 🎯 Casos de Uso Planejados
 
-## 🔒 Segurança e Permissões
+### **Alertas de Saúde**
+- Notificações sobre cadastros com condições críticas
+- Lembretes de acompanhamento médico
+- Alertas sobre medicamentos vencidos
+
+### **Eventos do Sistema**
+- Notificações de backup
+- Alertas de manutenção
+- Informações sobre atualizações
+
+## 🚀 Próximos Passos
+
+### **Funcionalidades a Implementar**
+1. **Interface de criação** - Formulário para criar notificações
+2. **Sistema de prioridades** - Cores e ícones por tipo
+3. **Marcação de leitura** - Controle de visualização
+4. **Filtros** - Por tipo, data, status
+5. **Integração automática** - Alertas baseados em dados de saúde
+
+### **Melhorias Planejadas**
+- **Notificações automáticas** - Baseadas em regras de saúde
+- **Dashboard de alertas** - Visão geral no painel principal
+- **Configurações** - Preferências de notificação por usuário
+- **Exportação** - Relatórios de notificações
+
+## 🔒 Segurança
 
 ### **Controle de Acesso**
 - **Login obrigatório** - Apenas usuários autenticados
-- **Criação livre** - Qualquer usuário logado pode criar
-- **Visualização própria** - Cada usuário vê suas próprias marcações
-- **Auditoria completa** - Log de todas as ações
+- **Navegação protegida** - Verificação de sessão
+- **Dados seguros** - Estrutura preparada para auditoria
 
-### **Validações**
-- **Campos obrigatórios** - Tipo, título e mensagem
-- **Limites de caracteres** - Título (200), Mensagem (1000)
-- **Sanitização** - Prevenção de XSS e injeção
-- **Rate limiting** - Prevenção de spam (futuro)
-
-## 🚀 Melhorias Futuras
-
-### **Funcionalidades Planejadas**
-- [ ] **Notificações push** - Alertas em tempo real no navegador
-- [ ] **Filtros avançados** - Por data, tipo, status
-- [ ] **Notificações por email** - Envio automático para urgent/high
-- [ ] **Templates** - Modelos pré-definidos para tipos comuns
-- [ ] **Agendamento** - Notificações programadas
-- [ ] **Anexos** - Suporte a arquivos nas notificações
-- [ ] **Menções** - Notificar usuários específicos (@usuario)
-- [ ] **Categorias** - Agrupamento por área (sistema, usuários, etc.)
-
-### **Melhorias Técnicas**
-- [ ] **WebSockets** - Notificações em tempo real
-- [ ] **Cache Redis** - Performance para grandes volumes
-- [ ] **API REST** - Integração com sistemas externos
-- [ ] **Webhooks** - Notificações para serviços externos
-- [ ] **Métricas avançadas** - Dashboard analítico
-
-## 📚 Exemplos de Uso
-
-### **Cenários Comuns**
-
-#### **1. Manutenção do Sistema**
-```
-Tipo: HIGH
-Título: Manutenção programada - Sistema indisponível
-Mensagem: O sistema ficará indisponível das 02:00 às 04:00 para manutenção dos servidores. Planeje suas atividades adequadamente.
-```
-
-#### **2. Nova Funcionalidade**
-```
-Tipo: MEDIUM
-Título: Nova funcionalidade: Gráficos interativos
-Mensagem: Agora você pode visualizar dados demográficos em gráficos interativos. Acesse a aba "📊 Gráficos" no menu principal.
-```
-
-#### **3. Problema Crítico**
-```
-Tipo: URGENT
-Título: Falha no backup automático
-Mensagem: O backup automático falhou nas últimas 24h. Verifique os logs e execute backup manual imediatamente.
-```
-
-#### **4. Lembrete Geral**
-```
-Tipo: LOW
-Título: Lembrete: Atualização de dados
-Mensagem: Lembre-se de manter os dados dos cadastros sempre atualizados para garantir a qualidade das informações.
-```
-
-## 🎯 Boas Práticas
-
-### **Para Criadores de Notificações**
-1. **Use o nível correto** - Urgent apenas para emergências
-2. **Seja claro e conciso** - Títulos objetivos, mensagens detalhadas
-3. **Inclua ações** - O que o usuário deve fazer
-4. **Evite spam** - Não crie notificações desnecessárias
-5. **Teste a mensagem** - Releia antes de enviar
-
-### **Para Administradores**
-1. **Monitore o uso** - Verifique estatísticas regularmente
-2. **Eduque usuários** - Treine sobre os níveis de prioridade
-3. **Limpe histórico** - Remova notificações antigas periodicamente
-4. **Analise engajamento** - Veja quais tipos são mais eficazes
-5. **Mantenha atualizado** - Acompanhe melhorias do sistema
+### **Preparação para Expansão**
+- **Campos de auditoria** - Rastreamento de criação/visualização
+- **Validações** - Estrutura para limites e sanitização
+- **Permissões** - Base para controles granulares
 
 ---
 
-**Sistema de Alertas AMEG** - Comunicação eficiente e organizada para toda a equipe.
+**Sistema de Notificações AMEG** - Estrutura implementada e pronta para expansão com alertas de saúde e eventos importantes.
