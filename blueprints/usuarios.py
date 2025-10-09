@@ -10,12 +10,12 @@ logger = logging.getLogger(__name__)
 
 usuarios_bp = Blueprint('usuarios', __name__)
 
-def is_admin_user(username):
+def is_admin_user(username,):
     """Verifica se o usuário tem privilégios de administrador"""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (username))
+        cursor.execute('SELECT tipo FROM usuarios WHERE usuario = %s', (username,))
         result = cursor.fetchone()
         cursor.close()
         conn.close()
@@ -48,7 +48,7 @@ def validar_senha(senha):
 def usuarios():
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
-    if not is_admin_user(session['usuario']):
+    if not is_admin_user(session['usuario'],):
         flash('Acesso negado! Apenas administradores podem gerenciar usuários.')
         return redirect(url_for('dashboard.dashboard'))
     
@@ -98,7 +98,7 @@ def criar_usuario():
     
     try:
         # Verificar se usuário já existe
-        cursor.execute('SELECT id FROM usuarios WHERE usuario = %s', (novo_usuario))
+        cursor.execute('SELECT id FROM usuarios WHERE usuario = %s', (novo_usuario,))
         existing_user = cursor.fetchone()
         
         if existing_user:
@@ -130,10 +130,10 @@ def criar_usuario():
     return redirect(url_for('usuarios.usuarios'))
 
 @usuarios_bp.route('/excluir_usuario/<int:usuario_id>')
-def excluir_usuario(usuario_id):
+def excluir_usuario(usuario_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
-    if not is_admin_user(session['usuario']):
+    if not is_admin_user(session['usuario'],):
         flash('Acesso negado! Apenas administradores podem excluir usuários.')
         return redirect(url_for('dashboard.dashboard'))
     
@@ -147,7 +147,7 @@ def excluir_usuario(usuario_id):
         cursor = conn.cursor()
         
         # Verificar se é o admin
-        cursor.execute('SELECT usuario FROM usuarios WHERE id = %s', (usuario_id))
+        cursor.execute('SELECT usuario FROM usuarios WHERE id = %s', (usuario_id,))
         user_data = cursor.fetchone()
         
         if not user_data:
@@ -165,7 +165,7 @@ def excluir_usuario(usuario_id):
             return redirect(url_for('usuarios.usuarios'))
         
         # Excluir usuário
-        cursor.execute('DELETE FROM usuarios WHERE id = %s', (usuario_id))
+        cursor.execute('DELETE FROM usuarios WHERE id = %s', (usuario_id,))
         usuarios_deletados = cursor.rowcount
         
         if usuarios_deletados > 0:
@@ -184,10 +184,10 @@ def excluir_usuario(usuario_id):
     return redirect(url_for('usuarios.usuarios'))
 
 @usuarios_bp.route('/promover_usuario/<int:usuario_id>')
-def promover_usuario(usuario_id):
+def promover_usuario(usuario_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
-    if not is_admin_user(session['usuario']):
+    if not is_admin_user(session['usuario'],):
         flash('Acesso negado! Apenas administradores podem promover usuários.')
         return redirect(url_for('dashboard.dashboard'))
     
@@ -201,7 +201,7 @@ def promover_usuario(usuario_id):
         cursor = conn.cursor()
         
         # Verificar se usuário existe
-        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id))
+        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
         user_data = cursor.fetchone()
         
         if not user_data:
@@ -239,10 +239,10 @@ def promover_usuario(usuario_id):
     return redirect(url_for('usuarios.usuarios'))
 
 @usuarios_bp.route('/rebaixar_usuario/<int:usuario_id>')
-def rebaixar_usuario(usuario_id):
+def rebaixar_usuario(usuario_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
-    if not is_admin_user(session['usuario']):
+    if not is_admin_user(session['usuario'],):
         flash('Acesso negado! Apenas administradores podem rebaixar usuários.')
         return redirect(url_for('dashboard.dashboard'))
     
@@ -256,7 +256,7 @@ def rebaixar_usuario(usuario_id):
         cursor = conn.cursor()
         
         # Verificar se usuário existe
-        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id))
+        cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
         user_data = cursor.fetchone()
         
         if not user_data:
@@ -300,10 +300,10 @@ def rebaixar_usuario(usuario_id):
     return redirect(url_for('usuarios.usuarios'))
 
 @usuarios_bp.route('/editar_usuario/<int:usuario_id>', methods=['GET', 'POST'])
-def editar_usuario(usuario_id):
+def editar_usuario(usuario_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
-    if not is_admin_user(session['usuario']):
+    if not is_admin_user(session['usuario'],):
         flash('Acesso negado! Apenas administradores podem editar usuários.')
         return redirect(url_for('dashboard.dashboard'))
     
@@ -327,7 +327,7 @@ def editar_usuario(usuario_id):
         
         if request.method == 'GET':
             # Buscar dados do usuário
-            cursor.execute('SELECT id, usuario, COALESCE(tipo, \'usuario\') as tipo FROM usuarios WHERE id = %s', (usuario_id))
+            cursor.execute('SELECT id, usuario, COALESCE(tipo, \'usuario\') as tipo FROM usuarios WHERE id = %s', (usuario_id,))
             user_data = cursor.fetchone()
             
             if not user_data:
@@ -337,7 +337,7 @@ def editar_usuario(usuario_id):
                 return redirect(url_for('usuarios.usuarios'))
             
             # Buscar permissões do usuário
-            permissoes_usuario = obter_permissoes_usuario(usuario_id)
+            permissoes_usuario = obter_permissoes_usuario(usuario_id,)
             
             cursor.close()
             conn.close()
@@ -351,7 +351,7 @@ def editar_usuario(usuario_id):
             nova_senha = request.form.get('nova_senha', '').strip()
             
             # Buscar dados atuais
-            cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id))
+            cursor.execute('SELECT usuario, tipo FROM usuarios WHERE id = %s', (usuario_id,))
             user_data = cursor.fetchone()
             
             if not user_data:
@@ -373,7 +373,7 @@ def editar_usuario(usuario_id):
             cursor.execute('UPDATE usuarios SET tipo = %s WHERE id = %s', (novo_tipo, usuario_id))
             
             # Processar permissões adicionais
-            permissoes_atuais = obter_permissoes_usuario(usuario_id)
+            permissoes_atuais = obter_permissoes_usuario(usuario_id,)
             permissoes_novas = request.form.getlist('permissoes')
             
             # Remover permissões que não estão mais selecionadas
@@ -518,7 +518,7 @@ def admin_reset():
     # Verificar se é o admin ID 1
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario']))
+    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario'],))
     admin_check = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -537,7 +537,7 @@ def admin_reset_execute():
     # Verificar se é o admin ID 1
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario']))
+    cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (session['usuario'],))
     admin_check = cursor.fetchone()
     
     if not admin_check:

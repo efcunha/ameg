@@ -93,13 +93,13 @@ def get_cadastros():
 
 @api_bp.route('/cadastros/<int:cadastro_id>', methods=['GET'])
 @require_api_key
-def get_cadastro(cadastro_id):
+def get_cadastro(cadastro_id,):
     """Obter cadastro específico"""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute("SELECT * FROM cadastros WHERE id = %s", (cadastro_id))
+        cursor.execute("SELECT * FROM cadastros WHERE id = %s", (cadastro_id,))
         row = cursor.fetchone()
         
         if not row:

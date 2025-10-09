@@ -106,7 +106,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def tem_permissao_caixa(usuario):
+def tem_permissao_caixa(usuario,):
     """Verifica se o usuário tem permissão para acessar o caixa"""
     if not usuario:
         return False
@@ -117,7 +117,7 @@ def tem_permissao_caixa(usuario):
         cursor = conn.cursor()
         
         # Verificar se é admin
-        cursor.execute('SELECT tipo_usuario FROM usuarios WHERE usuario = %s', (usuario))
+        cursor.execute('SELECT tipo_usuario FROM usuarios WHERE usuario = %s', (usuario,))
         user_data = cursor.fetchone()
         
         if user_data and user_data[0] == 'admin':
@@ -131,7 +131,7 @@ def tem_permissao_caixa(usuario):
             FROM permissoes_usuario p 
             JOIN usuarios u ON p.usuario_id = u.id 
             WHERE u.usuario = %s AND p.permissao = 'caixa'
-        ''', (usuario))
+        ''', (usuario,))
         
         result = cursor.fetchone()
         cursor.close()
@@ -143,7 +143,7 @@ def tem_permissao_caixa(usuario):
         print(f"Erro ao verificar permissão caixa: {e}")
         return False
 
-def is_admin_id_1(usuario):
+def is_admin_id_1(usuario,):
     """Verifica se o usuário é o admin ID 1"""
     if not usuario:
         return False
@@ -152,7 +152,7 @@ def is_admin_id_1(usuario):
         from database import get_db_connection
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (usuario))
+        cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (usuario,))
         result = cursor.fetchone()
         cursor.close()
         conn.close()

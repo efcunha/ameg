@@ -138,7 +138,7 @@ def relatorio_caixa():
         return redirect(url_for('caixa.caixa'))
 
 @caixa_bp.route('/excluir_movimentacao/<int:movimentacao_id>')
-def excluir_movimentacao(movimentacao_id):
+def excluir_movimentacao(movimentacao_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
     
@@ -151,7 +151,7 @@ def excluir_movimentacao(movimentacao_id):
         cursor = conn.cursor()
         
         # Buscar dados da movimentação para auditoria
-        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id))
+        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
         movimentacao = cursor.fetchone()
         
         if not movimentacao:
@@ -159,7 +159,7 @@ def excluir_movimentacao(movimentacao_id):
             return redirect(url_for('caixa.caixa'))
         
         # Excluir movimentação (comprovantes são excluídos automaticamente por CASCADE)
-        cursor.execute('DELETE FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id))
+        cursor.execute('DELETE FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
         
         conn.commit()
         cursor.close()
@@ -180,7 +180,7 @@ def excluir_movimentacao(movimentacao_id):
         return redirect(url_for('caixa.caixa'))
 
 @caixa_bp.route('/editar_movimentacao/<int:movimentacao_id>', methods=['GET', 'POST'])
-def editar_movimentacao(movimentacao_id):
+def editar_movimentacao(movimentacao_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
     
@@ -194,7 +194,7 @@ def editar_movimentacao(movimentacao_id):
         
         if request.method == 'GET':
             # Buscar dados da movimentação
-            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id))
+            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
             movimentacao = cursor.fetchone()
             
             if not movimentacao:
@@ -213,7 +213,7 @@ def editar_movimentacao(movimentacao_id):
         
         elif request.method == 'POST':
             # Buscar dados atuais para auditoria
-            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id))
+            cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
             dados_anteriores = cursor.fetchone()
             
             if not dados_anteriores:
@@ -249,7 +249,7 @@ def editar_movimentacao(movimentacao_id):
                 cadastro_id = None
             else:
                 try:
-                    cadastro_id = int(cadastro_id)
+                    cadastro_id = int(cadastro_id,)
                 except ValueError:
                     cadastro_id = None
             
@@ -288,7 +288,7 @@ def editar_movimentacao(movimentacao_id):
         return redirect(url_for('caixa.caixa'))
 
 @caixa_bp.route('/visualizar_comprovantes/<int:movimentacao_id>')
-def visualizar_comprovantes(movimentacao_id):
+def visualizar_comprovantes(movimentacao_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
     
@@ -301,7 +301,7 @@ def visualizar_comprovantes(movimentacao_id):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         # Buscar dados da movimentação
-        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id))
+        cursor.execute('SELECT * FROM movimentacoes_caixa WHERE id = %s', (movimentacao_id,))
         movimentacao = cursor.fetchone()
         
         if not movimentacao:
@@ -309,7 +309,7 @@ def visualizar_comprovantes(movimentacao_id):
             return redirect(url_for('caixa.caixa'))
         
         # Buscar comprovantes
-        comprovantes = obter_comprovantes_movimentacao(movimentacao_id)
+        comprovantes = obter_comprovantes_movimentacao(movimentacao_id,)
         
         cursor.close()
         conn.close()
@@ -363,7 +363,7 @@ def download_comprovante(comprovante_id):
         return redirect(url_for('caixa.caixa'))
 
 @caixa_bp.route('/exportar_comprovantes_pdf/<int:movimentacao_id>')
-def exportar_comprovantes_pdf(movimentacao_id):
+def exportar_comprovantes_pdf(movimentacao_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
     
@@ -373,7 +373,7 @@ def exportar_comprovantes_pdf(movimentacao_id):
     
     try:
         # Buscar comprovantes da movimentação
-        comprovantes = obter_comprovantes_movimentacao(movimentacao_id)
+        comprovantes = obter_comprovantes_movimentacao(movimentacao_id,)
         
         if not comprovantes:
             flash('Nenhum comprovante encontrado para esta movimentação', 'error')

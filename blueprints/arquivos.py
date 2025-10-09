@@ -46,7 +46,7 @@ def arquivos_cadastros():
                 WHERE cadastro_id = %s
                 ORDER BY data_upload DESC
             '''
-            cursor.execute(query_arquivos, (cadastro_data['id']))
+            cursor.execute(query_arquivos, (cadastro_data['id'],))
             arquivos = cursor.fetchall()
             
             cadastro_obj = {
@@ -70,7 +70,7 @@ def arquivos_cadastros():
         return redirect(url_for('dashboard.dashboard'))
 
 @arquivos_bp.route('/exportar_arquivos_pdf/<int:cadastro_id>')
-def exportar_arquivos_pdf(cadastro_id):
+def exportar_arquivos_pdf(cadastro_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
     
@@ -80,7 +80,7 @@ def exportar_arquivos_pdf(cadastro_id):
         
         # Buscar dados do cadastro
         query_cadastro = 'SELECT * FROM cadastros WHERE id = %s'
-        cursor.execute(query_cadastro, (cadastro_id))
+        cursor.execute(query_cadastro, (cadastro_id,))
         cadastro = cursor.fetchone()
         
         if not cadastro:
@@ -95,7 +95,7 @@ def exportar_arquivos_pdf(cadastro_id):
             WHERE cadastro_id = %s
             ORDER BY tipo_arquivo, data_upload
         '''
-        cursor.execute(query_arquivos, (cadastro_id))
+        cursor.execute(query_arquivos, (cadastro_id,))
         arquivos = cursor.fetchall()
         
         cursor.close()
@@ -173,17 +173,17 @@ def exportar_arquivos_pdf(cadastro_id):
         return redirect(url_for('arquivos.arquivos_cadastros'))
 
 @arquivos_bp.route('/arquivos_saude/<int:cadastro_id>')
-def arquivos_saude(cadastro_id):
+def arquivos_saude(cadastro_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
     
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute('SELECT nome_completo FROM cadastros WHERE id = %s', (cadastro_id))
+    cursor.execute('SELECT nome_completo FROM cadastros WHERE id = %s', (cadastro_id,))
     cadastro = cursor.fetchone()
     
-    cursor.execute('SELECT * FROM arquivos_saude WHERE cadastro_id = %s ORDER BY data_upload DESC', (cadastro_id))
+    cursor.execute('SELECT * FROM arquivos_saude WHERE cadastro_id = %s ORDER BY data_upload DESC', (cadastro_id,))
     arquivos = cursor.fetchall()
     
     conn.close()
@@ -195,14 +195,14 @@ def arquivos_saude(cadastro_id):
     return render_template('arquivos_saude.html', cadastro=cadastro, arquivos=arquivos, cadastro_id=cadastro_id)
 
 @arquivos_bp.route('/download_arquivo/<int:arquivo_id>')
-def download_arquivo(arquivo_id):
+def download_arquivo(arquivo_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
     
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute('SELECT nome_arquivo, arquivo_dados, tipo_arquivo FROM arquivos_saude WHERE id = %s', (arquivo_id))
+        cursor.execute('SELECT nome_arquivo, arquivo_dados, tipo_arquivo FROM arquivos_saude WHERE id = %s', (arquivo_id,))
         arquivo = cursor.fetchone()
         cursor.close()
         conn.close()
@@ -227,7 +227,7 @@ def download_arquivo(arquivo_id):
         return redirect(url_for('arquivos.arquivos_cadastros'))
 
 @arquivos_bp.route('/upload_arquivo/<int:cadastro_id>', methods=['POST'])
-def upload_arquivo(cadastro_id):
+def upload_arquivo(cadastro_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
     
@@ -257,7 +257,7 @@ def upload_arquivo(cadastro_id):
     return redirect(url_for('arquivos.arquivos_saude', cadastro_id=cadastro_id))
 
 @arquivos_bp.route('/excluir_arquivo/<int:arquivo_id>')
-def excluir_arquivo(arquivo_id):
+def excluir_arquivo(arquivo_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
     
@@ -266,7 +266,7 @@ def excluir_arquivo(arquivo_id):
         cursor = conn.cursor()
         
         # Buscar o cadastro_id antes de excluir
-        cursor.execute('SELECT cadastro_id FROM arquivos_saude WHERE id = %s', (arquivo_id))
+        cursor.execute('SELECT cadastro_id FROM arquivos_saude WHERE id = %s', (arquivo_id,))
         
         result = cursor.fetchone()
         if not result:
@@ -276,7 +276,7 @@ def excluir_arquivo(arquivo_id):
         cadastro_id = result[0] if isinstance(result, tuple) else result['cadastro_id']
         
         # Excluir o arquivo
-        cursor.execute('DELETE FROM arquivos_saude WHERE id = %s', (arquivo_id))
+        cursor.execute('DELETE FROM arquivos_saude WHERE id = %s', (arquivo_id,))
         
         conn.commit()
         cursor.close()

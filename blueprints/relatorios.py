@@ -320,7 +320,7 @@ def exportar():
     
     if tipo == 'completo':
         if cadastro_id:
-            cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id))
+            cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
             dados = cursor.fetchall()
             filename = f'cadastro_{cadastro_id}'
         else:
@@ -434,7 +434,7 @@ def exportar():
                              dsp.precisa_cuidados_especiais, dsp.cuidados_especiais
                              FROM cadastros c
                              LEFT JOIN dados_saude_pessoa dsp ON c.id = dsp.cadastro_id
-                             WHERE c.id = %s''', (cadastro_id))
+                             WHERE c.id = %s''', (cadastro_id,))
             dados = cursor.fetchall()
             filename = f'relatorio_saude_cadastro_{cadastro_id}'
         else:
@@ -1504,14 +1504,14 @@ def exportar_fichas_individuais():
         return redirect(url_for('relatorios.relatorio_estatistico'))
 
 @relatorios_bp.route('/ficha/<int:cadastro_id>')
-def ficha(cadastro_id):
+def ficha(cadastro_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
     
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id))
+        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
         cadastro = cursor.fetchone()
         cursor.close()
         conn.close()
@@ -1528,14 +1528,14 @@ def ficha(cadastro_id):
         return redirect(url_for('relatorios.relatorios'))
 
 @relatorios_bp.route('/ficha_pdf/<int:cadastro_id>')
-def ficha_pdf(cadastro_id):
+def ficha_pdf(cadastro_id,):
     if 'usuario' not in session:
         return redirect(url_for('auth.login'))
     
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id))
+        cursor.execute('SELECT * FROM cadastros WHERE id = %s', (cadastro_id,))
         cadastro = cursor.fetchone()
         cursor.close()
         conn.close()
