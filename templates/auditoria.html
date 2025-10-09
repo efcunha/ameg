@@ -175,9 +175,15 @@
         <a href="/dashboard">Dashboard</a>
         <a href="/cadastrar">Novo Cadastro</a>
         <a href="/relatorios">Relatórios</a>
+        <a href="/notificacoes">🔔 Notificações</a>
+        <a href="/charts">📊 Gráficos</a>
+        {% if tem_permissao_caixa %}
+        <a href="/caixa">💰 Caixa</a>
+        {% endif %}
         <a href="/arquivos_cadastros">📁 Arquivos</a>
         <a href="/usuarios">👥 Usuários</a>
         <a href="/auditoria" style="background: #27ae60;">🔍 Auditoria</a>
+        <a href="/admin_reset">🔄 Reset</a>
     </div>
 
     <div class="container">

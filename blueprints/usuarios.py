@@ -498,12 +498,15 @@ def auditoria():
         cursor.close()
         conn.close()
         
+        # Verificar permissão do caixa
+        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
         return render_template('auditoria.html', 
                              auditorias=auditorias,
                              stats=stats,
                              page=page,
                              total_pages=total_pages,
-                             query_params=query_params)
+                             query_params=query_params,
+                             tem_permissao_caixa=tem_permissao_caixa)
         
     except Exception as e:
         logger.error(f"Erro ao carregar auditoria: {e}")
