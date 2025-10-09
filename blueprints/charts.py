@@ -126,7 +126,9 @@ def charts_page():
     
     try:
         logger.info("🎨 Renderizando template charts.html")
-        return render_template('charts.html')
+        # Verificar permissão do caixa
+        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+        return render_template('charts.html', tem_permissao_caixa=tem_permissao_caixa)
     except Exception as e:
         logger.error(f"❌ Erro ao renderizar template: {e}")
         return f"Erro ao carregar página: {e}", 500
