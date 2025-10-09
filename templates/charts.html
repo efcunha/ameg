@@ -101,9 +101,15 @@
             <div class="chart-card">
                 <div class="chart-title">
                     <span class="chart-icon" style="background: linear-gradient(45deg, #4ECDC4, #26C6DA);">🏘️</span>
-                    Top Bairros
+                    Top 10 Bairros
+                    <div style="margin-left: auto; font-size: 0.8em; color: #666;">
+                        <button onclick="toggleBairrosView()" id="toggle-bairros" style="background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 11px;">
+                            📊 Ver Todos
+                        </button>
+                    </div>
                 </div>
                 <canvas id="bairrosChart" width="400" height="300"></canvas>
+                <div id="bairros-lista" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 10px;"></div>
             </div>
 
             <!-- Evolução -->
@@ -125,6 +131,9 @@
 
     <script>
         console.log('🚀 INICIANDO SISTEMA DE GRÁFICOS INTERNO AMEG');
+        
+        let allBairrosData = [];
+        let showingAllBairros = false;
         
         // Polyfill para roundRect
         if (!CanvasRenderingContext2D.prototype.roundRect) {
@@ -188,7 +197,11 @@
                 
                 // Criar gráficos nativos
                 drawDoughnutChart('idadeChart', data.idade, 'faixa', 'total');
-                drawBarChart('bairrosChart', data.bairros, 'bairro', 'total');
+                
+                // Salvar dados completos dos bairros
+                allBairrosData = data.bairros;
+                drawBarChart('bairrosChart', data.bairros.slice(0, 10), 'bairro', 'total');
+                
                 drawLineChart('evolucaoChart', data.evolucao, 'mes', 'total');
                 
                 // Atualizar subtitle
@@ -451,6 +464,39 @@
             document.getElementById('filtro-bairro').value = 'todos';
             document.getElementById('filtro-idade').value = 'todos';
             loadAllCharts();
+        }
+        
+        function toggleBairrosView() {
+            const canvas = document.getElementById('bairrosChart');
+            const lista = document.getElementById('bairros-lista');
+            const button = document.getElementById('toggle-bairros');
+            
+            if (showingAllBairros) {
+                // Mostrar gráfico (top 10)
+                canvas.style.display = 'block';
+                lista.style.display = 'none';
+                button.textContent = '📊 Ver Todos';
+                drawBarChart('bairrosChart', allBairrosData.slice(0, 10), 'bairro', 'total');
+                showingAllBairros = false;
+            } else {
+                // Mostrar lista completa
+                canvas.style.display = 'none';
+                lista.style.display = 'block';
+                button.textContent = '📊 Ver Gráfico';
+                
+                let html = '<h4 style="margin-top: 0;">📋 Todos os Bairros:</h4>';
+                allBairrosData.forEach((item, index) => {
+                    const color = index < 10 ? '#4ECDC4' : '#95a5a6';
+                    html += `
+                        <div style="display: flex; justify-content: space-between; padding: 8px; margin: 5px 0; background: ${color}20; border-radius: 5px; border-left: 4px solid ${color};">
+                            <span style="font-weight: bold;">${index + 1}. ${item.bairro}</span>
+                            <span style="color: ${color}; font-weight: bold;">${item.total} cadastros</span>
+                        </div>
+                    `;
+                });
+                lista.innerHTML = html;
+                showingAllBairros = true;
+            }
         }
     </script>
 </body>
