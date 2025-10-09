@@ -220,7 +220,7 @@ def relatorio_renda():
         conn.close()
         
         tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
-    return render_template('relatorio_renda.html', faixas_renda=faixas_renda, renda_bairro=renda_bairro, tem_permissao_caixa=tem_permissao_caixa)
+        return render_template('relatorio_renda.html', faixas_renda=faixas_renda, renda_bairro=renda_bairro, tem_permissao_caixa=tem_permissao_caixa)
         
     except Exception as e:
         logger.error(f"Erro em relatorio_renda: {e}")
