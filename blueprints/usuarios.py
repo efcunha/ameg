@@ -62,12 +62,16 @@ def usuarios():
         cursor.close()
         conn.close()
         
-        return render_template('usuarios.html', usuarios=usuarios_lista)
+        # Verificar permissão do caixa
+        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+        return render_template('usuarios.html', usuarios=usuarios_lista, tem_permissao_caixa=tem_permissao_caixa)
         
     except Exception as e:
         logger.error(f"Erro ao carregar usuários: {e}")
         flash('Erro ao carregar lista de usuários.')
-        return render_template('usuarios.html', usuarios=[])
+        # Verificar permissão do caixa
+        tem_permissao_caixa = session.get('tipo_usuario') == 'admin' or session.get('usuario') == 'admin'
+        return render_template('usuarios.html', usuarios=[], tem_permissao_caixa=tem_permissao_caixa)
 
 @usuarios_bp.route('/criar_usuario', methods=['GET', 'POST'])
 def criar_usuario():
