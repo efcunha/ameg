@@ -130,6 +130,17 @@ def add_security_headers(response):
     
     return response
 
+@app.context_processor
+def inject_cdn():
+    """Injeta URLs do CDN nos templates"""
+    cdn_enabled = os.getenv('CDN_ENABLED', 'false').lower() == 'true'
+    github_user = os.getenv('GITHUB_USER', 'efcunha')
+    
+    if cdn_enabled:
+        cdn_base = f"https://cdn.jsdelivr.net/gh/{github_user}/ameg@main"
+        return {'cdn_url': cdn_base}
+    return {'cdn_url': ''}
+
 # Cache para arquivos estáticos
 @app.after_request
 def after_request(response):

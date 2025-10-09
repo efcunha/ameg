@@ -4,7 +4,12 @@
     <title>AMEG - Dashboard</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/mobile.min.css">
+    {% if cdn_url %}
+        <link rel="stylesheet" href="{{ cdn_url }}/static/css/mobile.min.css" 
+              onerror="this.onerror=null;this.href='/static/css/mobile.min.css'">
+    {% else %}
+        <link rel="stylesheet" href="/static/css/mobile.min.css">
+    {% endif %}
     <style>
         body { font-family: Arial; margin: 0; background: #f4f4f4; }
         .header { background: #2c3e50; color: white; padding: 20px; }
