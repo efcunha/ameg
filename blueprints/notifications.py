@@ -81,22 +81,42 @@ def historico_notificacoes():
     if 'user_id' not in session:
         return redirect('/login')
     
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Verificar se a tabela existe, se não, criar
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS historico_notificacoes (
+                id SERIAL PRIMARY KEY,
+                tipo VARCHAR(20) NOT NULL,
+                prioridade VARCHAR(10) NOT NULL,
+                mensagem TEXT NOT NULL,
+                icone VARCHAR(10),
+                cadastro_id INTEGER REFERENCES cadastros(id) ON DELETE CASCADE,
+                visualizada BOOLEAN DEFAULT FALSE,
+                data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                data_visualizacao TIMESTAMP
+            )
+        """)
+        conn.commit()
+        
+        cursor.execute("""
+            SELECT hn.*, c.nome_completo
+            FROM historico_notificacoes hn
+            LEFT JOIN cadastros c ON hn.cadastro_id = c.id
+            ORDER BY hn.data_criacao DESC
+            LIMIT 100
+        """)
+        
+        notificacoes = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return render_template('historico_notificacoes.html', notificacoes=notificacoes)
     
-    cursor.execute("""
-        SELECT hn.*, c.nome_completo
-        FROM historico_notificacoes hn
-        LEFT JOIN cadastros c ON hn.cadastro_id = c.id
-        ORDER BY hn.data_criacao DESC
-        LIMIT 100
-    """)
-    
-    notificacoes = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return render_template('historico_notificacoes.html', notificacoes=notificacoes)
+    except Exception as e:
+        return f"Erro: {str(e)}"
 
 @notifications_bp.route('/api/marcar-visualizada/<int:notif_id>')
 def marcar_visualizada(notif_id):
