@@ -1,18 +1,26 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <title>AMEG - Histórico de Notificações</title>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Histórico de Notificações - AMEG</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.min.css') }}">
+    <link rel="stylesheet" href="/static/css/mobile.min.css">
     <style>
+        body { font-family: Arial; margin: 0; background: #f4f4f4; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav { background: #34495e; padding: 15px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; margin-right: 10px; background: #3498db; border-radius: 5px; }
+        .nav a:hover { background: #2980b9; }
+        .container { padding: 20px; }
+        .logout { float: right; }
+        
         .notification-item {
             background: white;
             border-left: 4px solid;
             padding: 15px;
             margin-bottom: 10px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .notification-item.urgent { border-left-color: #dc3545; }
         .notification-item.high { border-left-color: #fd7e14; }
@@ -43,48 +51,64 @@
         .badge.high { background: #fd7e14; color: white; }
         .badge.medium { background: #ffc107; color: black; }
         .badge.low { background: #28a745; color: white; }
+        .alert { padding: 15px; margin: 20px 0; background: #d4edda; color: #155724; border-radius: 5px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📋 Histórico de Notificações</h1>
-            <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-secondary">← Voltar</a>
-        </div>
+    <div class="header">
+        <h1>AMEG - Histórico de Notificações</h1>
+        <span>Bem-vindo, {{ session.usuario }}!</span>
+        <a href="/logout" class="logout" style="color: white; text-decoration: none;">Sair</a>
+    </div>
 
-        <div class="content">
-            {% if notificacoes %}
-                {% for notif in notificacoes %}
-                <div class="notification-item {{ notif[2] }} {{ 'visualizada' if notif[6] else '' }}">
-                    <div class="notification-header">
-                        <div>
-                            <span class="notification-icon">{{ notif[4] }}</span>
-                            <span class="badge {{ notif[2] }}">{{ notif[2].upper() }}</span>
-                            {% if notif[6] %}
-                                <span class="badge" style="background: #6c757d; color: white;">VISTA</span>
-                            {% endif %}
-                        </div>
-                        <div class="notification-date">
-                            {{ notif[7].strftime('%d/%m/%Y %H:%M') }}
-                        </div>
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/cadastrar">Novo Cadastro</a>
+        <a href="/relatorios">Relatórios</a>
+        <a href="/historico-notificacoes" style="background: #2980b9;">🔔 Notificações</a>
+        <a href="/charts">📊 Gráficos</a>
+        {% if tem_permissao_caixa %}
+        <a href="/caixa">💰 Caixa</a>
+        {% endif %}
+        {% if session.tipo == 'admin' %}
+        <a href="/usuarios">Usuários</a>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        <h2>📋 Histórico de Notificações</h2>
+        
+        {% if notificacoes %}
+            {% for notif in notificacoes %}
+            <div class="notification-item {{ notif[2] }} {{ 'visualizada' if notif[6] else '' }}">
+                <div class="notification-header">
+                    <div>
+                        <span class="notification-icon">{{ notif[4] }}</span>
+                        <span class="badge {{ notif[2] }}">{{ notif[2].upper() }}</span>
+                        {% if notif[6] %}
+                            <span class="badge" style="background: #6c757d; color: white;">VISTA</span>
+                        {% endif %}
                     </div>
-                    <div class="notification-message">
-                        {{ notif[3] }}
+                    <div class="notification-date">
+                        {{ notif[7].strftime('%d/%m/%Y %H:%M') }}
                     </div>
-                    {% if notif[9] %}
-                        <div style="margin-top: 5px; font-size: 12px; color: #666;">
-                            Cadastro: {{ notif[9] }}
-                        </div>
-                    {% endif %}
                 </div>
-                {% endfor %}
-            {% else %}
-                <div class="alert alert-info">
-                    <h3>📭 Nenhuma notificação encontrada</h3>
-                    <p>Quando houver alertas de saúde ou outros eventos importantes, eles aparecerão aqui.</p>
+                <div class="notification-message">
+                    {{ notif[3] }}
                 </div>
-            {% endif %}
-        </div>
+                {% if notif[9] %}
+                    <div style="margin-top: 5px; font-size: 12px; color: #666;">
+                        Cadastro: {{ notif[9] }}
+                    </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert">
+                <h3>📭 Nenhuma notificação encontrada</h3>
+                <p>Quando houver alertas de saúde ou outros eventos importantes, eles aparecerão aqui.</p>
+            </div>
+        {% endif %}
     </div>
 </body>
 </html>
