@@ -43,7 +43,9 @@
         {% if is_admin_user(session.usuario) %}
         <a href="/usuarios">👥 Usuários</a>
         <a href="/auditoria">🔍 Auditoria</a>
+        {% if is_admin_id_1(session.usuario) %}
         <a href="/admin/reset">🔄 Reset</a>
+        {% endif %}
         {% endif %}
     </div>
     

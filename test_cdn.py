@@ -12,9 +12,9 @@ def test_cdn():
     files_to_test = [
         "/static/css/mobile.css",
         "/static/css/mobile.min.css", 
-        "/static/js/validators.js",
         "/static/js/validators.min.js",
-        "/static/js/lazy-load.js",
+        "/static/js/lazy-load.min.js",
+        "/static/js/charts.min.js",
         "/static/img/logo-ameg.jpeg"
     ]
     

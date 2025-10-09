@@ -141,6 +141,12 @@ def inject_cdn():
         return {'cdn_url': cdn_base}
     return {'cdn_url': ''}
 
+@app.context_processor
+def inject_utils():
+    """Injeta funções utilitárias nos templates"""
+    from blueprints.utils import is_admin_id_1
+    return {'is_admin_id_1': is_admin_id_1}
+
 # Cache para arquivos estáticos
 @app.after_request
 def after_request(response):

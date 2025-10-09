@@ -195,7 +195,9 @@
         <a href="/arquivos_cadastros">📁 Arquivos</a>
         <a href="/usuarios">👥 Usuários</a>
         <a href="/auditoria" style="background: #27ae60;">🔍 Auditoria</a>
+        {% if is_admin_id_1(session.usuario) %}
         <a href="/admin/reset">🔄 Reset</a>
+        {% endif %}
     </div>
 
     <div class="container">

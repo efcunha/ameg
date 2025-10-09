@@ -105,3 +105,20 @@ def login_required(f):
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
+
+def is_admin_id_1(usuario):
+    """Verifica se o usuário é o admin ID 1"""
+    if not usuario:
+        return False
+    
+    try:
+        from database import get_db_connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT id FROM usuarios WHERE usuario = %s AND id = 1', (usuario,))
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return result is not None
+    except:
+        return False
