@@ -25,7 +25,7 @@ def salvar_notificacao_historico(tipo, prioridade, mensagem, icone, cadastro_id=
     cursor.close()
     conn.close()
 
-@notifications_bp.route('/api/notifications')
+@notifications_bp.route('/api/notifications', methods=['GET'])
 def get_notifications():
     if 'user_id' not in session:
         return jsonify([])
@@ -76,7 +76,7 @@ def get_notifications():
     
     return jsonify(notifications[:5])  # Máximo 5 notificações
 
-@notifications_bp.route('/historico-notificacoes')
+@notifications_bp.route('/historico-notificacoes', methods=['GET'])
 def historico_notificacoes():
     if 'user_id' not in session:
         return redirect('/login')
@@ -118,7 +118,7 @@ def historico_notificacoes():
     except Exception as e:
         return f"Erro: {str(e)}"
 
-@notifications_bp.route('/api/marcar-visualizada/<int:notif_id>')
+@notifications_bp.route('/api/marcar-visualizada/<int:notif_id>', methods=['GET', 'POST'])
 def marcar_visualizada(notif_id):
     if 'user_id' not in session:
         return jsonify({'error': 'Não autorizado'}), 401
